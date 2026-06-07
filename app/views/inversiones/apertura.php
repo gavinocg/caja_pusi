@@ -15,7 +15,7 @@
                         <select name="id_socio" class="form-select <?= isset($errors['id_socio']) ? 'is-invalid' : '' ?>" required>
                             <option value="">Seleccione...</option>
                             <?php foreach ($socios as $s): ?>
-                            <option value="<?= $s['id_socio'] ?>"><?= htmlspecialchars($s['cédula'] . ' — ' . $s['nombre']) ?></option>
+                            <option value="<?= $s['id_socio'] ?>"><?= htmlspecialchars($s['cedula'] . ' — ' . $s['nombre']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -24,7 +24,7 @@
                         <select name="id_producto" id="selProd" class="form-select <?= isset($errors['id_producto']) ? 'is-invalid' : '' ?>" required onchange="cargarLimites()">
                             <option value="">Seleccione...</option>
                             <?php foreach ($productos as $p): ?>
-                            <option value="<?= $p['id_producto'] ?>" data-tasa="<?= $p['tasa_interés_anual'] ?>" data-min="<?= $p['plazo_mín_meses'] ?>" data-max="<?= $p['plazo_máx_meses'] ?>"><?= htmlspecialchars($p['nombre']) ?> (<?= $p['tasa_interés_anual'] ?>%)</option>
+                            <option value="<?= $p['id_producto'] ?>" data-tasa="<?= $p['tasa_interes_anual'] ?>" data-min="<?= $p['plazo_min_meses'] ?>" data-max="<?= $p['plazo_max_meses'] ?>"><?= htmlspecialchars($p['nombre']) ?> (<?= $p['tasa_interes_anual'] ?>%)</option>
                             <?php endforeach; ?>
                         </select>
                     </div>

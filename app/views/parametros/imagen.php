@@ -2,8 +2,8 @@
 $logoSidebarId = '';
 $logoSdId = '';
 foreach ($params as $p) {
-    if ($p['código'] === 'logo_sidebar') $logoSidebarId = $p['valor'];
-    if ($p['código'] === 'logo_sd') $logoSdId = $p['valor'];
+    if ($p['codigo'] === 'logo_sidebar') $logoSidebarId = $p['valor'];
+    if ($p['codigo'] === 'logo_sd') $logoSdId = $p['valor'];
 }
 function fmPreview($idArchivo, $baseUrl) {
     if (empty($idArchivo)) return '';
@@ -62,12 +62,12 @@ function fmPreview($idArchivo, $baseUrl) {
                 <div class="card-body">
                     <h5>Colores institucionales</h5>
                     <?php foreach ($params as $p):
-                        if (strpos($p['código'], 'color.') !== 0) continue; ?>
+                        if (strpos($p['codigo'], 'color.') !== 0) continue; ?>
                     <div class="mb-2 d-flex align-items-center">
                         <label class="me-2" style="min-width:120px"><?= htmlspecialchars($p['nombre']) ?></label>
                         <input type="color" class="form-control form-control-color w-auto"
                                value="<?= htmlspecialchars($p['valor']) ?>"
-                               onchange="guardarColor('<?= $p['código'] ?>', this.value)">
+                               onchange="guardarColor('<?= $p['codigo'] ?>', this.value)">
                         <code class="ms-2 small"><?= htmlspecialchars($p['valor']) ?></code>
                     </div>
                     <?php endforeach; ?>

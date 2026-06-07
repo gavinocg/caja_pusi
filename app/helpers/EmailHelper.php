@@ -33,7 +33,7 @@ class EmailHelper {
             $mailer->isHTML(true);
             $mailer->Subject = 'Código de verificación - ' . APP_NAME;
             $mailer->Body = self::pinTemplate($nombre, $pin);
-            $mailer->AltBody = "Hola $nombre,\n\nTu código PIN es: $pin\n\nVálido por " . PIN_2FA_EXPIRATION_MIN . " minutos.\n\n" . APP_NAME;
+            $mailer->AltBody = "Hola $nombre,\n\nTu codigo PIN es: $pin\n\nVálido por " . PIN_2FA_EXPIRATION_MIN . " minutos.\n\n" . APP_NAME;
 
             $mailer->send();
             return true;
@@ -57,10 +57,10 @@ class EmailHelper {
             <div class="header"><h2>' . APP_NAME . '</h2><p>Código de verificación</p></div>
             <div class="content">
                 <h3>Hola ' . htmlspecialchars($nombre) . ',</h3>
-                <p>Se ha generado un código PIN para verificar tu identidad:</p>
+                <p>Se ha generado un codigo PIN para verificar tu identidad:</p>
                 <div class="pin-box"><div class="pin-number">' . $pin . '</div></div>
-                <p style="color:#666;font-size:13px">Este código es válido por <strong>' . PIN_2FA_EXPIRATION_MIN . ' minutos</strong>.</p>
-                <p style="color:#999;font-size:12px">Si no solicitaste este código, ignora este correo.</p>
+                <p style="color:#666;font-size:13px">Este codigo es válido por <strong>' . PIN_2FA_EXPIRATION_MIN . ' minutos</strong>.</p>
+                <p style="color:#999;font-size:12px">Si no solicitaste este codigo, ignora este correo.</p>
             </div>
             <div class="footer"><p>' . APP_NAME . ' - Este es un correo automático</p></div>
         </div></body></html>';

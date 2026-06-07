@@ -7,7 +7,7 @@ class MultaController extends BaseController {
         $idSocio = null;
         $esSocio = false;
         if ($cedula) {
-            $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cédula = ?");
+            $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
             $stmt->execute([$cedula]);
             $idSocio = $stmt->fetchColumn();
             if ($idSocio) $esSocio = true;
@@ -18,11 +18,11 @@ class MultaController extends BaseController {
         $offset = ($page - 1) * $porPagina;
 
         if ($esSocio) {
-            $stmt = $this->db->prepare("SELECT m.*, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio, s.cédula
+            $stmt = $this->db->prepare("SELECT m.*, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio, s.cedula
                                         FROM multas m
                                         JOIN socios s ON m.id_socio = s.id_socio
                                         WHERE m.id_socio = ?
-                                        ORDER BY m.fecha_generación DESC LIMIT $porPagina OFFSET $offset");
+                                        ORDER BY m.fecha_generacion DESC LIMIT $porPagina OFFSET $offset");
             $stmt->execute([$idSocio]);
             $multas = $stmt->fetchAll();
             $total = $this->db->prepare("SELECT COUNT(*) FROM multas WHERE id_socio = ?");
@@ -40,11 +40,11 @@ class MultaController extends BaseController {
             if ($filtroPagada !== '') { $where[] = 'm.pagada = ?'; $params[] = $filtroPagada; }
             if ($filtroSocio) { $where[] = 's.apellido1 LIKE ?'; $params[] = "%$filtroSocio%"; }
             $whereClause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
-            $stmt = $this->db->prepare("SELECT m.*, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio, s.cédula
+            $stmt = $this->db->prepare("SELECT m.*, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio, s.cedula
                                         FROM multas m
                                         JOIN socios s ON m.id_socio = s.id_socio
                                         $whereClause
-                                        ORDER BY m.fecha_generación DESC LIMIT $porPagina OFFSET $offset");
+                                        ORDER BY m.fecha_generacion DESC LIMIT $porPagina OFFSET $offset");
             $stmt->execute($params);
             $multas = $stmt->fetchAll();
             $total = $this->db->prepare("SELECT COUNT(*) FROM multas m JOIN socios s ON m.id_socio = s.id_socio $whereClause");
@@ -68,7 +68,7 @@ class MultaController extends BaseController {
     public function ver($id) {
         $this->requireAuth();
         $stmt = $this->db->prepare("SELECT m.*, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio,
-                                     s.cédula, s.correo_electrónico
+                                     s.cedula, s.correo_electronico
                                      FROM multas m
                                      JOIN socios s ON m.id_socio = s.id_socio
                                      WHERE m.id_multa = ?");
@@ -84,11 +84,11 @@ class MultaController extends BaseController {
 
     public function justificar($id) {
         $this->requireAuth();
-        $stmt = $this->db->prepare("SELECT m.*, s.cédula FROM multas m JOIN socios s ON m.id_socio = s.id_socio WHERE m.id_multa = ?");
+        $stmt = $this->db->prepare("SELECT m.*, s.cedula FROM multas m JOIN socios s ON m.id_socio = s.id_socio WHERE m.id_multa = ?");
         $stmt->execute([$id]);
         $multa = $stmt->fetch();
         if (!$multa) $this->json(['error' => 'No encontrada'], 404);
-        if ($multa['cédula'] !== ($_SESSION['usuario_cedula'] ?? '')) {
+        if ($multa['cedula'] !== ($_SESSION['usuario_cedula'] ?? '')) {
             $this->json(['error' => 'No autorizado'], 403);
         }
 
@@ -97,7 +97,7 @@ class MultaController extends BaseController {
             $texto = trim($_POST['justificacion'] ?? '');
             $archivo = null;
 
-            if (empty($texto)) $this->json(['error' => 'Escriba una justificación'], 400);
+            if (empty($texto)) $this->json(['error' => 'Escriba una justificacion'], 400);
 
             if (!empty($_FILES['archivo']) && $_FILES['archivo']['error'] === UPLOAD_ERR_OK) {
                 $ext = strtolower(pathinfo($_FILES['archivo']['name'], PATHINFO_EXTENSION));
@@ -111,10 +111,10 @@ class MultaController extends BaseController {
             }
 
             if ($archivo) {
-                $this->db->prepare("UPDATE multas SET justificación = ?, justificación_pdf = ? WHERE id_multa = ?")
+                $this->db->prepare("UPDATE multas SET justificacion = ?, justificacion_pdf = ? WHERE id_multa = ?")
                     ->execute([$texto, $archivo, $id]);
             } else {
-                $this->db->prepare("UPDATE multas SET justificación = ? WHERE id_multa = ?")
+                $this->db->prepare("UPDATE multas SET justificacion = ? WHERE id_multa = ?")
                     ->execute([$texto, $id]);
             }
 
@@ -128,7 +128,7 @@ class MultaController extends BaseController {
         $this->validateCSRF();
         $accion = $_POST['accion'] ?? '';
         $aprobada = $accion === 'aprobar' ? 1 : 0;
-        $this->db->prepare("UPDATE multas SET justificación_aprobada = ? WHERE id_multa = ?")->execute([$aprobada, $id]);
+        $this->db->prepare("UPDATE multas SET justificacion_aprobada = ? WHERE id_multa = ?")->execute([$aprobada, $id]);
         $this->json(['mensaje' => $aprobada ? 'Justificación aprobada' : 'Justificación rechazada']);
     }
 

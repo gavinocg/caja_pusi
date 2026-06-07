@@ -79,26 +79,26 @@ class AuthController extends BaseController {
             $nueva = $_POST['nueva'] ?? '';
             $confirmar = $_POST['confirmar'] ?? '';
 
-            if (empty($actual)) $errors['actual'] = 'Ingrese su contraseña actual';
+            if (empty($actual)) $errors['actual'] = 'Ingrese su contrasena actual';
             if (strlen($nueva) < 6) $errors['nueva'] = 'Mínimo 6 caracteres';
-            if ($nueva !== $confirmar) $errors['confirmar'] = 'Las contraseñas no coinciden';
+            if ($nueva !== $confirmar) $errors['confirmar'] = 'Las contrasenas no coinciden';
 
             if (empty($errors)) {
-                $stmt = $this->db->prepare("SELECT contraseña FROM usuarios WHERE id_usuario = ?");
+                $stmt = $this->db->prepare("SELECT contrasena FROM usuarios WHERE id_usuario = ?");
                 $stmt->execute([$_SESSION['usuario_id']]);
                 $hash = $stmt->fetchColumn();
 
                 if (!password_verify($actual, $hash)) {
                     $errors['actual'] = 'Contraseña actual incorrecta';
                 } else {
-                    $stmt = $this->db->prepare("UPDATE usuarios SET contraseña = ? WHERE id_usuario = ?");
+                    $stmt = $this->db->prepare("UPDATE usuarios SET contrasena = ? WHERE id_usuario = ?");
                     $stmt->execute([password_hash($nueva, PASSWORD_BCRYPT), $_SESSION['usuario_id']]);
                     $errors['exito'] = 'Contraseña actualizada correctamente';
                 }
             }
         }
 
-        $this->render('auth/password', ['titulo' => 'Cambiar contraseña', 'errors' => $errors]);
+        $this->render('auth/password', ['titulo' => 'Cambiar contrasena', 'errors' => $errors]);
     }
 
     public function logout() {
@@ -109,7 +109,7 @@ class AuthController extends BaseController {
         $to = $_SESSION['usuario_correo'] ?? '';
         if (empty($to)) {
             $db = Database::getInstance();
-            $stmt = $db->prepare("SELECT correo_electrónico FROM usuarios WHERE id_usuario = ?");
+            $stmt = $db->prepare("SELECT correo_electronico FROM usuarios WHERE id_usuario = ?");
             $stmt->execute([$_SESSION['usuario_id']]);
             $to = $stmt->fetchColumn();
         }

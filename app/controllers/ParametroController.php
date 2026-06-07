@@ -3,7 +3,7 @@ class ParametroController extends BaseController {
 
     public function listar() {
         $this->requirePermission('param.financiero');
-        $stmt = $this->db->query("SELECT * FROM parámetros ORDER BY módulo, código");
+        $stmt = $this->db->query("SELECT * FROM parametros ORDER BY modulo, codigo");
         $params = $stmt->fetchAll();
 
         $this->render('parametros/listar', [
@@ -14,7 +14,7 @@ class ParametroController extends BaseController {
 
     public function editar($id) {
         $this->requirePermission('param.financiero');
-        $stmt = $this->db->prepare("SELECT * FROM parámetros WHERE id_parámetro = ?");
+        $stmt = $this->db->prepare("SELECT * FROM parametros WHERE id_parametro = ?");
         $stmt->execute([$id]);
         $param = $stmt->fetch();
         if (!$param) $this->redirect('/parametro/listar');
@@ -30,7 +30,7 @@ class ParametroController extends BaseController {
                 return;
             }
             $valor = $_POST['valor'] ?? '';
-            $stmt = $this->db->prepare("UPDATE parámetros SET valor = ? WHERE id_parámetro = ?");
+            $stmt = $this->db->prepare("UPDATE parametros SET valor = ? WHERE id_parametro = ?");
             $stmt->execute([$valor, $id]);
             $this->redirect('/parametro/listar');
         }
@@ -43,7 +43,7 @@ class ParametroController extends BaseController {
 
     public function modulo($modulo) {
         $this->requirePermission('param.financiero');
-        $stmt = $this->db->prepare("SELECT * FROM parámetros WHERE módulo = ? ORDER BY código");
+        $stmt = $this->db->prepare("SELECT * FROM parametros WHERE modulo = ? ORDER BY codigo");
         $stmt->execute([$modulo]);
         $params = $stmt->fetchAll();
 

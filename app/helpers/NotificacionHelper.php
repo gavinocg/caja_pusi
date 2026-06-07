@@ -5,14 +5,14 @@ class NotificacionHelper {
         $db = Database::getInstance();
         $id = UUIDGenerator::generar();
         $stmt = $db->prepare("INSERT INTO notificaciones
-            (id_notificación, id_usuario, id_socio, tipo, título, mensaje, enviada_pusher)
+            (id_notificacion, id_usuario, id_socio, tipo, titulo, mensaje, enviada_pusher)
             VALUES (?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([
             $id,
             $data['id_usuario'] ?? null,
             $data['id_socio'] ?? null,
             $data['tipo'],
-            $data['título'],
+            $data['titulo'],
             $data['mensaje'],
             !empty($data['enviar_pusher']) ? 1 : 0,
         ]);
@@ -27,7 +27,7 @@ class NotificacionHelper {
         return self::crear([
             'id_socio' => $idSocio,
             'tipo' => 'cobro',
-            'título' => 'Cobro registrado',
+            'titulo' => 'Cobro registrado',
             'mensaje' => "Cobro de $tipo por $$monto a $socioNombre",
             'enviar_pusher' => true,
         ]);
@@ -35,8 +35,8 @@ class NotificacionHelper {
 
     public static function crearCredito($socioNombre, $estado, $monto) {
         return self::crear([
-            'tipo' => 'crédito',
-            'título' => "Crédito $estado",
+            'tipo' => 'credito',
+            'titulo' => "Crédito $estado",
             'mensaje' => "Crédito de $$monto para $socioNombre ha sido $estado",
             'enviar_pusher' => true,
         ]);
@@ -45,7 +45,7 @@ class NotificacionHelper {
     public static function crearSesion($numero, $accion) {
         return self::crear([
             'tipo' => 'sesión',
-            'título' => "Sesión $accion",
+            'titulo' => "Sesión $accion",
             'mensaje' => "Sesión #$numero ha sido $accion",
             'enviar_pusher' => true,
         ]);

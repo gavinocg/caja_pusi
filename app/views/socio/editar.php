@@ -30,11 +30,11 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Dirección</label>
-                        <input type="text" name="direccion" class="form-control" value="<?= htmlspecialchars($socio['dirección']) ?>">
+                        <input type="text" name="direccion" class="form-control" value="<?= htmlspecialchars($socio['direccion']) ?>">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Teléfono</label>
-                        <input type="text" name="telefono" class="form-control" value="<?= htmlspecialchars($socio['teléfono'] ?? '') ?>">
+                        <input type="text" name="telefono" class="form-control" value="<?= htmlspecialchars($socio['telefono'] ?? '') ?>">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Celular</label>
@@ -42,7 +42,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Profesión</label>
-                        <input type="text" name="profesion" class="form-control" value="<?= htmlspecialchars($socio['profesión'] ?? '') ?>">
+                        <input type="text" name="profesion" class="form-control" value="<?= htmlspecialchars($socio['profesion'] ?? '') ?>">
                     </div>
                 </div>
                 <div class="mt-4">

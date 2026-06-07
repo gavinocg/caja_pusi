@@ -1,0 +1,50 @@
+Flujos:
+-----------
+
+1. CRÉDITOS
+1.1 Definir productos de crédito
+1.2 Solicitar
+	** Autogestionado (Socio::Requiere calificación)
+	** Ingresado (Presidente, Tesorero::Aprobado en Asamblea) 
+1.3 Calificar
+	** Aprobar
+	** Negar
+	** Dejar pendiente
+1.4 Desembolsar
+	** Efectivo
+	** Transferencia/P2P
+1.5 Cobrar cuotas
+
+1.6 Funcionalidades adicionales:
+1.6.1 Aplicar multas
+1.6.2 Solicitar pre-cancelación
+1.6.3 Novación
+
+2. INVERSIONES
+2.1. Definir productos de inversión
+2.2. Invertir
+	** Autogestionado (Socio::requiere revisión)
+	** Ingresado (Presidente, Tesorero:: aprobado en Asamblea)
+2.3. Revisar
+	** Aprobar
+	** Negar
+	** Dejar pendiente
+2.4 Solicitar pre-liquidación 
+
+3. UTILIDADES
+3.1 Parametrización
+3.2 Cierre de período (personalizado)
+3.4 Pago
+
+4. ADMINISTRATIVO
+4.1 Reuniones
+	** Crear reunión (notificación)
+	** Registrar asistencia, faltas y multas
+4.2 Gestión documental simple
+	** Crear árbol de directorios (carpetas y subcarpetas)
+	** Carga de documentos
+	** Compartir documentos
+	** Vincular documentos con actuaciones administrativas
+4.3 Sistema de comunicaciones
+4.3.1 Correos electrónicos individuales/masivos
+4.3.2 Notificaciones PUSH (Dashboard)

@@ -68,7 +68,7 @@
                     <div class="table-responsive"><table class="table table-sm mb-0">
                         <?php foreach ($ultimasSesiones as $s): ?>
                         <tr>
-                            <td>#<?= $s['número_sesión'] ?></td>
+                            <td>#<?= $s['numero_sesion'] ?></td>
                             <td><?= $s['fecha'] ?></td>
                             <td><span class="badge <?= $s['estado'] === 'abierta' ? 'bg-success' : 'bg-secondary' ?>"><?= ucfirst($s['estado']) ?></span></td>
                         </tr>

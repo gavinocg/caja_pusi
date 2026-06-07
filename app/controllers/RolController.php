@@ -33,7 +33,7 @@ class RolController extends BaseController {
             }
 
             if (empty($errors)) {
-                $stmt = $this->db->prepare("INSERT INTO roles (nombre, descripción, endosable) VALUES (?, ?, ?)");
+                $stmt = $this->db->prepare("INSERT INTO roles (nombre, descripcion, endosable) VALUES (?, ?, ?)");
                 $stmt->execute([$nombre, $descripcion, $endosable]);
                 $this->redirect('/rol/permisos/' . $this->db->lastInsertId());
             }
@@ -72,7 +72,7 @@ class RolController extends BaseController {
             }
 
             if (empty($errors)) {
-                $stmt = $this->db->prepare("UPDATE roles SET nombre = ?, descripción = ?, endosable = ? WHERE id_rol = ?");
+                $stmt = $this->db->prepare("UPDATE roles SET nombre = ?, descripcion = ?, endosable = ? WHERE id_rol = ?");
                 $stmt->execute([$nombre, $descripcion, $endosable, $id]);
                 $this->redirect('/rol/listar');
             }
@@ -104,7 +104,7 @@ class RolController extends BaseController {
         $rol = $stmt->fetch();
         if (!$rol) $this->redirect('/rol/listar');
 
-        $permisos = $this->db->query("SELECT * FROM permisos ORDER BY código")->fetchAll();
+        $permisos = $this->db->query("SELECT * FROM permisos ORDER BY codigo")->fetchAll();
 
         $stmt = $this->db->prepare("SELECT id_permiso, permitir FROM roles_permisos WHERE id_rol = ?");
         $stmt->execute([$id]);

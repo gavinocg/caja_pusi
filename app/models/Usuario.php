@@ -7,7 +7,7 @@ class Usuario extends BaseModel {
     }
 
     public function getByCedula($cedula) {
-        return $this->getOneWhere('cédula = ?', [$cedula]);
+        return $this->getOneWhere('cedula = ?', [$cedula]);
     }
 
     public function getByUsername($username) {
@@ -15,7 +15,7 @@ class Usuario extends BaseModel {
     }
 
     public function getRoles($usuarioId) {
-        $stmt = $this->db->prepare("SELECT r.id_rol, r.nombre, r.descripción, r.endosable
+        $stmt = $this->db->prepare("SELECT r.id_rol, r.nombre, r.descripcion, r.endosable
                                      FROM roles_usuarios ru
                                      JOIN roles r ON ru.id_rol = r.id_rol
                                      WHERE ru.id_usuario = ?");

@@ -1,8 +1,8 @@
 <?php
 class ProductoController extends BaseController {
 
-    private $tipos = ['crédito' => 'Crédito', 'inversión' => 'Inversión'];
-    private $metodos = ['simple' => 'Simple', 'francés' => 'Francés', 'alemán' => 'Alemán'];
+    private $tipos = ['credito' => 'Crédito', 'inversion' => 'Inversión'];
+    private $metodos = ['simple' => 'Simple', 'frances' => 'Francés', 'aleman' => 'Alemán'];
 
     public function listar() {
         $this->requirePermission('param.financiero');
@@ -28,16 +28,21 @@ class ProductoController extends BaseController {
             if (empty($errors)) {
                 $id = UUIDGenerator::generar();
                 $stmt = $this->db->prepare("INSERT INTO productos_financieros
-                    (id_producto, nombre, tipo, tasa_interés_anual, método_interés,
-                     plazo_mín_meses, plazo_máx_meses, monto_mín, monto_máx,
-                     requiere_garante, penalidad_retiro_anticipado)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    (id_producto, nombre, tipo, activo, tasa_interes_anual, metodo_interes,
+                     plazo_min_meses, plazo_max_meses, monto_min, monto_max,
+                     requiere_garante, penalidad_retiro_anticipado,
+                     condiciones_html, min_permanencia_meses, min_ahorro,
+                     es_emergente, monto_max_emergente, requiere_documento_firmado)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->execute([
-                    $id, $data['nombre'], $data['tipo'], $data['tasa_interés_anual'],
-                    $data['método_interés'], $data['plazo_mín_meses'], $data['plazo_máx_meses'],
-                    $data['monto_mín'], $data['monto_máx'],
-                    !empty($data['requiere_garante']) ? 1 : 0,
-                    $data['penalidad_retiro_anticipado'] ?? 0
+                    $id, $data['nombre'], $data['tipo'], $data['activo'],
+                    $data['tasa_interes_anual'], $data['metodo_interes'],
+                    $data['plazo_min_meses'], $data['plazo_max_meses'],
+                    $data['monto_min'], $data['monto_max'],
+                    $data['requiere_garante'], $data['penalidad_retiro_anticipado'],
+                    $data['condiciones_html'], $data['min_permanencia_meses'],
+                    $data['min_ahorro'], $data['es_emergente'],
+                    $data['monto_max_emergente'], $data['requiere_documento_firmado'],
                 ]);
                 $this->redirect('/producto/listar');
             }
@@ -64,20 +69,26 @@ class ProductoController extends BaseController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->validateCSRF();
             $data = $this->sanitizar($_POST);
-            $errors = $this->validar($data, $id);
+            $errors = $this->validar($data);
 
             if (empty($errors)) {
                 $stmt = $this->db->prepare("UPDATE productos_financieros SET
-                    nombre = ?, tipo = ?, tasa_interés_anual = ?, método_interés = ?,
-                    plazo_mín_meses = ?, plazo_máx_meses = ?, monto_mín = ?, monto_máx = ?,
-                    requiere_garante = ?, penalidad_retiro_anticipado = ?
+                    nombre = ?, tipo = ?, activo = ?, tasa_interes_anual = ?, metodo_interes = ?,
+                    plazo_min_meses = ?, plazo_max_meses = ?, monto_min = ?, monto_max = ?,
+                    requiere_garante = ?, penalidad_retiro_anticipado = ?,
+                    condiciones_html = ?, min_permanencia_meses = ?, min_ahorro = ?,
+                    es_emergente = ?, monto_max_emergente = ?, requiere_documento_firmado = ?
                     WHERE id_producto = ?");
                 $stmt->execute([
-                    $data['nombre'], $data['tipo'], $data['tasa_interés_anual'],
-                    $data['método_interés'], $data['plazo_mín_meses'], $data['plazo_máx_meses'],
-                    $data['monto_mín'], $data['monto_máx'],
-                    !empty($data['requiere_garante']) ? 1 : 0,
-                    $data['penalidad_retiro_anticipado'] ?? 0, $id
+                    $data['nombre'], $data['tipo'], $data['activo'],
+                    $data['tasa_interes_anual'], $data['metodo_interes'],
+                    $data['plazo_min_meses'], $data['plazo_max_meses'],
+                    $data['monto_min'], $data['monto_max'],
+                    $data['requiere_garante'], $data['penalidad_retiro_anticipado'],
+                    $data['condiciones_html'], $data['min_permanencia_meses'],
+                    $data['min_ahorro'], $data['es_emergente'],
+                    $data['monto_max_emergente'], $data['requiere_documento_firmado'],
+                    $id,
                 ]);
                 $this->redirect('/producto/listar');
             }
@@ -105,31 +116,44 @@ class ProductoController extends BaseController {
     }
 
     private function sanitizar($post) {
+        $tipo = $post['tipo'] ?? 'credito';
+        $esCredito = $tipo === 'credito';
+
         return [
             'nombre' => trim($post['nombre'] ?? ''),
-            'tipo' => $post['tipo'] ?? '',
-            'tasa_interés_anual' => str_replace(',', '.', $post['tasa_interés_anual'] ?? '0'),
-            'método_interés' => $post['método_interés'] ?? 'simple',
-            'plazo_mín_meses' => intval($post['plazo_mín_meses'] ?? 1),
-            'plazo_máx_meses' => intval($post['plazo_máx_meses'] ?? 12),
-            'monto_mín' => str_replace(',', '.', $post['monto_mín'] ?? '0'),
-            'monto_máx' => str_replace(',', '.', $post['monto_máx'] ?? '0'),
-            'requiere_garante' => $post['requiere_garante'] ?? '',
-            'penalidad_retiro_anticipado' => str_replace(',', '.', $post['penalidad_retiro_anticipado'] ?? '0'),
+            'tipo' => $tipo,
+            'activo' => !empty($post['activo']) ? 1 : 0,
+            'tasa_interes_anual' => str_replace(',', '.', $post['tasa_interes_anual'] ?? '0'),
+            'metodo_interes' => $esCredito ? ($post['metodo_interes'] ?? 'simple') : 'simple',
+            'plazo_min_meses' => intval($post['plazo_min_meses'] ?? 1),
+            'plazo_max_meses' => intval($post['plazo_max_meses'] ?? 12),
+            'monto_min' => str_replace(',', '.', $post['monto_min'] ?? '0'),
+            'monto_max' => str_replace(',', '.', $post['monto_max'] ?? '0'),
+            'requiere_garante' => $esCredito ? (!empty($post['requiere_garante']) ? 1 : 0) : 0,
+            'penalidad_retiro_anticipado' => $esCredito ? 0 : str_replace(',', '.', $post['penalidad_retiro_anticipado'] ?? '0'),
+            'condiciones_html' => $post['condiciones_html'] ?? '',
+            'min_permanencia_meses' => $esCredito ? 0 : intval($post['min_permanencia_meses'] ?? 0),
+            'min_ahorro' => $esCredito ? 0 : str_replace(',', '.', $post['min_ahorro'] ?? '0'),
+            'es_emergente' => $esCredito ? (!empty($post['es_emergente']) ? 1 : 0) : 0,
+            'monto_max_emergente' => $esCredito ? str_replace(',', '.', $post['monto_max_emergente'] ?? '0') : 0,
+            'requiere_documento_firmado' => $esCredito ? (!empty($post['requiere_documento_firmado']) ? 1 : 0) : 1,
         ];
     }
 
-    private function validar($d, $id = null) {
+    private function validar($d) {
         $errors = [];
+        $esCredito = $d['tipo'] === 'credito';
+
         if (empty($d['nombre'])) $errors['nombre'] = 'El nombre es obligatorio';
         if (!isset($this->tipos[$d['tipo']])) $errors['tipo'] = 'Tipo inválido';
-        if (!is_numeric($d['tasa_interés_anual']) || $d['tasa_interés_anual'] < 0 || $d['tasa_interés_anual'] > 100)
-            $errors['tasa_interés_anual'] = 'Tasa inválida (0-100%)';
-        if (!isset($this->metodos[$d['método_interés']])) $errors['método_interés'] = 'Método inválido';
-        if ($d['plazo_mín_meses'] < 1) $errors['plazo_mín_meses'] = 'Plazo mínimo debe ser ≥ 1';
-        if ($d['plazo_máx_meses'] < $d['plazo_mín_meses']) $errors['plazo_máx_meses'] = 'Plazo máximo debe ser ≥ mínimo';
-        if (!is_numeric($d['monto_mín']) || $d['monto_mín'] < 0) $errors['monto_mín'] = 'Monto mínimo inválido';
-        if (!is_numeric($d['monto_máx']) || $d['monto_máx'] <= $d['monto_mín']) $errors['monto_máx'] = 'Monto máximo debe ser > mínimo';
+        if (!is_numeric($d['tasa_interes_anual']) || $d['tasa_interes_anual'] < 0 || $d['tasa_interes_anual'] > 100)
+            $errors['tasa_interes_anual'] = 'Tasa inválida (0-100%)';
+        if ($esCredito && !isset($this->metodos[$d['metodo_interes']]))
+            $errors['metodo_interes'] = 'Método inválido';
+        if ($d['plazo_min_meses'] < 1) $errors['plazo_min_meses'] = 'Plazo mínimo debe ser ≥ 1';
+        if ($d['plazo_max_meses'] < $d['plazo_min_meses']) $errors['plazo_max_meses'] = 'Plazo máximo debe ser ≥ mínimo';
+        if (!is_numeric($d['monto_min']) || $d['monto_min'] < 0) $errors['monto_min'] = 'Monto mínimo inválido';
+        if (!is_numeric($d['monto_max']) || $d['monto_max'] <= $d['monto_min']) $errors['monto_max'] = 'Monto máximo debe ser > mínimo';
         return $errors;
     }
 }

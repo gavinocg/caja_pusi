@@ -20,8 +20,8 @@ class InversionController extends BaseController {
     public function apertura() {
         $this->requirePermission('cobro.inversión');
         $errors = [];
-        $productos = $this->db->query("SELECT id_producto, nombre, tasa_interés_anual, plazo_mín_meses, plazo_máx_meses, monto_mín, monto_máx FROM productos_financieros WHERE tipo = 'inversión' AND activo = TRUE ORDER BY nombre")->fetchAll();
-        $socios = $this->db->query("SELECT id_socio, cédula, CONCAT_WS(' ', apellido1, apellido2, nombre1, nombre2) AS nombre FROM socios WHERE estado = 'activo' ORDER BY apellido1, nombre1")->fetchAll();
+        $productos = $this->db->query("SELECT id_producto, nombre, tasa_interes_anual, plazo_min_meses, plazo_max_meses, monto_min, monto_max FROM productos_financieros WHERE tipo = 'inversion' AND activo = TRUE ORDER BY nombre")->fetchAll();
+        $socios = $this->db->query("SELECT id_socio, cedula, CONCAT_WS(' ', apellido1, apellido2, nombre1, nombre2) AS nombre FROM socios WHERE estado = 'activo' ORDER BY apellido1, nombre1")->fetchAll();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->validateCSRF();
@@ -39,10 +39,10 @@ class InversionController extends BaseController {
             }
             if (!$prod) $errors['id_producto'] = 'Producto inválido';
             if (!is_numeric($monto) || $monto <= 0) $errors['monto'] = 'Monto inválido';
-            if ($plazo < ($prod['plazo_mín_meses'] ?? 1) || $plazo > ($prod['plazo_máx_meses'] ?? 999)) $errors['plazo'] = 'Plazo fuera de rango';
+            if ($plazo < ($prod['plazo_min_meses'] ?? 1) || $plazo > ($prod['plazo_max_meses'] ?? 999)) $errors['plazo'] = 'Plazo fuera de rango';
 
             if (empty($errors)) {
-                $tasa = $prod['tasa_interés_anual'];
+                $tasa = $prod['tasa_interes_anual'];
                 $factor = $tasa / 100 / 12;
                 $rendimiento = $monto * $factor * $plazo;
 
@@ -54,7 +54,7 @@ class InversionController extends BaseController {
                 $this->db->beginTransaction();
                 try {
                     $this->db->prepare("INSERT INTO inversiones
-                        (id_inversión, id_socio, id_producto, monto, plazo_meses, tasa_interés, fecha_inicio, fecha_vencimiento, rendimiento_proyectado)
+                        (id_inversion, id_socio, id_producto, monto, plazo_meses, tasa_interes, fecha_inicio, fecha_vencimiento, rendimiento_proyectado)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
                         ->execute([$id, $idSocio, $idProducto, $monto, $plazo, $tasa, $fechaInicio, $fechaVenc->format('Y-m-d'), round($rendimiento, 2)]);
 
@@ -63,24 +63,24 @@ class InversionController extends BaseController {
                     if ($stmt->fetchColumn() == 0) {
                         $this->db->prepare("INSERT INTO cuentas_ahorro (id_cuenta_ahorro, id_socio) VALUES (?, ?)")->execute([UUIDGenerator::generar(), $idSocio]);
                     }
-                    $this->db->prepare("UPDATE cuentas_ahorro SET saldo_disponible = saldo_disponible - ?, fecha_último_movimiento = NOW() WHERE id_socio = ?")->execute([$monto, $idSocio]);
+                    $this->db->prepare("UPDATE cuentas_ahorro SET saldo_disponible = saldo_disponible - ?, fecha_ultimo_movimiento = NOW() WHERE id_socio = ?")->execute([$monto, $idSocio]);
 
-                    $idSesion = $this->db->query("SELECT id_sesión FROM sesiones_mensuales WHERE estado = 'abierta' LIMIT 1")->fetchColumn();
+                    $idSesion = $this->db->query("SELECT id_sesion FROM sesiones_mensuales WHERE estado = 'abierta' LIMIT 1")->fetchColumn();
                     $idCobro = UUIDGenerator::generar();
-                    $hash = hash('sha256', $idSocio . $id . 'inversión' . $monto . date('Y-m-d H:i:s'));
-                    $this->db->prepare("INSERT INTO cobros (id_cobro, id_socio, id_sesión, tipo, id_referencia, monto, medio_pago, hash_integridad, usuario_registra) VALUES (?, ?, ?, 'inversión', ?, ?, 'efectivo', ?, ?)")
+                    $hash = hash('sha256', $idSocio . $id . 'inversion' . $monto . date('Y-m-d H:i:s'));
+                    $this->db->prepare("INSERT INTO cobros (id_cobro, id_socio, id_sesion, tipo, id_referencia, monto, medio_pago, hash_integridad, usuario_registra) VALUES (?, ?, ?, 'inversion', ?, ?, 'efectivo', ?, ?)")
                         ->execute([$idCobro, $idSocio, $idSesion ?: null, $id, $monto, $hash, $_SESSION['usuario_id']]);
 
-                    $this->historialInsert($idSocio, 'inversión_apertura', $monto, $id, $idSesion ?: null);
+                    $this->historialInsert($idSocio, 'inversion_apertura', $monto, $id, $idSesion ?: null);
                     $this->db->commit();
 
-                    $st = $this->db->prepare("SELECT CONCAT_WS(' ', apellido1, apellido2, nombre1, nombre2) AS nombre, cédula FROM socios WHERE id_socio = ?");
+                    $st = $this->db->prepare("SELECT CONCAT_WS(' ', apellido1, apellido2, nombre1, nombre2) AS nombre, cedula FROM socios WHERE id_socio = ?");
                     $st->execute([$idSocio]);
                     $soc = $st->fetch();
                     PDFGenerator::generarContratoInversion([
                         'inversion' => $id,
                         'socio' => $soc['nombre'] ?? '',
-                        'cedula' => $soc['cédula'] ?? '',
+                        'cedula' => $soc['cedula'] ?? '',
                         'monto' => $monto,
                         'producto' => $prod['nombre'],
                         'tasa' => $tasa,
@@ -110,7 +110,7 @@ class InversionController extends BaseController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Método no permitido'], 405);
         $this->validateCSRF();
 
-        $stmt = $this->db->query("SELECT i.id_inversión, i.id_socio, i.monto, i.rendimiento_proyectado
+        $stmt = $this->db->query("SELECT i.id_inversion, i.id_socio, i.monto, i.rendimiento_proyectado
                                    FROM inversiones i
                                    WHERE i.estado = 'activa' AND i.fecha_vencimiento <= CURDATE()");
         $vencidas = $stmt->fetchAll();
@@ -119,10 +119,10 @@ class InversionController extends BaseController {
             $devolucion = $v['monto'] + ($v['rendimiento_proyectado'] ?? 0);
             try {
                 $this->db->beginTransaction();
-                $this->db->prepare("UPDATE inversiones SET estado = 'vencida' WHERE id_inversión = ?")->execute([$v['id_inversión']]);
-                $this->db->prepare("UPDATE cuentas_ahorro SET saldo_disponible = saldo_disponible + ?, fecha_último_movimiento = NOW() WHERE id_socio = ?")
+                $this->db->prepare("UPDATE inversiones SET estado = 'vencida' WHERE id_inversion = ?")->execute([$v['id_inversion']]);
+                $this->db->prepare("UPDATE cuentas_ahorro SET saldo_disponible = saldo_disponible + ?, fecha_ultimo_movimiento = NOW() WHERE id_socio = ?")
                     ->execute([$devolucion, $v['id_socio']]);
-                $this->historialInsert($v['id_socio'], 'inversión_retiro', $devolucion, $v['id_inversión']);
+                $this->historialInsert($v['id_socio'], 'inversion_retiro', $devolucion, $v['id_inversion']);
                 $this->db->commit();
                 $count++;
             } catch (Exception $e) {
@@ -136,7 +136,7 @@ class InversionController extends BaseController {
         $this->requirePermission('cobro.inversión');
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->validateCSRF();
-            $stmt = $this->db->prepare("SELECT i.*, p.penalidad_retiro_anticipado FROM inversiones i JOIN productos_financieros p ON i.id_producto = p.id_producto WHERE i.id_inversión = ? AND i.estado = 'activa'");
+            $stmt = $this->db->prepare("SELECT i.*, p.penalidad_retiro_anticipado FROM inversiones i JOIN productos_financieros p ON i.id_producto = p.id_producto WHERE i.id_inversion = ? AND i.estado = 'activa'");
             $stmt->execute([$id]);
             $inv = $stmt->fetch();
             if (!$inv) $this->json(['error' => 'Inversión no encontrada o no activa'], 400);
@@ -146,9 +146,9 @@ class InversionController extends BaseController {
 
             $this->db->beginTransaction();
             try {
-                $this->db->prepare("UPDATE inversiones SET estado = 'retiro_anticipado' WHERE id_inversión = ?")->execute([$id]);
-                $this->db->prepare("UPDATE cuentas_ahorro SET saldo_disponible = saldo_disponible + ?, fecha_último_movimiento = NOW() WHERE id_socio = ?")->execute([$devolucion, $inv['id_socio']]);
-                $this->historialInsert($inv['id_socio'], 'inversión_retiro', $devolucion, $id);
+                $this->db->prepare("UPDATE inversiones SET estado = 'retiro_anticipado' WHERE id_inversion = ?")->execute([$id]);
+                $this->db->prepare("UPDATE cuentas_ahorro SET saldo_disponible = saldo_disponible + ?, fecha_ultimo_movimiento = NOW() WHERE id_socio = ?")->execute([$devolucion, $inv['id_socio']]);
+                $this->historialInsert($inv['id_socio'], 'inversion_retiro', $devolucion, $id);
                 $this->db->commit();
                 $this->json(['mensaje' => 'Retiro procesado', 'devolución' => round($devolucion, 2), 'penalidad' => round($penalidad, 2)]);
             } catch (Exception $e) {

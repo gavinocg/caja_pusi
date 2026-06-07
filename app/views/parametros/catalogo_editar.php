@@ -15,7 +15,7 @@
                         <option value="<?= $p['id_provincia'] ?>" <?= $p['id_provincia'] == $item['id_provincia'] ? 'selected' : '' ?>><?= htmlspecialchars($p['nombre']) ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <?php elseif ($col === 'razón_social'): ?>
+                    <?php elseif ($col === 'razon_social'): ?>
                     <input type="text" name="razon_social" class="form-control" value="<?= htmlspecialchars($item[$col] ?? '') ?>" required>
                     <?php else: ?>
                     <input type="text" name="<?= $postField ?>" class="form-control" value="<?= htmlspecialchars($item[$col] ?? '') ?>" required>

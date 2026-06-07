@@ -6,7 +6,7 @@ class NotificacionController extends BaseController {
         $cedula = $_SESSION['usuario_cedula'] ?? '';
         $idSocio = null;
         if ($cedula) {
-            $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cédula = ?");
+            $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
             $stmt->execute([$cedula]);
             $idSocio = $stmt->fetchColumn();
         }
@@ -14,7 +14,7 @@ class NotificacionController extends BaseController {
                                      FROM notificaciones n
                                      LEFT JOIN socios s ON n.id_socio = s.id_socio
                                      WHERE n.id_usuario = ? OR n.id_usuario IS NULL OR n.id_socio = ?
-                                     ORDER BY n.fecha_creación DESC LIMIT 50");
+                                     ORDER BY n.fecha_creacion DESC LIMIT 50");
         $stmt->execute([$_SESSION['usuario_id'], $idSocio]);
         $notificaciones = $stmt->fetchAll();
         $this->render('notificaciones/listar', [
@@ -25,31 +25,31 @@ class NotificacionController extends BaseController {
 
     public function leer($id) {
         $this->requireAuth();
-        $this->db->prepare("UPDATE notificaciones SET leída = TRUE, fecha_lectura = NOW() WHERE id_notificación = ?")->execute([$id]);
-        $this->json(['mensaje' => 'Marcada como leída']);
+        $this->db->prepare("UPDATE notificaciones SET leida = TRUE, fecha_lectura = NOW() WHERE id_notificacion = ?")->execute([$id]);
+        $this->json(['mensaje' => 'Marcada como leida']);
     }
 
     public function leerTodas() {
         $this->requireAuth();
-        $this->db->prepare("UPDATE notificaciones SET leída = TRUE, fecha_lectura = NOW() WHERE (id_usuario = ? OR id_usuario IS NULL) AND leída = FALSE")->execute([$_SESSION['usuario_id']]);
-        $this->json(['mensaje' => 'Todas marcadas como leídas']);
+        $this->db->prepare("UPDATE notificaciones SET leida = TRUE, fecha_lectura = NOW() WHERE (id_usuario = ? OR id_usuario IS NULL) AND leida = FALSE")->execute([$_SESSION['usuario_id']]);
+        $this->json(['mensaje' => 'Todas marcadas como leidas']);
     }
 
     public function contar() {
         $this->requireAuth();
         $count = 0;
 
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM notificaciones WHERE (id_usuario = ? OR (id_usuario IS NULL AND id_socio IS NULL)) AND leída = FALSE");
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM notificaciones WHERE (id_usuario = ? OR (id_usuario IS NULL AND id_socio IS NULL)) AND leida = FALSE");
         $stmt->execute([$_SESSION['usuario_id']]);
         $count += (int)$stmt->fetchColumn();
 
         $cedula = $_SESSION['usuario_cedula'] ?? '';
         if ($cedula) {
-            $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cédula = ?");
+            $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
             $stmt->execute([$cedula]);
             $idSocio = $stmt->fetchColumn();
             if ($idSocio) {
-                $stmt = $this->db->prepare("SELECT COUNT(*) FROM notificaciones WHERE id_socio = ? AND leída = FALSE");
+                $stmt = $this->db->prepare("SELECT COUNT(*) FROM notificaciones WHERE id_socio = ? AND leida = FALSE");
                 $stmt->execute([$idSocio]);
                 $count += (int)$stmt->fetchColumn();
             }

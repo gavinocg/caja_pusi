@@ -10,7 +10,7 @@
         <div class="card-body">
             <form method="GET" class="row g-2">
                 <div class="col-md-6">
-                    <input type="text" name="search" class="form-control" placeholder="Buscar por cédula, apellido o nombre..."
+                    <input type="text" name="search" class="form-control" placeholder="Buscar por cedula, apellido o nombre..."
                            value="<?= htmlspecialchars($search ?? '') ?>">
                 </div>
                 <div class="col-md-3">
@@ -52,7 +52,7 @@
                         <?php else: ?>
                         <?php foreach ($socios['data'] as $s): ?>
                         <tr>
-                            <td><?= htmlspecialchars($s['cédula']) ?></td>
+                            <td><?= htmlspecialchars($s['cedula']) ?></td>
                             <td><?= htmlspecialchars($s['apellido1'] . ' ' . ($s['apellido2'] ?? '')) ?></td>
                             <td><?= htmlspecialchars($s['nombre1'] . ' ' . ($s['nombre2'] ?? '')) ?></td>
                             <td><span class="badge bg-<?= $s['estado'] === 'activo' ? 'success' : ($s['estado'] === 'pendiente' ? 'warning' : ($s['estado'] === 'suspendido' ? 'danger' : 'secondary')) ?>"><?= $s['estado'] ?></span></td>

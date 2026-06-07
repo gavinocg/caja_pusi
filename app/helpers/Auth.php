@@ -2,7 +2,7 @@
 class Auth {
     public function login($cedula, $password) {
         $db = Database::getInstance();
-        $stmt = $db->prepare("SELECT * FROM usuarios WHERE cédula = ? AND activo = TRUE");
+        $stmt = $db->prepare("SELECT * FROM usuarios WHERE cedula = ? AND activo = TRUE");
         $stmt->execute([$cedula]);
         $user = $stmt->fetch();
 
@@ -17,7 +17,7 @@ class Auth {
             $stmt->execute([$user['id_usuario']]);
         }
 
-        if (!password_verify($password, $user['contraseña'])) {
+        if (!password_verify($password, $user['contrasena'])) {
             $intentos = $user['intentos_fallidos'] + 1;
             if ($intentos >= MAX_LOGIN_ATTEMPTS) {
                 $bloqueoHasta = date('Y-m-d H:i:s', time() + (BLOCK_MINUTES * 60));
@@ -30,13 +30,13 @@ class Auth {
             return false;
         }
 
-        $stmt = $db->prepare("UPDATE usuarios SET intentos_fallidos = 0, fecha_último_acceso = NOW() WHERE id_usuario = ?");
+        $stmt = $db->prepare("UPDATE usuarios SET intentos_fallidos = 0, fecha_ultimo_acceso = NOW() WHERE id_usuario = ?");
         $stmt->execute([$user['id_usuario']]);
 
         $_SESSION['usuario_id'] = $user['id_usuario'];
         $_SESSION['usuario_nombres'] = $user['nombres'];
         $_SESSION['usuario_apellidos'] = $user['apellidos'];
-        $_SESSION['usuario_cedula'] = $user['cédula'];
+        $_SESSION['usuario_cedula'] = $user['cedula'];
         $_SESSION['2fa_required'] = $user['_2fa_obligatorio'];
         $_SESSION['2fa_verified'] = false;
 

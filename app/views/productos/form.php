@@ -6,11 +6,11 @@
 
     <div class="card card-dashboard">
         <div class="card-body">
-            <form method="POST">
+            <form method="POST" id="productoForm">
                 <?= CSRFMiddleware::campoHTML() ?>
 
                 <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-md-5">
                         <label class="form-label">Nombre *</label>
                         <input type="text" name="nombre" class="form-control <?= isset($errors['nombre']) ? 'is-invalid' : '' ?>"
                                value="<?= htmlspecialchars($data['nombre'] ?? '') ?>" required>
@@ -18,63 +18,141 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Tipo *</label>
-                        <select name="tipo" class="form-select <?= isset($errors['tipo']) ? 'is-invalid' : '' ?>">
+                        <select name="tipo" id="tipoProducto" class="form-select <?= isset($errors['tipo']) ? 'is-invalid' : '' ?>"
+                                onchange="toggleTipo()">
                             <?php foreach ($tipos as $k => $v): ?>
-                            <option value="<?= $k ?>" <?= ($data['tipo'] ?? '') === $k ? 'selected' : '' ?>><?= $v ?></option>
+                            <option value="<?= $k ?>" <?= ($data['tipo'] ?? 'credito') === $k ? 'selected' : '' ?>><?= $v ?></option>
                             <?php endforeach; ?>
                         </select>
+                        <div class="invalid-feedback"><?= $errors['tipo'] ?? '' ?></div>
                     </div>
+                    <div class="col-md-4 d-flex align-items-end gap-3 pb-1">
+                        <div class="form-check">
+                            <input type="checkbox" name="activo" class="form-check-input" value="1" id="checkActivo"
+                                   <?= !isset($data['activo']) || !empty($data['activo']) ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="checkActivo">Activo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+                <h6 class="fw-semibold">Configuración financiera</h6>
+
+                <div class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label">Tasa interés anual % *</label>
-                        <input type="number" step="0.01" min="0" max="100" name="tasa_interés_anual"
-                               class="form-control <?= isset($errors['tasa_interés_anual']) ? 'is-invalid' : '' ?>"
-                               value="<?= htmlspecialchars($data['tasa_interés_anual'] ?? '6.00') ?>">
-                        <div class="invalid-feedback"><?= $errors['tasa_interés_anual'] ?? '' ?></div>
+                        <input type="number" step="0.01" min="0" max="100" name="tasa_interes_anual"
+                               class="form-control <?= isset($errors['tasa_interes_anual']) ? 'is-invalid' : '' ?>"
+                               value="<?= htmlspecialchars($data['tasa_interes_anual'] ?? '6.00') ?>">
+                        <div class="invalid-feedback"><?= $errors['tasa_interes_anual'] ?? '' ?></div>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Método de interés *</label>
-                        <select name="método_interés" class="form-select <?= isset($errors['método_interés']) ? 'is-invalid' : '' ?>">
-                            <?php foreach ($metodos as $k => $v): ?>
-                            <option value="<?= $k ?>" <?= ($data['método_interés'] ?? '') === $k ? 'selected' : '' ?>><?= $v ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">Plazo mínimo (meses) *</label>
-                        <input type="number" min="1" name="plazo_mín_meses"
-                               class="form-control <?= isset($errors['plazo_mín_meses']) ? 'is-invalid' : '' ?>"
-                               value="<?= htmlspecialchars($data['plazo_mín_meses'] ?? '1') ?>">
+                        <input type="number" min="1" name="plazo_min_meses"
+                               class="form-control <?= isset($errors['plazo_min_meses']) ? 'is-invalid' : '' ?>"
+                               value="<?= htmlspecialchars($data['plazo_min_meses'] ?? '1') ?>">
+                        <div class="invalid-feedback"><?= $errors['plazo_min_meses'] ?? '' ?></div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">Plazo máximo (meses) *</label>
-                        <input type="number" min="1" name="plazo_máx_meses"
-                               class="form-control <?= isset($errors['plazo_máx_meses']) ? 'is-invalid' : '' ?>"
-                               value="<?= htmlspecialchars($data['plazo_máx_meses'] ?? '12') ?>">
+                        <input type="number" min="1" name="plazo_max_meses"
+                               class="form-control <?= isset($errors['plazo_max_meses']) ? 'is-invalid' : '' ?>"
+                               value="<?= htmlspecialchars($data['plazo_max_meses'] ?? '12') ?>">
+                        <div class="invalid-feedback"><?= $errors['plazo_max_meses'] ?? '' ?></div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">Monto mínimo $ *</label>
-                        <input type="number" step="0.01" min="0" name="monto_mín"
-                               class="form-control <?= isset($errors['monto_mín']) ? 'is-invalid' : '' ?>"
-                               value="<?= htmlspecialchars($data['monto_mín'] ?? '0') ?>">
+                        <input type="number" step="0.01" min="0" name="monto_min"
+                               class="form-control <?= isset($errors['monto_min']) ? 'is-invalid' : '' ?>"
+                               value="<?= htmlspecialchars($data['monto_min'] ?? '0') ?>">
+                        <div class="invalid-feedback"><?= $errors['monto_min'] ?? '' ?></div>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Monto máximo $ *</label>
-                        <input type="number" step="0.01" min="0" name="monto_máx"
-                               class="form-control <?= isset($errors['monto_máx']) ? 'is-invalid' : '' ?>"
-                               value="<?= htmlspecialchars($data['monto_máx'] ?? '1000') ?>">
+                        <input type="number" step="0.01" min="0" name="monto_max"
+                               class="form-control <?= isset($errors['monto_max']) ? 'is-invalid' : '' ?>"
+                               value="<?= htmlspecialchars($data['monto_max'] ?? '1000') ?>">
+                        <div class="invalid-feedback"><?= $errors['monto_max'] ?? '' ?></div>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Penalidad retiro anticipado (%)</label>
-                        <input type="number" step="0.01" min="0" max="100" name="penalidad_retiro_anticipado"
-                               class="form-control"
-                               value="<?= htmlspecialchars($data['penalidad_retiro_anticipado'] ?? '0') ?>">
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <div class="form-check">
-                            <input type="checkbox" name="requiere_garante" class="form-check-input" value="1" id="reqGarante"
-                                   <?= !empty($data['requiere_garante']) ? 'checked' : '' ?>>
-                            <label class="form-check-label" for="reqGarante">Requiere garante</label>
+                </div>
+
+                <!-- Opciones de crédito -->
+                <div id="camposCredito" class="mt-3">
+                    <hr class="my-3">
+                    <h6 class="fw-semibold">Opciones de crédito</h6>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Método de interés *</label>
+                            <select name="metodo_interes" class="form-select <?= isset($errors['metodo_interes']) ? 'is-invalid' : '' ?>">
+                                <?php foreach ($metodos as $k => $v): ?>
+                                <option value="<?= $k ?>" <?= ($data['metodo_interes'] ?? 'simple') === $k ? 'selected' : '' ?>><?= $v ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="invalid-feedback"><?= $errors['metodo_interes'] ?? '' ?></div>
                         </div>
+                        <div class="col-md-3 d-flex align-items-end pb-1">
+                            <div class="form-check">
+                                <input type="checkbox" name="requiere_garante" class="form-check-input" value="1" id="reqGarante"
+                                       <?= !empty($data['requiere_garante']) ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="reqGarante">Requiere garante</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end pb-1">
+                            <div class="form-check">
+                                <input type="checkbox" name="requiere_documento_firmado" class="form-check-input" value="1" id="reqDocFirmado"
+                                       <?= !isset($data['requiere_documento_firmado']) || !empty($data['requiere_documento_firmado']) ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="reqDocFirmado">Requiere documento firmado</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-3 d-flex align-items-center gap-2 pb-1">
+                            <div class="form-check">
+                                <input type="checkbox" name="es_emergente" class="form-check-input" value="1" id="esEmergente"
+                                       onchange="document.getElementById('montoEmergenteGroup').style.display=this.checked?'':'none'"
+                                       <?= !empty($data['es_emergente']) ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="esEmergente">Crédito emergente</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3" id="montoEmergenteGroup" style="display:<?= !empty($data['es_emergente']) ? '' : 'none' ?>">
+                            <label class="form-label">Monto máximo emergente $</label>
+                            <input type="number" step="0.01" min="0" name="monto_max_emergente" class="form-control"
+                                   value="<?= htmlspecialchars($data['monto_max_emergente'] ?? '0') ?>">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Opciones de inversión -->
+                <div id="camposInversion" class="mt-3" style="display:none">
+                    <hr class="my-3">
+                    <h6 class="fw-semibold">Opciones de inversión</h6>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Permanencia mínima (meses)</label>
+                            <input type="number" min="0" name="min_permanencia_meses" class="form-control"
+                                   value="<?= htmlspecialchars($data['min_permanencia_meses'] ?? '0') ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Ahorro mínimo requerido $</label>
+                            <input type="number" step="0.01" min="0" name="min_ahorro" class="form-control"
+                                   value="<?= htmlspecialchars($data['min_ahorro'] ?? '0') ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Penalidad retiro anticipado %</label>
+                            <input type="number" step="0.01" min="0" max="100" name="penalidad_retiro_anticipado"
+                                   class="form-control"
+                                   value="<?= htmlspecialchars($data['penalidad_retiro_anticipado'] ?? '0') ?>">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Condiciones -->
+                <hr class="my-3">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold" id="lblCondiciones">Condiciones del producto</label>
+                        <div id="editorContainer" style="min-height:200px; border:1px solid #ccc; border-radius:4px;"></div>
+                        <textarea name="condiciones_html" id="condicionesHtml" class="d-none"><?= htmlspecialchars($data['condiciones_html'] ?? '') ?></textarea>
                     </div>
                 </div>
 
@@ -85,3 +163,38 @@
         </div>
     </div>
 </div>
+
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs5.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs5.min.js"></script>
+<script>
+function toggleTipo() {
+    var tipo = document.getElementById('tipoProducto').value;
+    var esCredito = tipo === 'credito';
+    document.getElementById('camposCredito').style.display = esCredito ? '' : 'none';
+    document.getElementById('camposInversion').style.display = esCredito ? 'none' : '';
+    document.getElementById('lblCondiciones').textContent = esCredito ? 'Condiciones del crédito' : 'Condiciones de la inversión';
+}
+
+document.querySelector('form').onsubmit = function() {
+    $('#condicionesHtml').val($('#editorContainer').summernote('code'));
+};
+
+toggleTipo();
+
+$(document).ready(function() {
+    $('#editorContainer').summernote({
+        height: 200,
+        placeholder: 'Escriba las condiciones...',
+        toolbar: [
+            ['style', ['bold', 'italic', 'underline', 'clear']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['insert', ['link']],
+            ['view', ['codeview']],
+        ]
+    });
+    var ta = document.getElementById('condicionesHtml');
+    if (ta.value) $('#editorContainer').summernote('code', ta.value);
+});
+</script>

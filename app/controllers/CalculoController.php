@@ -6,7 +6,7 @@ class CalculoController extends BaseController {
     public function simulador() {
         $this->requirePermission('cálculo.intereses');
         $resultado = null;
-        $productos = $this->db->query("SELECT id_producto, nombre, tipo, tasa_interés_anual, método_interés, plazo_mín_meses, plazo_máx_meses FROM productos_financieros WHERE activo = TRUE ORDER BY nombre")->fetchAll();
+        $productos = $this->db->query("SELECT id_producto, nombre, tipo, tasa_interes_anual, metodo_interes, plazo_min_meses, plazo_max_meses FROM productos_financieros WHERE activo = TRUE ORDER BY nombre")->fetchAll();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->validateCSRF();
@@ -33,35 +33,35 @@ class CalculoController extends BaseController {
 
     public function generarTabla($idCredito) {
         $this->requirePermission('cálculo.intereses');
-        $stmt = $this->db->prepare("SELECT c.*, p.método_interés FROM créditos c
+        $stmt = $this->db->prepare("SELECT c.*, p.metodo_interes FROM creditos c
                                      JOIN productos_financieros p ON c.id_producto = p.id_producto
-                                     WHERE c.id_crédito = ? AND c.estado = 'aprobado'");
+                                     WHERE c.id_credito = ? AND c.estado = 'aprobado'");
         $stmt->execute([$idCredito]);
         $credito = $stmt->fetch();
         if (!$credito) {
             $this->json(['error' => 'Crédito no encontrado o no está aprobado'], 400);
         }
 
-        $cuotas = CalculadoraInteres::simular($credito['monto_aprobado'], $credito['tasa_interés'], $credito['plazo_meses'], $credito['método_interés']);
+        $cuotas = CalculadoraInteres::simular($credito['monto_aprobado'], $credito['tasa_interes'], $credito['plazo_meses'], $credito['metodo_interes']);
 
         $this->db->beginTransaction();
         try {
-            $this->db->prepare("DELETE FROM amortizaciones WHERE id_crédito = ?")->execute([$idCredito]);
+            $this->db->prepare("DELETE FROM amortizaciones WHERE id_credito = ?")->execute([$idCredito]);
             $stmt = $this->db->prepare("INSERT INTO amortizaciones
-                (id_amortización, id_crédito, número_cuota, fecha_vencimiento, capital, interés, total, saldo_restante)
+                (id_amortizacion, id_credito, numero_cuota, fecha_vencimiento, capital, interes, total, saldo_restante)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
-            $fechaInicio = new DateTime($credito['fecha_aprobación'] ?? date('Y-m-d'));
+            $fechaInicio = new DateTime($credito['fecha_aprobacion'] ?? date('Y-m-d'));
             foreach ($cuotas as $i => $c) {
                 $fechaVto = clone $fechaInicio;
                 $fechaVto->modify('+' . ($i + 1) . ' months');
                 $stmt->execute([
                     UUIDGenerator::generar(),
                     $idCredito,
-                    $c['número'],
+                    $c['numero'],
                     $fechaVto->format('Y-m-d'),
                     $c['capital'],
-                    $c['interés'],
+                    $c['interes'],
                     $c['total'],
                     $c['saldo'],
                 ]);
@@ -86,7 +86,7 @@ class CalculoController extends BaseController {
             if (!is_numeric($totalExcedente) || $totalExcedente <= 0) {
                 $errors['total'] = 'Ingrese un monto válido';
             } else {
-                $socios = $this->db->query("SELECT s.id_socio, s.cédula, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS nombre,
+                $socios = $this->db->query("SELECT s.id_socio, s.cedula, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS nombre,
                                             ca.saldo_obligatorio, ca.saldo_excedente
                                             FROM socios s
                                             JOIN cuentas_ahorro ca ON s.id_socio = ca.id_socio
@@ -127,10 +127,10 @@ class CalculoController extends BaseController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Método no permitido'], 405);
         $this->validateCSRF();
 
-        $stmt = $this->db->prepare("SELECT valor FROM parámetros WHERE código = 'tasa_interés_ahorro'");
+        $stmt = $this->db->prepare("SELECT valor FROM parametros WHERE codigo = 'tasa_interes_ahorro'");
         $stmt->execute();
         $tasaAnual = (float)($stmt->fetchColumn() ?: 0);
-        if ($tasaAnual <= 0) $this->json(['error' => 'Tasa de interés de ahorro no configurada (0%)'], 400);
+        if ($tasaAnual <= 0) $this->json(['error' => 'Tasa de interes de ahorro no configurada (0%)'], 400);
 
         $tasaMensual = $tasaAnual / 100 / 12;
 
@@ -144,8 +144,8 @@ class CalculoController extends BaseController {
 
         $this->db->beginTransaction();
         try {
-            $upd = $this->db->prepare("UPDATE cuentas_ahorro SET saldo_excedente = saldo_excedente + ?, saldo_disponible = saldo_disponible + ?, fecha_último_movimiento = NOW() WHERE id_socio = ?");
-            $hist = $this->db->prepare("INSERT INTO historial_operaciones (id_operación, id_socio, tipo_operación, monto, id_usuario_registra) VALUES (?, ?, 'interés_ganado', ?, ?)");
+            $upd = $this->db->prepare("UPDATE cuentas_ahorro SET saldo_excedente = saldo_excedente + ?, saldo_disponible = saldo_disponible + ?, fecha_ultimo_movimiento = NOW() WHERE id_socio = ?");
+            $hist = $this->db->prepare("INSERT INTO historial_operaciones (id_operacion, id_socio, tipo_operacion, monto, id_usuario_registra) VALUES (?, ?, 'interes_ganado', ?, ?)");
             $total = 0;
             foreach ($socios as $s) {
                 $interes = round($s['saldo_disponible'] * $tasaMensual, 2);
@@ -185,10 +185,10 @@ class CalculoController extends BaseController {
             $ratio = $totalExcedente / $totalAportes;
             $this->db->beginTransaction();
             try {
-                $upd = $this->db->prepare("UPDATE cuentas_ahorro SET saldo_excedente = saldo_excedente + ?, saldo_disponible = saldo_disponible + ?, fecha_último_movimiento = NOW() WHERE id_socio = ?");
+                $upd = $this->db->prepare("UPDATE cuentas_ahorro SET saldo_excedente = saldo_excedente + ?, saldo_disponible = saldo_disponible + ?, fecha_ultimo_movimiento = NOW() WHERE id_socio = ?");
                 $hist = $this->db->prepare("INSERT INTO historial_operaciones
-                    (id_operación, id_socio, tipo_operación, monto, id_usuario_registra)
-                    VALUES (?, ?, 'interés_ganado', ?, ?)");
+                    (id_operacion, id_socio, tipo_operacion, monto, id_usuario_registra)
+                    VALUES (?, ?, 'interes_ganado', ?, ?)");
                 foreach ($socios as $s) {
                     $monto = round($s['saldo_obligatorio'] * $ratio, 2);
                     $upd->execute([$monto, $monto, $s['id_socio']]);

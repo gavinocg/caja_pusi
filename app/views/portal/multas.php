@@ -14,14 +14,14 @@
                 <tbody>
                 <?php foreach ($multas as $m): ?>
                 <tr>
-                    <td data-label="Fecha"><?= $m['fecha_generación'] ?></td>
+                    <td data-label="Fecha"><?= $m['fecha_generacion'] ?></td>
                     <td data-label="Tipo"><span class="badge bg-<?= $m['tipo'] === 'inasistencia' ? 'danger' : 'info' ?>"><?= str_replace('_', ' ', $m['tipo']) ?></span></td>
                     <td data-label="Monto"><strong>$<?= number_format($m['monto'], 2) ?></strong></td>
                     <td data-label="Justif.">
-                        <?php if ($m['justificación']): ?>
+                        <?php if ($m['justificacion']): ?>
                         <span class="badge bg-success">Enviada</span>
-                        <?php if ($m['justificación_aprobada'] === '1'): ?><span class="badge bg-primary">Aprobada</span>
-                        <?php elseif ($m['justificación_aprobada'] === '0'): ?><span class="badge bg-danger">Rechazada</span>
+                        <?php if ($m['justificacion_aprobada'] === '1'): ?><span class="badge bg-primary">Aprobada</span>
+                        <?php elseif ($m['justificacion_aprobada'] === '0'): ?><span class="badge bg-danger">Rechazada</span>
                         <?php endif; ?>
                         <?php else: ?>
                         <span class="badge bg-secondary">Pendiente</span>
@@ -29,7 +29,7 @@
                     </td>
                     <td data-label="Estado"><?= $m['pagada'] ? '<span class="badge bg-success">Pagada</span>' : '<span class="badge bg-danger">Pendiente</span>' ?></td>
                     <td data-label="Acción">
-                        <?php if (!$m['justificación']): ?>
+                        <?php if (!$m['justificacion']): ?>
                         <button class="btn btn-sm btn-outline-warning" onclick="mostrarFormJustificacion('<?= $m['id_multa'] ?>')"><i class="bi bi-pencil"></i></button>
                         <?php endif; ?>
                     </td>
@@ -59,7 +59,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Enviar justificación</button>
+                    <button type="submit" class="btn btn-primary">Enviar justificacion</button>
                 </div>
             </form>
         </div>
@@ -82,6 +82,6 @@ document.getElementById('formJustificacion').addEventListener('submit', function
     .then(function(d) {
         if (d.error) { alert(d.error); } else { alert(d.mensaje); location.reload(); }
     })
-    .catch(function() { alert('Error al enviar justificación'); });
+    .catch(function() { alert('Error al enviar justificacion'); });
 });
 </script>

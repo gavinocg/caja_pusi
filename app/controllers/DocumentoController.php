@@ -7,10 +7,10 @@ class DocumentoController extends BaseController {
         $this->requireAuth();
         if (!$idCobro) { $this->redirect('/cobro'); return; }
         $stmt = $this->db->prepare("SELECT c.*, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio_nombre,
-                                     s.cédula, ses.número_sesión
+                                     s.cedula, ses.numero_sesion
                                      FROM cobros c
                                      JOIN socios s ON c.id_socio = s.id_socio
-                                     LEFT JOIN sesiones_mensuales ses ON c.id_sesión = ses.id_sesión
+                                     LEFT JOIN sesiones_mensuales ses ON c.id_sesion = ses.id_sesion
                                      WHERE c.id_cobro = ?");
         $stmt->execute([$idCobro]);
         $c = $stmt->fetch();
@@ -19,9 +19,9 @@ class DocumentoController extends BaseController {
         $data = [
             'fecha' => $c['fecha_registro'],
             'socio' => $c['socio_nombre'],
-            'cedula' => $c['cédula'],
+            'cedula' => $c['cedula'],
             'concepto' => ucfirst(str_replace('_', ' ', $c['tipo'])),
-            'sesion' => $c['número_sesión'] ? 'Sesión #' . $c['número_sesión'] : '-',
+            'sesion' => $c['numero_sesion'] ? 'Sesión #' . $c['numero_sesion'] : '-',
             'monto' => $c['monto'],
             'medio_pago' => $c['medio_pago'],
             'tipo' => $c['tipo'],
@@ -42,7 +42,7 @@ class DocumentoController extends BaseController {
         $data = [
             'fecha' => date('Y-m-d'),
             'socio' => $s['apellido1'] . ' ' . ($s['apellido2'] ?? '') . ' ' . $s['nombre1'] . ' ' . ($s['nombre2'] ?? ''),
-            'cedula' => $s['cédula'],
+            'cedula' => $s['cedula'],
             'estado' => $s['estado'],
             'fecha_ingreso' => $s['fecha_ingreso'],
         ];
@@ -58,7 +58,7 @@ class DocumentoController extends BaseController {
         $s = $stmt->fetch();
         if (!$s) { http_response_code(404); exit; }
 
-        $vencidas = $this->db->prepare("SELECT COUNT(*) FROM amortizaciones a JOIN créditos c ON a.id_crédito = c.id_crédito WHERE c.id_socio = ? AND a.estado IN ('pendiente','vencida')");
+        $vencidas = $this->db->prepare("SELECT COUNT(*) FROM amortizaciones a JOIN creditos c ON a.id_credito = c.id_credito WHERE c.id_socio = ? AND a.estado IN ('pendiente','vencida')");
         $vencidas->execute([$idSocio]);
         $tieneDeuda = $vencidas->fetchColumn() > 0;
 
@@ -69,7 +69,7 @@ class DocumentoController extends BaseController {
         $data = [
             'fecha' => date('Y-m-d'),
             'socio' => $s['apellido1'] . ' ' . ($s['apellido2'] ?? '') . ' ' . $s['nombre1'] . ' ' . ($s['nombre2'] ?? ''),
-            'cedula' => $s['cédula'],
+            'cedula' => $s['cedula'],
             'libre_deuda' => !$tieneDeuda && !$tieneMultas,
         ];
         $filename = PDFGenerator::generarLibreDeuda($data, 'libre_deuda_' . substr($idSocio, 0, 8));
@@ -88,8 +88,8 @@ class DocumentoController extends BaseController {
         $stmt->execute([$idSocio]);
         $saldo = $stmt->fetchColumn() ?: 0;
 
-        $stmt = $this->db->prepare("SELECT fecha_registro AS fecha, tipo_operación AS concepto, monto,
-                                     CASE WHEN tipo_operación IN ('aporte_obligatorio','aporte_excedente','interés_ganado') THEN 'credito' ELSE 'debito' END AS tipo
+        $stmt = $this->db->prepare("SELECT fecha_registro AS fecha, tipo_operacion AS concepto, monto,
+                                     CASE WHEN tipo_operacion IN ('aporte_obligatorio','aporte_excedente','interes_ganado') THEN 'credito' ELSE 'debito' END AS tipo
                                      FROM historial_operaciones WHERE id_socio = ? ORDER BY fecha_registro ASC");
         $stmt->execute([$idSocio]);
         $movs = $stmt->fetchAll();
@@ -103,7 +103,7 @@ class DocumentoController extends BaseController {
             'fecha' => date('Y-m-d'),
             'periodo' => 'Desde el inicio hasta ' . date('Y-m-d'),
             'socio' => $s['apellido1'] . ' ' . ($s['apellido2'] ?? '') . ' ' . $s['nombre1'] . ' ' . ($s['nombre2'] ?? ''),
-            'cedula' => $s['cédula'],
+            'cedula' => $s['cedula'],
             'saldo_actual' => $saldo,
             'movimientos' => $movs,
         ];
@@ -114,16 +114,16 @@ class DocumentoController extends BaseController {
 
     public function actaCierre($idSesion) {
         $this->requireAuth();
-        $stmt = $this->db->prepare("SELECT * FROM sesiones_mensuales WHERE id_sesión = ?");
+        $stmt = $this->db->prepare("SELECT * FROM sesiones_mensuales WHERE id_sesion = ?");
         $stmt->execute([$idSesion]);
         $sesion = $stmt->fetch();
         if (!$sesion || $sesion['estado'] !== 'cerrada') { http_response_code(404); exit; }
 
-        $stmt = $this->db->prepare("SELECT tipo, COUNT(*) AS total, SUM(monto) AS suma FROM cobros WHERE id_sesión = ? AND anulado = FALSE GROUP BY tipo");
+        $stmt = $this->db->prepare("SELECT tipo, COUNT(*) AS total, SUM(monto) AS suma FROM cobros WHERE id_sesion = ? AND anulado = FALSE GROUP BY tipo");
         $stmt->execute([$idSesion]);
         $resumen = $stmt->fetchAll();
 
-        $filename = PDFGenerator::generarActaCierre($sesion, $resumen, 'acta_sesion_' . $sesion['número_sesión']);
+        $filename = PDFGenerator::generarActaCierre($sesion, $resumen, 'acta_sesion_' . $sesion['numero_sesion']);
         header('Location: ' . BASE_URL . '/storage/documentos/' . $filename);
         exit;
     }

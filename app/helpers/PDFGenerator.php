@@ -20,7 +20,7 @@ class PDFGenerator {
     private static function layout($body) {
         $logo = BASE_URL . '/public/assets/images/favicon.svg';
         try {
-            $stmt = Database::getInstance()->prepare("SELECT valor FROM parámetros WHERE código = 'logo_sidebar'");
+            $stmt = Database::getInstance()->prepare("SELECT valor FROM parametros WHERE codigo = 'logo_sidebar'");
             $stmt->execute();
             $logoId = $stmt->fetchColumn();
             if ($logoId) $logo = BASE_URL . '/archivo/ver/' . $logoId;
@@ -67,7 +67,7 @@ class PDFGenerator {
         $h = '<h3>Constancia de socio activo</h3>';
         $h .= '<p style="font-size:11pt;text-align:justify">';
         $h .= 'Por medio de la presente, ' . APP_NAME . ' certifica que el/la señor(a) <strong>' . htmlspecialchars($data['socio']) . '</strong>';
-        $h .= ', portador(a) de la cédula de identidad N° <strong>' . htmlspecialchars($data['cedula'] ?? '') . '</strong>,';
+        $h .= ', portador(a) de la cedula de identidad N° <strong>' . htmlspecialchars($data['cedula'] ?? '') . '</strong>,';
         $h .= ' se encuentra registrado(a) como socio(a) activo(a) desde el <strong>' . $data['fecha_ingreso'] . '</strong>.';
         $h .= '</p><p style="font-size:10pt;color:#666">Estado actual: <strong>' . ucfirst($data['estado']) . '</strong></p>';
         $h .= '<div class="firma"><table><tr>';
@@ -85,7 +85,7 @@ class PDFGenerator {
         $h = '<h3>Certificado de libre deuda</h3>';
         $h .= '<p style="font-size:11pt;text-align:justify">';
         $h .= 'Por medio de la presente, ' . APP_NAME . ' certifica que el/la señor(a) <strong>' . htmlspecialchars($data['socio']) . '</strong>';
-        $h .= ', portador(a) de la cédula de identidad N° <strong>' . htmlspecialchars($data['cedula'] ?? '') . '</strong>,';
+        $h .= ', portador(a) de la cedula de identidad N° <strong>' . htmlspecialchars($data['cedula'] ?? '') . '</strong>,';
         $h .= ' se encuentra al día en sus obligaciones con la institución.</p>';
         $h .= '<p style="font-size:12pt;text-align:center;padding:15px;background:#e8f5e9;border-radius:5px">';
         $h .= $data['libre_deuda'] ? '✅ CERTIFICADO SIN DEUDA' : '❌ REGISTRA OBLIGACIONES PENDIENTES';
@@ -105,13 +105,13 @@ class PDFGenerator {
         $h = '<h3>Contrato de inversión</h3>';
         $h .= '<p style="font-size:11pt;text-align:justify">';
         $h .= 'Entre ' . APP_NAME . ', representada por su Presidente y el/la señor(a) <strong>' . htmlspecialchars($data['socio']) . '</strong>';
-        $h .= ', portador(a) de la cédula N° <strong>' . htmlspecialchars($data['cedula']) . '</strong>,';
+        $h .= ', portador(a) de la cedula N° <strong>' . htmlspecialchars($data['cedula']) . '</strong>,';
         $h .= ' se acuerda la apertura de una inversión por <strong>$ ' . number_format($data['monto'], 2) . '</strong>';
         $h .= ' en el producto <strong>' . htmlspecialchars($data['producto']) . '</strong>.';
         $h .= '</p>';
         $h .= '<table>';
         $h .= '<tr><td width="180"><strong>Monto:</strong></td><td>$ ' . number_format($data['monto'], 2) . '</td></tr>';
-        $h .= '<tr><td><strong>Tasa interés anual:</strong></td><td>' . $data['tasa'] . '%</td></tr>';
+        $h .= '<tr><td><strong>Tasa interes anual:</strong></td><td>' . $data['tasa'] . '%</td></tr>';
         $h .= '<tr><td><strong>Plazo:</strong></td><td>' . $data['plazo'] . ' meses</td></tr>';
         $h .= '<tr><td><strong>Rendimiento proyectado:</strong></td><td>$ ' . number_format($data['rendimiento'], 2) . '</td></tr>';
         $h .= '<tr><td><strong>Fecha de inicio:</strong></td><td>' . $data['fecha_inicio'] . '</td></tr>';
@@ -176,11 +176,11 @@ class PDFGenerator {
     }
 
     private static function plantillaActa($sesion, $resumen) {
-        $h = '<h3>Acta de cierre — Sesión #' . $sesion['número_sesión'] . '</h3>';
+        $h = '<h3>Acta de cierre — Sesión #' . $sesion['numero_sesion'] . '</h3>';
         $h .= '<table>';
         $h .= '<tr><td width="150"><strong>Fecha de cierre:</strong></td><td>' . $sesion['fecha_cierre'] . '</td></tr>';
         $h .= '<tr><td><strong>Fecha de sesión:</strong></td><td>' . $sesion['fecha'] . '</td></tr>';
-        $h .= '<tr><td><strong>Título:</strong></td><td>' . htmlspecialchars($sesion['título'] ?? 'Sesión #' . $sesion['número_sesión']) . '</td></tr>';
+        $h .= '<tr><td><strong>Título:</strong></td><td>' . htmlspecialchars($sesion['titulo'] ?? 'Sesión #' . $sesion['numero_sesion']) . '</td></tr>';
         $h .= '<tr><td><strong>Total recaudado:</strong></td><td>$ ' . number_format($sesion['total_recaudado'], 2) . '</td></tr>';
         $h .= '<tr><td><strong>Total desembolsado:</strong></td><td>$ ' . number_format($sesion['total_desembolsado'], 2) . '</td></tr>';
         $h .= '<tr><td><strong>Saldo de caja:</strong></td><td>$ ' . number_format($sesion['saldo_caja'], 2) . '</td></tr>';

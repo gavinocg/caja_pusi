@@ -18,11 +18,11 @@
                 <?php $diasVencido = (new DateTime())->diff(new DateTime($a['fecha_vencimiento']))->days ?>
                 <tr class="<?= $diasVencido > 90 ? 'table-danger' : ($diasVencido > 30 ? 'table-warning' : '') ?>">
                     <td><?= htmlspecialchars($a['socio']) ?></td>
-                    <td><?= $a['cédula'] ?></td>
-                    <td><?= $a['número_cuota'] ?></td>
+                    <td><?= $a['cedula'] ?></td>
+                    <td><?= $a['numero_cuota'] ?></td>
                     <td><?= $a['fecha_vencimiento'] ?></td>
                     <td class="text-end">$<?= number_format($a['capital'], 2) ?></td>
-                    <td class="text-end">$<?= number_format($a['interés'], 2) ?></td>
+                    <td class="text-end">$<?= number_format($a['interes'], 2) ?></td>
                     <td class="text-end"><strong>$<?= number_format($a['total'], 2) ?></strong></td>
                     <td><span class="badge bg-<?= $diasVencido > 90 ? 'danger' : ($diasVencido > 30 ? 'warning' : 'secondary') ?>"><?= $diasVencido ?> días</span></td>
                 </tr>

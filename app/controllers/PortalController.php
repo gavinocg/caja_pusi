@@ -5,7 +5,7 @@ class PortalController extends BaseController {
         $this->requireAuth();
         $cedula = $_SESSION['usuario_cedula'] ?? '';
 
-        $stmt = $this->db->prepare("SELECT * FROM socios WHERE cédula = ?");
+        $stmt = $this->db->prepare("SELECT * FROM socios WHERE cedula = ?");
         $stmt->execute([$cedula]);
         $socio = $stmt->fetch();
 
@@ -27,7 +27,7 @@ class PortalController extends BaseController {
         $stmt->execute([$idSocio]);
         $cuenta = $stmt->fetch();
 
-        $stmt = $this->db->prepare("SELECT c.*, p.nombre AS producto FROM créditos c JOIN productos_financieros p ON c.id_producto = p.id_producto WHERE c.id_socio = ? ORDER BY c.fecha_solicitud DESC");
+        $stmt = $this->db->prepare("SELECT c.*, p.nombre AS producto FROM creditos c JOIN productos_financieros p ON c.id_producto = p.id_producto WHERE c.id_socio = ? ORDER BY c.fecha_solicitud DESC");
         $stmt->execute([$idSocio]);
         $creditos = $stmt->fetchAll();
 
@@ -35,7 +35,7 @@ class PortalController extends BaseController {
         $stmt->execute([$idSocio]);
         $inversiones = $stmt->fetchAll();
 
-        $stmt = $this->db->prepare("SELECT c.*, ses.número_sesión FROM cobros c LEFT JOIN sesiones_mensuales ses ON c.id_sesión = ses.id_sesión WHERE c.id_socio = ? AND c.anulado = FALSE ORDER BY c.fecha_registro DESC LIMIT 10");
+        $stmt = $this->db->prepare("SELECT c.*, ses.numero_sesion FROM cobros c LEFT JOIN sesiones_mensuales ses ON c.id_sesion = ses.id_sesion WHERE c.id_socio = ? AND c.anulado = FALSE ORDER BY c.fecha_registro DESC LIMIT 10");
         $stmt->execute([$idSocio]);
         $cobros = $stmt->fetchAll();
 
@@ -47,7 +47,7 @@ class PortalController extends BaseController {
         $stmt->execute([$idSocio]);
         $multasRes = $stmt->fetch();
 
-        $stmt = $this->db->prepare("SELECT IFNULL(SUM(a.total), 0) AS cuotas_credito FROM amortizaciones a JOIN créditos cr ON a.id_crédito = cr.id_crédito WHERE cr.id_socio = ? AND a.estado != 'pagada'");
+        $stmt = $this->db->prepare("SELECT IFNULL(SUM(a.total), 0) AS cuotas_credito FROM amortizaciones a JOIN creditos cr ON a.id_credito = cr.id_credito WHERE cr.id_socio = ? AND a.estado != 'pagada'");
         $stmt->execute([$idSocio]);
         $creditosRes = $stmt->fetch();
 
@@ -72,7 +72,7 @@ class PortalController extends BaseController {
     public function historial() {
         $this->requireAuth();
         $cedula = $_SESSION['usuario_cedula'] ?? '';
-        $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cédula = ?");
+        $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
         $stmt->execute([$cedula]);
         $socio = $stmt->fetch();
         if (!$socio) { $this->redirect('/portal'); return; }
@@ -90,7 +90,7 @@ class PortalController extends BaseController {
     public function solicitarRetiro() {
         $this->requireAuth();
         $cedula = $_SESSION['usuario_cedula'] ?? '';
-        $stmt = $this->db->prepare("SELECT s.id_socio, c.saldo_disponible FROM socios s LEFT JOIN cuentas_ahorro c ON s.id_socio = c.id_socio WHERE s.cédula = ?");
+        $stmt = $this->db->prepare("SELECT s.id_socio, c.saldo_disponible FROM socios s LEFT JOIN cuentas_ahorro c ON s.id_socio = c.id_socio WHERE s.cedula = ?");
         $stmt->execute([$cedula]);
         $socio = $stmt->fetch();
         if (!$socio) $this->redirect('/portal');
@@ -133,12 +133,12 @@ class PortalController extends BaseController {
     public function multas() {
         $this->requireAuth();
         $cedula = $_SESSION['usuario_cedula'] ?? '';
-        $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cédula = ?");
+        $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
         $stmt->execute([$cedula]);
         $socio = $stmt->fetch();
         if (!$socio) { $this->redirect('/portal'); return; }
 
-        $stmt = $this->db->prepare("SELECT * FROM multas WHERE id_socio = ? ORDER BY fecha_generación DESC");
+        $stmt = $this->db->prepare("SELECT * FROM multas WHERE id_socio = ? ORDER BY fecha_generacion DESC");
         $stmt->execute([$socio['id_socio']]);
         $multas = $stmt->fetchAll();
 
@@ -151,14 +151,14 @@ class PortalController extends BaseController {
     public function asistencias() {
         $this->requireAuth();
         $cedula = $_SESSION['usuario_cedula'] ?? '';
-        $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cédula = ?");
+        $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
         $stmt->execute([$cedula]);
         $socio = $stmt->fetch();
         if (!$socio) { $this->redirect('/portal'); return; }
 
-        $stmt = $this->db->prepare("SELECT a.*, ses.número_sesión, ses.fecha AS fecha_sesión
+        $stmt = $this->db->prepare("SELECT a.*, ses.numero_sesion, ses.fecha AS fecha_sesión
                                     FROM asistencias a
-                                    JOIN sesiones_mensuales ses ON a.id_sesión = ses.id_sesión
+                                    JOIN sesiones_mensuales ses ON a.id_sesion = ses.id_sesion
                                     WHERE a.id_socio = ?
                                     ORDER BY a.fecha_registro DESC");
         $stmt->execute([$socio['id_socio']]);
@@ -173,18 +173,18 @@ class PortalController extends BaseController {
     public function notificaciones() {
         $this->requireAuth();
         $cedula = $_SESSION['usuario_cedula'] ?? '';
-        $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cédula = ?");
+        $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
         $stmt->execute([$cedula]);
         $socio = $stmt->fetch();
 
         $notificaciones = [];
         if ($socio) {
-            $stmt = $this->db->prepare("SELECT * FROM notificaciones WHERE id_socio = ? ORDER BY fecha_creación DESC LIMIT 50");
+            $stmt = $this->db->prepare("SELECT * FROM notificaciones WHERE id_socio = ? ORDER BY fecha_creacion DESC LIMIT 50");
             $stmt->execute([$socio['id_socio']]);
             $notificaciones = $stmt->fetchAll();
         }
 
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM notificaciones WHERE id_usuario = ? AND leída = FALSE");
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM notificaciones WHERE id_usuario = ? AND leida = FALSE");
         $stmt->execute([$_SESSION['usuario_id']]);
         $noLeidas = $stmt->fetchColumn();
 
@@ -198,7 +198,7 @@ class PortalController extends BaseController {
     public function pagar() {
         $this->requireAuth();
         $cedula = $_SESSION['usuario_cedula'] ?? '';
-        $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cédula = ?");
+        $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
         $stmt->execute([$cedula]);
         $socio = $stmt->fetch();
         $pendientes = [];
@@ -216,7 +216,7 @@ class PortalController extends BaseController {
 
             $stmt = $this->db->prepare("SELECT IFNULL(SUM(a.total), 0) AS cuotas_pendientes
                                         FROM amortizaciones a
-                                        JOIN créditos cr ON a.id_crédito = cr.id_crédito
+                                        JOIN creditos cr ON a.id_credito = cr.id_credito
                                         WHERE cr.id_socio = ? AND a.estado != 'pagada'");
             $stmt->execute([$idSocio]);
             $creditos = $stmt->fetch();
@@ -236,13 +236,96 @@ class PortalController extends BaseController {
     }
 
     public function solicitarCredito() {
-        $this->redirect('/portal');
+        $this->requireAuth();
+        $cedula = $_SESSION['usuario_cedula'] ?? '';
+        $stmt = $this->db->prepare("SELECT s.*, c.saldo_obligatorio, c.saldo_excedente FROM socios s LEFT JOIN cuentas_ahorro c ON s.id_socio = c.id_socio WHERE s.cedula = ?");
+        $stmt->execute([$cedula]);
+        $socio = $stmt->fetch();
+        if (!$socio) $this->redirect('/portal');
+
+        $productos = $this->db->query("SELECT * FROM productos_financieros WHERE tipo = 'credito' AND activo = TRUE ORDER BY nombre")->fetchAll();
+
+        $errors = [];
+        $exito = '';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->validateCSRF();
+            $idProducto = $_POST['id_producto'] ?? '';
+            $monto = str_replace(',', '.', $_POST['monto'] ?? '0');
+            $plazo = intval($_POST['plazo'] ?? 1);
+            $acepta = !empty($_POST['acepta_condiciones']);
+
+            $prod = null;
+            foreach ($productos as $p) {
+                if ($p['id_producto'] === $idProducto) { $prod = $p; break; }
+            }
+
+            if (!$prod) $errors['id_producto'] = 'Seleccione un producto';
+            if (!is_numeric($monto) || $monto <= 0) $errors['monto'] = 'Monto inválido';
+            if ($plazo < ($prod['plazo_min_meses'] ?? 1) || $plazo > ($prod['plazo_max_meses'] ?? 999)) $errors['plazo'] = 'Plazo fuera de rango';
+            if ($monto < ($prod['monto_min'] ?? 0) || $monto > ($prod['monto_max'] ?? 999999)) $errors['monto'] = 'Monto fuera del rango del producto';
+            if (!$acepta) $errors['acepta'] = 'Debe aceptar las condiciones';
+
+            $fechaIngreso = new DateTime($socio['fecha_ingreso']);
+            $hoy = new DateTime();
+            $mesesActivo = $fechaIngreso->diff($hoy)->m + ($fechaIngreso->diff($hoy)->y * 12);
+            $permanenciaReq = intval($prod['min_permanencia_meses'] ?? 0);
+            if ($permanenciaReq > 0 && $mesesActivo < $permanenciaReq) {
+                $errors['elegibilidad'] = "Requiere mínimo $permanenciaReq meses de permanencia activa (lleva $mesesActivo)";
+            }
+            $ahorroReq = floatval($prod['min_ahorro'] ?? 0);
+            $ahorroTotal = floatval($socio['saldo_obligatorio'] ?? 0) + floatval($socio['saldo_excedente'] ?? 0);
+            if ($ahorroReq > 0 && $ahorroTotal < $ahorroReq) {
+                $errors['elegibilidad'] = ($errors['elegibilidad'] ?? '') . " Requiere mínimo $" . number_format($ahorroReq, 2) . " de ahorro (tiene $" . number_format($ahorroTotal, 2) . ")";
+            }
+
+            if (empty($errors)) {
+                $id = UUIDGenerator::generar();
+                $stmt = $this->db->prepare("INSERT INTO `creditos`
+                    (id_credito, id_socio, id_producto, monto_solicitado, plazo_meses, tasa_interes, metodo_interes, destino, estado)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ingresado')");
+                $stmt->execute([
+                    $id, $socio['id_socio'], $idProducto, $monto, $plazo,
+                    $prod['tasa_interes_anual'], $prod['metodo_interes'], $_POST['destino'] ?? ''
+                ]);
+
+                if (!empty($prod['requiere_garante']) && !empty($_POST['garantes'])) {
+                    $insG = $this->db->prepare("INSERT INTO garantes (id_garante, id_credito, id_socio, monto_garantizado) VALUES (?, ?, ?, ?)");
+                    $montoG = round($monto / count($_POST['garantes']), 2);
+                    foreach ($_POST['garantes'] as $g) {
+                        $insG->execute([UUIDGenerator::generar(), $id, $g, $montoG]);
+                    }
+                }
+
+                NotificacionHelper::crear([
+                    'tipo' => 'credito',
+                    'titulo' => 'Nueva solicitud de credito',
+                    'mensaje' => "El socio " . ($socio['nombre1'] ?? '') . " ha solicitado un credito de $$monto",
+                    'enviar_pusher' => true,
+                ]);
+
+                $exito = 'Solicitud ingresada exitosamente. Recibirá notificación cuando sea procesada.';
+            }
+        }
+
+        $stmt = $this->db->prepare("SELECT id_socio, cedula, CONCAT_WS(' ', apellido1, apellido2, nombre1, nombre2) AS nombre FROM socios WHERE estado = 'activo' AND id_socio != ? ORDER BY apellido1, nombre1");
+        $stmt->execute([$socio['id_socio']]);
+        $sociosActivos = $stmt->fetchAll();
+
+        $this->render('portal/solicitarCredito', [
+            'titulo' => 'Solicitar crédito',
+            'productos' => $productos,
+            'socio' => $socio,
+            'sociosActivos' => $sociosActivos,
+            'errors' => $errors,
+            'exito' => $exito,
+        ]);
     }
 
     public function solicitarCertificado() {
         $this->requireAuth();
         $cedula = $_SESSION['usuario_cedula'] ?? '';
-        $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cédula = ?");
+        $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
         $stmt->execute([$cedula]);
         $socio = $stmt->fetch();
         if (!$socio) $this->redirect('/portal');
@@ -264,6 +347,31 @@ class PortalController extends BaseController {
         $this->redirect('/portal');
     }
 
+    public function simularCredito() {
+        $this->requireAuth();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['error' => 'Método no permitido'], 405);
+        }
+        $this->validateCSRF();
+
+        $monto = str_replace(',', '.', $_POST['monto'] ?? '0');
+        $tasa = str_replace(',', '.', $_POST['tasa'] ?? '0');
+        $plazo = intval($_POST['plazo'] ?? 1);
+        $metodo = $_POST['metodo'] ?? 'simple';
+
+        if (!is_numeric($monto) || $monto <= 0 || !is_numeric($tasa) || $plazo <= 0) {
+            $this->json(['error' => 'Parámetros inválidos'], 400);
+        }
+
+        require_once ROOT_PATH . '/app/helpers/CalculadoraInteres.php';
+        try {
+            $cuotas = CalculadoraInteres::simular($monto, $tasa, $plazo, $metodo);
+            $this->json($cuotas);
+        } catch (Exception $e) {
+            $this->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     public function password() {
         $this->requireAuth();
         $errors = [];
@@ -275,7 +383,7 @@ class PortalController extends BaseController {
             $nueva = $_POST['nueva'] ?? '';
             $confirmar = $_POST['confirmar'] ?? '';
 
-            $stmt = $this->db->prepare("SELECT contraseña FROM usuarios WHERE id_usuario = ?");
+            $stmt = $this->db->prepare("SELECT contrasena FROM usuarios WHERE id_usuario = ?");
             $stmt->execute([$_SESSION['usuario_id']]);
             $hash = $stmt->fetchColumn();
 
@@ -284,14 +392,14 @@ class PortalController extends BaseController {
             if ($nueva !== $confirmar) $errors['confirmar'] = 'No coinciden';
 
             if (empty($errors)) {
-                $this->db->prepare("UPDATE usuarios SET contraseña = ? WHERE id_usuario = ?")
+                $this->db->prepare("UPDATE usuarios SET contrasena = ? WHERE id_usuario = ?")
                     ->execute([password_hash($nueva, PASSWORD_BCRYPT), $_SESSION['usuario_id']]);
                 $exito = 'Contraseña actualizada';
             }
         }
 
         $this->render('portal/password', [
-            'titulo' => 'Cambiar contraseña',
+            'titulo' => 'Cambiar contrasena',
             'errors' => $errors,
             'exito' => $exito,
         ]);

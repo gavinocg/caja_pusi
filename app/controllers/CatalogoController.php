@@ -15,7 +15,7 @@ class CatalogoController extends BaseController {
 
     public function cantones() {
         $this->requirePermission('param.catálogos');
-        $stmt = $this->db->query("SELECT c.id_cantón, c.nombre, p.nombre AS provincia
+        $stmt = $this->db->query("SELECT c.id_canton, c.nombre, p.nombre AS provincia
                                    FROM cantones c JOIN provincias p ON c.id_provincia = p.id_provincia
                                    ORDER BY p.nombre, c.nombre");
         $items = $stmt->fetchAll();
@@ -31,7 +31,7 @@ class CatalogoController extends BaseController {
 
     public function entidades() {
         $this->requirePermission('param.catálogos');
-        $stmt = $this->db->query("SELECT * FROM catastro_entidades_públicas ORDER BY razón_social");
+        $stmt = $this->db->query("SELECT * FROM catastro_entidades_publicas ORDER BY razon_social");
         $items = $stmt->fetchAll();
         $this->render('parametros/catalogos', [
             'titulo' => 'Entidades públicas',
@@ -39,7 +39,7 @@ class CatalogoController extends BaseController {
             'tipo' => 'entidades',
             'campos' => [
                 ['ruc', 'RUC', 'text'],
-                ['razón_social', 'Razón social', 'text'],
+                ['razon_social', 'Razón social', 'text'],
             ],
         ]);
     }
@@ -58,7 +58,7 @@ class CatalogoController extends BaseController {
                 $ruc = trim($_POST['ruc'] ?? '');
                 $razon = trim($_POST['razon_social'] ?? '');
                 if (!empty($ruc) && !empty($razon)) {
-                    $this->db->prepare("INSERT INTO catastro_entidades_públicas (ruc, razón_social) VALUES (?, ?)")->execute([$ruc, $razon]);
+                    $this->db->prepare("INSERT INTO catastro_entidades_publicas (ruc, razon_social) VALUES (?, ?)")->execute([$ruc, $razon]);
                 }
                 $this->redirect('/catalogo/entidades');
             }
@@ -81,9 +81,9 @@ class CatalogoController extends BaseController {
 
     public function editar($tipo, $id) {
         $this->requirePermission('param.catálogos');
-        $tables = ['provincias' => 'provincias', 'cantones' => 'cantones', 'entidades' => 'catastro_entidades_públicas'];
-        $pk = ['provincias' => 'id_provincia', 'cantones' => 'id_cantón', 'entidades' => 'id_entidad'];
-        $cols = ['provincias' => ['nombre' => 'nombre'], 'cantones' => ['nombre' => 'nombre', 'id_provincia' => 'id_provincia'], 'entidades' => ['ruc' => 'ruc', 'razón_social' => 'razon_social']];
+        $tables = ['provincias' => 'provincias', 'cantones' => 'cantones', 'entidades' => 'catastro_entidades_publicas'];
+        $pk = ['provincias' => 'id_provincia', 'cantones' => 'id_canton', 'entidades' => 'id_entidad'];
+        $cols = ['provincias' => ['nombre' => 'nombre'], 'cantones' => ['nombre' => 'nombre', 'id_provincia' => 'id_provincia'], 'entidades' => ['ruc' => 'ruc', 'razon_social' => 'razon_social']];
 
         if (!isset($tables[$tipo])) $this->redirect('/catalogo/' . $tipo);
 
@@ -119,8 +119,8 @@ class CatalogoController extends BaseController {
 
     public function eliminar($tipo, $id) {
         $this->requirePermission('param.catálogos');
-        $tables = ['provincias' => 'provincias', 'cantones' => 'cantones', 'entidades' => 'catastro_entidades_públicas'];
-        $pk = ['provincias' => 'id_provincia', 'cantones' => 'id_cantón', 'entidades' => 'id_entidad'];
+        $tables = ['provincias' => 'provincias', 'cantones' => 'cantones', 'entidades' => 'catastro_entidades_publicas'];
+        $pk = ['provincias' => 'id_provincia', 'cantones' => 'id_canton', 'entidades' => 'id_entidad'];
         if (isset($tables[$tipo])) {
             $this->db->prepare("DELETE FROM {$tables[$tipo]} WHERE {$pk[$tipo]} = ?")->execute([$id]);
         }

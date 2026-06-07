@@ -20,11 +20,11 @@
                 <div class="card-header"><strong>Datos personales</strong></div>
                 <div class="card-body">
                     <div class="table-responsive"><table class="table table-sm">
-                        <tr><th>Cédula</th><td><?= htmlspecialchars($socio['cédula']) ?></td></tr>
+                        <tr><th>Cédula</th><td><?= htmlspecialchars($socio['cedula']) ?></td></tr>
                         <tr><th>Apellidos</th><td><?= htmlspecialchars($socio['apellido1'] . ' ' . ($socio['apellido2'] ?? '')) ?></td></tr>
                         <tr><th>Nombres</th><td><?= htmlspecialchars($socio['nombre1'] . ' ' . ($socio['nombre2'] ?? '')) ?></td></tr>
                         <tr><th>Fecha de nacimiento</th><td><?= $socio['fecha_nacimiento'] ?></td></tr>
-                        <tr><th>Género</th><td><?= ucfirst($socio['género']) ?></td></tr>
+                        <tr><th>Género</th><td><?= ucfirst($socio['genero']) ?></td></tr>
                         <tr><th>Estado civil</th><td><?= ucfirst(str_replace('_', ' ', $socio['estado_civil'] ?? '-')) ?></td></tr>
                         <tr><th>Estado</th><td><span class="badge bg-<?= $socio['estado'] === 'activo' ? 'success' : 'warning' ?>"><?= $socio['estado'] ?></span></td></tr>
                     </table></div>
@@ -36,11 +36,11 @@
                 <div class="card-header"><strong>Contacto</strong></div>
                 <div class="card-body">
                     <div class="table-responsive"><table class="table table-sm">
-                        <tr><th>Dirección</th><td><?= htmlspecialchars($socio['dirección']) ?></td></tr>
-                        <tr><th>Teléfono</th><td><?= htmlspecialchars($socio['teléfono'] ?? '-') ?></td></tr>
+                        <tr><th>Dirección</th><td><?= htmlspecialchars($socio['direccion']) ?></td></tr>
+                        <tr><th>Teléfono</th><td><?= htmlspecialchars($socio['telefono'] ?? '-') ?></td></tr>
                         <tr><th>Celular</th><td><?= htmlspecialchars($socio['celular']) ?></td></tr>
-                        <tr><th>Correo</th><td><?= htmlspecialchars($socio['correo_electrónico']) ?></td></tr>
-                        <tr><th>Profesión</th><td><?= htmlspecialchars($socio['profesión'] ?? '-') ?></td></tr>
+                        <tr><th>Correo</th><td><?= htmlspecialchars($socio['correo_electronico']) ?></td></tr>
+                        <tr><th>Profesión</th><td><?= htmlspecialchars($socio['profesion'] ?? '-') ?></td></tr>
                     </table></div>
                 </div>
             </div>
@@ -53,8 +53,8 @@
         <div class="card-body">
             <div class="table-responsive"><table class="table table-sm">
                 <tr><th>Nombres</th><td><?= htmlspecialchars($socio['representante_nombres']) ?></td></tr>
-                <tr><th>Cédula</th><td><?= htmlspecialchars($socio['representante_cédula']) ?></td></tr>
-                <tr><th>Teléfono</th><td><?= htmlspecialchars($socio['representante_teléfono']) ?></td></tr>
+                <tr><th>Cédula</th><td><?= htmlspecialchars($socio['representante_cedula']) ?></td></tr>
+                <tr><th>Teléfono</th><td><?= htmlspecialchars($socio['representante_telefono']) ?></td></tr>
                 <tr><th>Correo</th><td><?= htmlspecialchars($socio['representante_correo']) ?></td></tr>
             </table></div>
         </div>
@@ -136,7 +136,7 @@
                 <div class="card-header"><strong>Créditos</strong></div>
                 <div class="card-body">
                     <?php if (empty($creditos)): ?>
-                    <p class="text-muted">Sin créditos</p>
+                    <p class="text-muted">Sin creditos</p>
                     <?php else: ?>
                     <p>Total: <strong><?= count($creditos) ?></strong></p>
                     <ul class="small">

@@ -11,7 +11,7 @@
                     <tr>
                         <th>Nombre</th>
                         <th>Tipo</th>
-                        <th>Tasa interés</th>
+                        <th>Tasa interes</th>
                         <th>Método</th>
                         <th>Plazo (meses)</th>
                         <th>Monto</th>
@@ -23,11 +23,14 @@
                     <?php foreach ($productos as $p): ?>
                     <tr>
                         <td><strong><?= htmlspecialchars($p['nombre']) ?></strong></td>
-                        <td><span class="badge <?= $p['tipo'] === 'crédito' ? 'bg-warning' : 'bg-info' ?>"><?= $tipos[$p['tipo']] ?></span></td>
-                        <td><?= number_format($p['tasa_interés_anual'], 2) ?>%</td>
-                        <td><?= $metodos[$p['método_interés']] ?></td>
-                        <td><?= $p['plazo_mín_meses'] ?> - <?= $p['plazo_máx_meses'] ?></td>
-                        <td>$<?= number_format($p['monto_mín'], 2) ?> - $<?= number_format($p['monto_máx'], 2) ?></td>
+                        <td><span class="badge <?= $p['tipo'] === 'credito' ? 'bg-warning' : 'bg-info' ?>"><?= $tipos[$p['tipo']] ?></span>
+                            <?php if (!empty($p['es_emergente'])): ?><span class="badge bg-danger ms-1">Emergente</span><?php endif; ?>
+                            <?php if (!empty($p['requiere_documento_firmado'])): ?><span class="badge bg-secondary ms-1">PDF</span><?php endif; ?>
+                        </td>
+                        <td><?= number_format($p['tasa_interes_anual'], 2) ?>%</td>
+                        <td><?= $metodos[$p['metodo_interes']] ?></td>
+                        <td><?= $p['plazo_min_meses'] ?> - <?= $p['plazo_max_meses'] ?></td>
+                        <td>$<?= number_format($p['monto_min'], 2) ?> - $<?= number_format($p['monto_max'], 2) ?></td>
                         <td>
                             <span class="badge <?= $p['activo'] ? 'bg-success' : 'bg-secondary' ?>">
                                 <?= $p['activo'] ? 'Activo' : 'Inactivo' ?>

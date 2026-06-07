@@ -7,7 +7,7 @@ class DashboardController extends BaseController {
         $totalSocios = $this->db->query("SELECT COUNT(*) FROM socios")->fetchColumn();
         $sociosActivos = $this->db->query("SELECT COUNT(*) FROM socios WHERE estado = 'activo'")->fetchColumn();
         $sesionAbierta = $this->db->query("SELECT COUNT(*) FROM sesiones_mensuales WHERE estado = 'abierta'")->fetchColumn();
-        $creditosPendientes = $this->db->query("SELECT COUNT(*) FROM créditos WHERE estado = 'pendiente'")->fetchColumn();
+        $creditosPendientes = $this->db->query("SELECT COUNT(*) FROM `creditos` WHERE estado IN ('ingresado','pendiente')")->fetchColumn();
 
         $stmt = $this->db->query("SELECT c.fecha_registro, CONCAT(s.apellido1, ' ', COALESCE(s.apellido2,''), ' ', s.nombre1, ' ', COALESCE(s.nombre2,'')) AS socio,
                                    c.tipo, c.monto
@@ -17,7 +17,7 @@ class DashboardController extends BaseController {
                                    ORDER BY c.fecha_registro DESC LIMIT 5");
         $ultimosCobros = $stmt->fetchAll();
 
-        $stmt2 = $this->db->query("SELECT id_sesión, número_sesión, fecha, estado FROM sesiones_mensuales ORDER BY fecha DESC LIMIT 3");
+        $stmt2 = $this->db->query("SELECT id_sesion, numero_sesion, fecha, estado FROM sesiones_mensuales ORDER BY fecha DESC LIMIT 3");
         $ultimasSesiones = $stmt2->fetchAll();
 
         $permisos = RBAC::obtenerPermisosUsuario($_SESSION['usuario_id']);

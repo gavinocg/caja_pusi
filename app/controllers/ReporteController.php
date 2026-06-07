@@ -8,8 +8,8 @@ class ReporteController extends BaseController {
 
     public function socios() {
         $this->requirePermission('reporte.socios');
-        $stmt = $this->db->query("SELECT s.cédula, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS nombre,
-                                   s.correo_electrónico, s.teléfono, s.estado, s.fecha_ingreso,
+        $stmt = $this->db->query("SELECT s.cedula, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS nombre,
+                                   s.correo_electronico, s.telefono, s.estado, s.fecha_ingreso,
                                    ca.saldo_obligatorio, ca.saldo_excedente, ca.saldo_disponible
                                    FROM socios s
                                    LEFT JOIN cuentas_ahorro ca ON s.id_socio = ca.id_socio
@@ -24,7 +24,7 @@ class ReporteController extends BaseController {
             'titulo' => 'Reporte de socios',
             'encabezados' => ['Cédula', 'Nombre', 'Correo', 'Teléfono', 'Estado', 'Ingreso', 'Aporte Obligatorio', 'Aporte Excedente', 'Disponible'],
             'filas' => $data,
-            'campos' => ['cédula', 'nombre', 'correo_electrónico', 'teléfono', 'estado', 'fecha_ingreso', 'saldo_obligatorio', 'saldo_excedente', 'saldo_disponible'],
+            'campos' => ['cedula', 'nombre', 'correo_electronico', 'telefono', 'estado', 'fecha_ingreso', 'saldo_obligatorio', 'saldo_excedente', 'saldo_disponible'],
             'ruta_csv' => BASE_URL . '/reporte/socios?formato=csv',
         ]);
     }
@@ -34,14 +34,14 @@ class ReporteController extends BaseController {
 
         $activos = $this->db->query("SELECT COUNT(*) FROM socios WHERE estado = 'activo'")->fetchColumn();
         $totalAportes = $this->db->query("SELECT COALESCE(SUM(saldo_disponible), 0) FROM cuentas_ahorro")->fetchColumn();
-        $totalCreditos = $this->db->query("SELECT COALESCE(SUM(monto_aprobado), 0) AS t FROM créditos WHERE estado IN ('aprobado','desembolsado')")->fetchColumn();
+        $totalCreditos = $this->db->query("SELECT COALESCE(SUM(monto_aprobado), 0) AS t FROM creditos WHERE estado IN ('aprobado','desembolsado')")->fetchColumn();
         $totalInversiones = $this->db->query("SELECT COALESCE(SUM(monto), 0) FROM inversiones WHERE estado = 'activa'")->fetchColumn();
         $totalCobros = $this->db->query("SELECT COALESCE(SUM(monto), 0) FROM cobros WHERE anulado = FALSE")->fetchColumn();
 
         $resumen = [
             'Socios activos' => $activos,
             'Total en cuentas de ahorro' => $totalAportes,
-            'Total créditos activos' => $totalCreditos,
+            'Total creditos activos' => $totalCreditos,
             'Total inversiones activas' => $totalInversiones,
             'Total cobros registrados' => $totalCobros,
         ];
@@ -54,10 +54,10 @@ class ReporteController extends BaseController {
 
     public function morosidad() {
         $this->requirePermission('reporte.financiero');
-        $stmt = $this->db->query("SELECT a.*, c.id_crédito, c.monto_aprobado, c.plazo_meses, c.tasa_interés,
-                                  CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio, s.cédula
+        $stmt = $this->db->query("SELECT a.*, c.id_credito, c.monto_aprobado, c.plazo_meses, c.tasa_interes,
+                                  CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio, s.cedula
                                   FROM amortizaciones a
-                                  JOIN créditos c ON a.id_crédito = c.id_crédito
+                                  JOIN creditos c ON a.id_credito = c.id_credito
                                   JOIN socios s ON c.id_socio = s.id_socio
                                   WHERE a.estado = 'vencida' OR (a.estado = 'pendiente' AND a.fecha_vencimiento < CURDATE())
                                   ORDER BY a.fecha_vencimiento ASC");
@@ -67,7 +67,7 @@ class ReporteController extends BaseController {
         $sociosMorosos = [];
         foreach ($cuotas as $a) {
             $totalMoroso += $a['total'];
-            $sociosMorosos[$a['id_crédito']] = $a['socio'];
+            $sociosMorosos[$a['id_credito']] = $a['socio'];
         }
 
         $this->render('reportes/morosidad', [
@@ -103,11 +103,11 @@ class ReporteController extends BaseController {
     public function cobros() {
         $this->requirePermission('reporte.cobros');
         $stmt = $this->db->query("SELECT c.fecha_registro, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio,
-                                   c.tipo, c.monto, c.medio_pago, ses.número_sesión,
-                                   c.anulado, c.motivo_anulación
+                                   c.tipo, c.monto, c.medio_pago, ses.numero_sesion,
+                                   c.anulado, c.motivo_anulacion
                                    FROM cobros c
                                    JOIN socios s ON c.id_socio = s.id_socio
-                                   JOIN sesiones_mensuales ses ON c.id_sesión = ses.id_sesión
+                                   JOIN sesiones_mensuales ses ON c.id_sesion = ses.id_sesion
                                    ORDER BY c.fecha_registro DESC");
         $data = $stmt->fetchAll();
 
@@ -119,7 +119,7 @@ class ReporteController extends BaseController {
             'titulo' => 'Reporte de cobros',
             'encabezados' => ['Fecha', 'Socio', 'Tipo', 'Monto', 'Medio de Pago', 'Sesión', 'Anulado', 'Motivo'],
             'filas' => $data,
-            'campos' => ['fecha_registro', 'socio', 'tipo', 'monto', 'medio_pago', 'número_sesión', 'anulado', 'motivo_anulación'],
+            'campos' => ['fecha_registro', 'socio', 'tipo', 'monto', 'medio_pago', 'numero_sesion', 'anulado', 'motivo_anulacion'],
             'ruta_csv' => BASE_URL . '/reporte/cobros?formato=csv',
         ]);
     }

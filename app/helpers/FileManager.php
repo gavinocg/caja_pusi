@@ -42,7 +42,7 @@ class FileManager {
             return ['success' => false, 'error' => 'Error al mover el archivo al almacenamiento'];
         }
 
-        $stmt = $db->prepare("INSERT INTO archivos (id_archivo, nombre_original, nombre_archivo, mime_type, tamaño, extensión, ruta, hash_sha256, entidad_tipo, entidad_id, subdirectorio, id_usuario_subio, fecha_subida) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        $stmt = $db->prepare("INSERT INTO archivos (id_archivo, nombre_original, nombre_archivo, mime_type, tamano, extension, ruta, hash_sha256, entidad_tipo, entidad_id, subdirectorio, id_usuario_subio, fecha_subida) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
         $stmt->execute([
             $idArchivo,
             $file['name'],
@@ -62,8 +62,8 @@ class FileManager {
             'success' => true,
             'id_archivo' => $idArchivo,
             'nombre_original' => $file['name'],
-            'tamaño' => $file['size'],
-            'extensión' => $ext,
+            'tamano' => $file['size'],
+            'extension' => $ext,
         ];
     }
 
@@ -112,7 +112,7 @@ class FileManager {
         }
 
         header('Content-Type: ' . $archivo['mime_type']);
-        header('Content-Length: ' . $archivo['tamaño']);
+        header('Content-Length: ' . $archivo['tamano']);
         header('Content-Disposition: ' . $disposition . '; filename="' . $archivo['nombre_original'] . '"');
         header('Cache-Control: private, max-age=3600');
         header('X-Content-Type-Options: nosniff');
@@ -123,8 +123,8 @@ class FileManager {
     public static function validateFile($file) {
         if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
             $errors = [
-                UPLOAD_ERR_INI_SIZE => 'El archivo excede el tamaño máximo permitido por el servidor',
-                UPLOAD_ERR_FORM_SIZE => 'El archivo excede el tamaño máximo del formulario',
+                UPLOAD_ERR_INI_SIZE => 'El archivo excede el tamano máximo permitido por el servidor',
+                UPLOAD_ERR_FORM_SIZE => 'El archivo excede el tamano máximo del formulario',
                 UPLOAD_ERR_PARTIAL => 'El archivo fue subido parcialmente',
                 UPLOAD_ERR_NO_FILE => 'No se seleccionó ningún archivo',
                 UPLOAD_ERR_NO_TMP_DIR => 'No se encuentra el directorio temporal',
@@ -135,7 +135,7 @@ class FileManager {
         }
 
         if ($file['size'] > self::MAX_FILE_SIZE) {
-            return 'El archivo excede el tamaño máximo de ' . (self::MAX_FILE_SIZE / 1048576) . ' MB';
+            return 'El archivo excede el tamano máximo de ' . (self::MAX_FILE_SIZE / 1048576) . ' MB';
         }
 
         if (!isset(self::ALLOWED_TYPES[$file['type']])) {

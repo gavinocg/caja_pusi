@@ -33,12 +33,12 @@ class UsuarioController extends BaseController {
             $validator
                 ->required('cedula', 'Cédula', $data['cedula'] ?? '')
                 ->cedula('cedula', 'Cédula', $data['cedula'] ?? '')
-                ->unique('cedula', 'Cédula', $data['cedula'] ?? '', 'usuarios', 'cédula')
+                ->unique('cedula', 'Cédula', $data['cedula'] ?? '', 'usuarios', 'cedula')
                 ->required('nombres', 'Nombres', $data['nombres'] ?? '')
                 ->required('apellidos', 'Apellidos', $data['apellidos'] ?? '')
                 ->required('correo', 'Correo', $data['correo'] ?? '')
                 ->email('correo', 'Correo', $data['correo'] ?? '')
-                ->unique('correo', 'Correo', $data['correo'] ?? '', 'usuarios', 'correo_electrónico')
+                ->unique('correo', 'Correo', $data['correo'] ?? '', 'usuarios', 'correo_electronico')
                 ->required('username', 'Usuario', $data['username'] ?? '')
                 ->minLength('username', 'Usuario', $data['username'] ?? '', 3)
                 ->unique('username', 'Usuario', $data['username'] ?? '', 'usuarios', 'nombre_usuario')
@@ -54,11 +54,11 @@ class UsuarioController extends BaseController {
                     'id_usuario' => $id,
                     'nombres' => $data['nombres'],
                     'apellidos' => $data['apellidos'],
-                    'cédula' => $data['cedula'],
-                    'correo_electrónico' => $data['correo'],
-                    'teléfono' => $data['telefono'] ?? '',
+                    'cedula' => $data['cedula'],
+                    'correo_electronico' => $data['correo'],
+                    'telefono' => $data['telefono'] ?? '',
                     'nombre_usuario' => $data['username'],
-                    'contraseña' => password_hash($data['password'], PASSWORD_BCRYPT),
+                    'contrasena' => password_hash($data['password'], PASSWORD_BCRYPT),
                     'activo' => !empty($data['activo']) ? 1 : 0,
                     '_2fa_obligatorio' => !empty($data['_2fa_obligatorio']) ? 1 : 0,
                 ];
@@ -109,15 +109,15 @@ class UsuarioController extends BaseController {
                 $update = [
                     'nombres' => $data['nombres'],
                     'apellidos' => $data['apellidos'],
-                    'correo_electrónico' => $data['correo'],
-                    'teléfono' => $data['telefono'] ?? '',
+                    'correo_electronico' => $data['correo'],
+                    'telefono' => $data['telefono'] ?? '',
                     'activo' => !empty($data['activo']) ? 1 : 0,
                     '_2fa_obligatorio' => !empty($data['_2fa_obligatorio']) ? 1 : 0,
                 ];
                 if (!empty($data['password'])) {
                     $validator->minLength('password', 'Contraseña', $data['password'], 6);
                     if (!$validator->hasErrors()) {
-                        $update['contraseña'] = password_hash($data['password'], PASSWORD_BCRYPT);
+                        $update['contrasena'] = password_hash($data['password'], PASSWORD_BCRYPT);
                     } else {
                         $errors = $validator->getErrors();
                     }

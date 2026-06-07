@@ -10,19 +10,19 @@
             <tbody>
             <?php foreach ($asistencias as $a): ?>
             <tr>
-                <td>#<?= $a['número_sesión'] ?></td>
+                <td>#<?= $a['numero_sesion'] ?></td>
                 <td><?= $a['fecha_sesión'] ?></td>
                 <td><?= str_replace('_', ' ', ucfirst($a['tipo'])) ?></td>
-                <td><?= htmlspecialchars(substr($a['justificación'] ?? '-', 0, 60)) ?></td>
+                <td><?= htmlspecialchars(substr($a['justificacion'] ?? '-', 0, 60)) ?></td>
                 <td>
                     <?php if ($a['tipo'] === 'a_tiempo'): ?><span class="badge bg-success">Asistió</span>
-                    <?php elseif ($a['justificación_aprobada']): ?><span class="badge bg-info">Justificada</span>
-                    <?php elseif ($a['justificación']): ?><span class="badge bg-warning">Pendiente revisión</span>
+                    <?php elseif ($a['justificacion_aprobada']): ?><span class="badge bg-info">Justificada</span>
+                    <?php elseif ($a['justificacion']): ?><span class="badge bg-warning">Pendiente revisión</span>
                     <?php else: ?><span class="badge bg-danger">Pendiente</span>
                     <?php endif; ?>
                 </td>
                 <td>
-                    <?php if ($a['tipo'] !== 'a_tiempo' && empty($a['justificación'])): ?>
+                    <?php if ($a['tipo'] !== 'a_tiempo' && empty($a['justificacion'])): ?>
                     <button class="btn btn-sm btn-outline-warning" onclick="justificar('<?= $a['id_asistencia'] ?>')"><i class="bi bi-pencil-square"></i> Justificar</button>
                     <?php endif; ?>
                 </td>
@@ -35,7 +35,7 @@
 </div>
 <script>
 function justificar(id) {
-    var texto = prompt('Escriba su justificación:');
+    var texto = prompt('Escriba su justificacion:');
     if (!texto || texto.trim() === '') return;
     var formData = new FormData();
     formData.append('csrf_token', '<?= $csrfToken ?? '' ?>');

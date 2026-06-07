@@ -13,7 +13,7 @@
                 <?= CSRFMiddleware::campoHTML() ?>
                 <div class="mb-3">
                     <label class="form-label">Código</label>
-                    <input type="text" class="form-control" value="<?= htmlspecialchars($param['código']) ?>" readonly>
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($param['codigo']) ?>" readonly>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Nombre</label>
@@ -29,7 +29,7 @@
                     <?php elseif ($param['tipo'] === 'color'): ?>
                     <input type="color" name="valor" class="form-control form-control-color" value="<?= htmlspecialchars($param['valor']) ?>">
                     <?php else: ?>
-                    <input type="<?= $param['tipo'] === 'número' ? 'number' : ($param['tipo'] === 'decimal' ? 'number' : 'text') ?>"
+                    <input type="<?= $param['tipo'] === 'numero' ? 'number' : ($param['tipo'] === 'decimal' ? 'number' : 'text') ?>"
                            name="valor" class="form-control"
                            value="<?= htmlspecialchars($param['valor']) ?>"
                            <?= $param['tipo'] === 'decimal' ? 'step="0.01"' : '' ?>>

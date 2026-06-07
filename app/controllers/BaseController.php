@@ -30,13 +30,17 @@ class BaseController {
         }
     }
 
-    protected function render($view, $data = []) {
+    protected function render($view, $data = [], $layout = null) {
         extract($data);
         $baseUrl = BASE_URL;
         $csrfToken = CSRFMiddleware::generarToken();
-        require_once 'app/views/layouts/header.php';
-        require_once "app/views/$view.php";
-        require_once 'app/views/layouts/footer.php';
+        if ($layout === 'layouts/blank') {
+            require_once "app/views/$view.php";
+        } else {
+            require_once 'app/views/layouts/header.php';
+            require_once "app/views/$view.php";
+            require_once 'app/views/layouts/footer.php';
+        }
     }
 
     protected function renderPartial($view, $data = []) {
@@ -77,7 +81,7 @@ class BaseController {
 
     protected function historialInsert($idSocio, $tipoOperacion, $monto, $idReferencia = null, $idSesion = null) {
         $stmt = $this->db->prepare("INSERT INTO historial_operaciones
-            (id_operación, id_socio, tipo_operación, monto, id_referencia, id_sesión, id_usuario_registra, ip_registro)
+            (id_operacion, id_socio, tipo_operacion, monto, id_referencia, id_sesion, id_usuario_registra, ip_registro)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([
             UUIDGenerator::generar(),
@@ -95,11 +99,11 @@ class BaseController {
         $mapa = [
             'aporte_obligatorio' => 'aporte_obligatorio',
             'aporte_excedente' => 'aporte_excedente',
-            'cuota_crédito' => 'pago_cuota',
+            'cuota_credito' => 'pago_cuota',
             'multa' => 'pago_multa',
-            'inversión' => 'inversión_apertura',
-            'desembolso' => 'desembolso_crédito',
-            'interés' => 'interés_pagado',
+            'inversion' => 'inversion_apertura',
+            'desembolso' => 'desembolso_credito',
+            'interes' => 'interes_pagado',
         ];
         return $mapa[$tipoCobro] ?? null;
     }

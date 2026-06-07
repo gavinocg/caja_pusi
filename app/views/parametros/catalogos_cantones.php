@@ -19,8 +19,8 @@
                         <td><?= htmlspecialchars($item['provincia']) ?></td>
                         <td><?= htmlspecialchars($item['nombre']) ?></td>
                         <td>
-                            <a href="<?= BASE_URL ?>/catalogo/editar/cantones/<?= $item['id_cantón'] ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                            <a href="<?= BASE_URL ?>/catalogo/eliminar/cantones/<?= $item['id_cantón'] ?>"
+                            <a href="<?= BASE_URL ?>/catalogo/editar/cantones/<?= $item['id_canton'] ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                            <a href="<?= BASE_URL ?>/catalogo/eliminar/cantones/<?= $item['id_canton'] ?>"
                                class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar?')">
                                <i class="bi bi-trash"></i>
                             </a>

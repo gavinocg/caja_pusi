@@ -13,7 +13,7 @@ class SocioController extends BaseController {
         $where = '1=1';
         $params = [];
         if (!empty($search)) {
-            $where .= " AND (cédula LIKE ? OR apellido1 LIKE ? OR nombre1 LIKE ?)";
+            $where .= " AND (cedula LIKE ? OR apellido1 LIKE ? OR nombre1 LIKE ?)";
             $term = "%$search%";
             $params = [$term, $term, $term];
         }
@@ -40,18 +40,18 @@ class SocioController extends BaseController {
             $data = $this->getPostData();
             $validator = new Validator();
             $validator
-                ->required('cédula', 'Cédula', $data['cédula'])
-                ->cedula('cédula', 'Cédula', $data['cédula'])
-                ->unique('cédula', 'Cédula', $data['cédula'], 'socios', 'cédula')
+                ->required('cedula', 'Cédula', $data['cedula'])
+                ->cedula('cedula', 'Cédula', $data['cedula'])
+                ->unique('cedula', 'Cédula', $data['cedula'], 'socios', 'cedula')
                 ->required('apellido1', 'Primer apellido', $data['apellido1'])
                 ->required('nombre1', 'Primer nombre', $data['nombre1'])
                 ->required('fecha_nacimiento', 'Fecha de nacimiento', $data['fecha_nacimiento'])
                 ->date('fecha_nacimiento', 'Fecha de nacimiento', $data['fecha_nacimiento'])
-                ->required('dirección', 'Dirección', $data['dirección'])
+                ->required('direccion', 'Dirección', $data['direccion'])
                 ->required('celular', 'Celular', $data['celular'])
-                ->required('correo_electrónico', 'Correo electrónico', $data['correo_electrónico'])
-                ->email('correo_electrónico', 'Correo electrónico', $data['correo_electrónico'])
-                ->unique('correo_electrónico', 'Correo electrónico', $data['correo_electrónico'], 'socios', 'correo_electrónico');
+                ->required('correo_electronico', 'Correo electrónico', $data['correo_electronico'])
+                ->email('correo_electronico', 'Correo electrónico', $data['correo_electronico'])
+                ->unique('correo_electronico', 'Correo electrónico', $data['correo_electronico'], 'socios', 'correo_electronico');
 
             if ($validator->hasErrors()) {
                 $errors = $validator->getErrors();
@@ -60,25 +60,25 @@ class SocioController extends BaseController {
                 $idSocio = UUIDGenerator::generate();
                 $insertData = [
                     'id_socio' => $idSocio,
-                    'cédula' => strtoupper($data['cédula']),
+                    'cedula' => strtoupper($data['cedula']),
                     'apellido1' => strtoupper($data['apellido1']),
                     'apellido2' => strtoupper($data['apellido2'] ?? ''),
                     'nombre1' => strtoupper($data['nombre1']),
                     'nombre2' => strtoupper($data['nombre2'] ?? ''),
                     'fecha_nacimiento' => $data['fecha_nacimiento'],
-                    'género' => $data['género'],
+                    'genero' => $data['genero'],
                     'estado_civil' => !empty($data['estado_civil']) ? $data['estado_civil'] : null,
-                    'dirección' => $data['dirección'],
-                    'teléfono' => $data['teléfono'] ?? '',
+                    'direccion' => $data['direccion'],
+                    'telefono' => $data['telefono'] ?? '',
                     'celular' => $data['celular'],
-                    'correo_electrónico' => $data['correo_electrónico'],
-                    'profesión' => $data['profesión'] ?? '',
+                    'correo_electronico' => $data['correo_electronico'],
+                    'profesion' => $data['profesion'] ?? '',
                     'estado' => 'pendiente',
                     'fecha_ingreso' => date('Y-m-d'),
                     'menor_edad' => !empty($data['menor_edad']) ? 1 : 0,
                     'representante_nombres' => $data['representante_nombres'] ?? '',
-                    'representante_cédula' => $data['representante_cédula'] ?? '',
-                    'representante_teléfono' => $data['representante_teléfono'] ?? '',
+                    'representante_cedula' => $data['representante_cedula'] ?? '',
+                    'representante_telefono' => $data['representante_telefono'] ?? '',
                     'representante_correo' => $data['representante_correo'] ?? '',
                 ];
                 $insertData['hash_integridad'] = hash('sha256', json_encode($insertData));
@@ -112,7 +112,7 @@ class SocioController extends BaseController {
             $validator
                 ->required('apellido1', 'Primer apellido', $data['apellido1'])
                 ->required('nombre1', 'Primer nombre', $data['nombre1'])
-                ->email('correo_electrónico', 'Correo electrónico', $data['correo_electrónico']);
+                ->email('correo_electronico', 'Correo electrónico', $data['correo_electronico']);
 
             if ($validator->hasErrors()) {
                 $errors = $validator->getErrors();
@@ -122,10 +122,10 @@ class SocioController extends BaseController {
                     'apellido2' => strtoupper($data['apellido2'] ?? ''),
                     'nombre1' => strtoupper($data['nombre1']),
                     'nombre2' => strtoupper($data['nombre2'] ?? ''),
-                    'dirección' => $data['dirección'],
-                    'teléfono' => $data['teléfono'] ?? '',
+                    'direccion' => $data['direccion'],
+                    'telefono' => $data['telefono'] ?? '',
                     'celular' => $data['celular'],
-                    'profesión' => $data['profesión'] ?? '',
+                    'profesion' => $data['profesion'] ?? '',
                 ];
                 $updateData['hash_integridad'] = hash('sha256', json_encode($updateData));
 
@@ -158,7 +158,7 @@ class SocioController extends BaseController {
             $stmt->execute([$id]);
             $cuenta = $stmt->fetch();
 
-            $stmt = $this->db->prepare("SELECT * FROM créditos WHERE id_socio = ? ORDER BY fecha_solicitud DESC");
+            $stmt = $this->db->prepare("SELECT * FROM creditos WHERE id_socio = ? ORDER BY fecha_solicitud DESC");
             $stmt->execute([$id]);
             $creditos = $stmt->fetchAll();
 
@@ -194,18 +194,18 @@ class SocioController extends BaseController {
             $updateData['motivo_retiro'] = $_POST['motivo'] ?? '';
         }
         if ($nuevoEstado === 'excluido') {
-            $updateData['fecha_exclusión'] = date('Y-m-d');
-            $updateData['motivo_exclusión'] = $_POST['motivo'] ?? '';
+            $updateData['fecha_exclusion'] = date('Y-m-d');
+            $updateData['motivo_exclusion'] = $_POST['motivo'] ?? '';
         }
         if ($nuevoEstado === 'activo') {
-            $updateData['fecha_aprobación'] = date('Y-m-d');
-            $updateData['número_acta_aprobación'] = $_POST['numero_acta'] ?? '';
+            $updateData['fecha_aprobacion'] = date('Y-m-d');
+            $updateData['numero_acta_aprobacion'] = $_POST['numero_acta'] ?? '';
             if (!empty($_FILES['acta_pdf']) && $_FILES['acta_pdf']['error'] === UPLOAD_ERR_OK) {
                 $ext = strtolower(pathinfo($_FILES['acta_pdf']['name'], PATHINFO_EXTENSION));
                 if ($ext === 'pdf') {
                     $nombre = 'acta_aprobacion_' . substr($id, 0, 8) . '.pdf';
                     move_uploaded_file($_FILES['acta_pdf']['tmp_name'], ROOT_PATH . '/storage/documentos/' . $nombre);
-                    $updateData['acta_aprobación_pdf'] = $nombre;
+                    $updateData['acta_aprobacion_pdf'] = $nombre;
                 }
             }
         }
@@ -252,23 +252,23 @@ class SocioController extends BaseController {
 
     private function getPostData() {
         return [
-            'cédula' => $_POST['cedula'] ?? '',
+            'cedula' => $_POST['cedula'] ?? '',
             'apellido1' => $_POST['apellido1'] ?? '',
             'apellido2' => $_POST['apellido2'] ?? '',
             'nombre1' => $_POST['nombre1'] ?? '',
             'nombre2' => $_POST['nombre2'] ?? '',
             'fecha_nacimiento' => $_POST['fecha_nacimiento'] ?? '',
-            'género' => $_POST['genero'] ?? '',
+            'genero' => $_POST['genero'] ?? '',
             'estado_civil' => $_POST['estado_civil'] ?? '',
-            'dirección' => $_POST['direccion'] ?? '',
-            'teléfono' => $_POST['telefono'] ?? '',
+            'direccion' => $_POST['direccion'] ?? '',
+            'telefono' => $_POST['telefono'] ?? '',
             'celular' => $_POST['celular'] ?? '',
-            'correo_electrónico' => $_POST['correo'] ?? '',
-            'profesión' => $_POST['profesion'] ?? '',
+            'correo_electronico' => $_POST['correo'] ?? '',
+            'profesion' => $_POST['profesion'] ?? '',
             'menor_edad' => $_POST['menor_edad'] ?? '',
             'representante_nombres' => $_POST['representante_nombres'] ?? '',
-            'representante_cédula' => $_POST['representante_cedula'] ?? '',
-            'representante_teléfono' => $_POST['representante_telefono'] ?? '',
+            'representante_cedula' => $_POST['representante_cedula'] ?? '',
+            'representante_telefono' => $_POST['representante_telefono'] ?? '',
             'representante_correo' => $_POST['representante_correo'] ?? '',
         ];
     }

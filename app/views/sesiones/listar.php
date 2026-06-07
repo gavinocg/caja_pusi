@@ -22,9 +22,9 @@
                 <tbody>
                     <?php foreach ($sesiones as $s): ?>
                     <tr>
-                        <td><?= $s['número_sesión'] ?></td>
+                        <td><?= $s['numero_sesion'] ?></td>
                         <td><?= $s['fecha'] ?></td>
-                        <td><?= htmlspecialchars($s['título'] ?? 'Sesión #' . $s['número_sesión']) ?></td>
+                        <td><?= htmlspecialchars($s['titulo'] ?? 'Sesión #' . $s['numero_sesion']) ?></td>
                         <td>
                             <span class="badge <?= $s['estado'] === 'abierta' ? 'bg-success' : 'bg-secondary' ?>">
                                 <?= $s['estado'] === 'abierta' ? 'Abierta' : 'Cerrada' ?>
@@ -35,7 +35,7 @@
                         <td>$<?= number_format($s['saldo_caja'], 2) ?></td>
                         <td>
                             <?php if ($s['estado'] === 'abierta'): ?>
-                            <a href="<?= BASE_URL ?>/sesion/checkin/<?= $s['id_sesión'] ?>" class="btn btn-sm btn-outline-success"><i class="bi bi-check-circle"></i> Gestión</a>
+                            <a href="<?= BASE_URL ?>/sesion/checkin/<?= $s['id_sesion'] ?>" class="btn btn-sm btn-outline-success"><i class="bi bi-check-circle"></i> Gestión</a>
                             <?php endif; ?>
                         </td>
                     </tr>

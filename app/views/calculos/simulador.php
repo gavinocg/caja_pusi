@@ -11,10 +11,10 @@
                         <option value="">Seleccione...</option>
                         <?php foreach ($productos as $p): ?>
                         <option value="<?= $p['id_producto'] ?>"
-                            data-tasa="<?= $p['tasa_interés_anual'] ?>"
-                            data-metodo="<?= $p['método_interés'] ?>"
-                            data-min="<?= $p['plazo_mín_meses'] ?>"
-                            data-max="<?= $p['plazo_máx_meses'] ?>">
+                            data-tasa="<?= $p['tasa_interes_anual'] ?>"
+                            data-metodo="<?= $p['metodo_interes'] ?>"
+                            data-min="<?= $p['plazo_min_meses'] ?>"
+                            data-max="<?= $p['plazo_max_meses'] ?>">
                             <?= htmlspecialchars($p['nombre']) ?> (<?= $p['tipo'] ?>)
                         </option>
                         <?php endforeach; ?>
@@ -36,8 +36,8 @@
                     <label class="form-label">Método</label>
                     <select name="método" class="form-select">
                         <option value="simple" <?= ($_POST['método'] ?? '') === 'simple' ? 'selected' : '' ?>>Simple</option>
-                        <option value="francés" <?= ($_POST['método'] ?? '') === 'francés' ? 'selected' : '' ?>>Francés</option>
-                        <option value="alemán" <?= ($_POST['método'] ?? '') === 'alemán' ? 'selected' : '' ?>>Alemán</option>
+                        <option value="francés" <?= ($_POST['método'] ?? '') === 'frances' ? 'selected' : '' ?>>Francés</option>
+                        <option value="alemán" <?= ($_POST['método'] ?? '') === 'aleman' ? 'selected' : '' ?>>Alemán</option>
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
@@ -63,11 +63,11 @@
                 <tbody>
                     <?php $totalCapital = 0; $totalInteres = 0; $totalCuota = 0; ?>
                     <?php foreach ($resultado as $c): ?>
-                    <?php $totalCapital += $c['capital']; $totalInteres += $c['interés']; $totalCuota += $c['total']; ?>
+                    <?php $totalCapital += $c['capital']; $totalInteres += $c['interes']; $totalCuota += $c['total']; ?>
                     <tr>
-                        <td><?= $c['número'] ?></td>
+                        <td><?= $c['numero'] ?></td>
                         <td class="text-end">$<?= number_format($c['capital'], 2) ?></td>
-                        <td class="text-end">$<?= number_format($c['interés'], 2) ?></td>
+                        <td class="text-end">$<?= number_format($c['interes'], 2) ?></td>
                         <td class="text-end"><strong>$<?= number_format($c['total'], 2) ?></strong></td>
                         <td class="text-end">$<?= number_format($c['saldo'], 2) ?></td>
                     </tr>

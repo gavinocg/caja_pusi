@@ -5,7 +5,7 @@ class RetiroController extends BaseController {
         $this->requirePermission('cobro.aporte');
         $filtro = $_GET['estado'] ?? '';
         $where = $filtro ? "WHERE r.estado = ?" : '';
-        $stmt = $this->db->prepare("SELECT r.*, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio, s.cédula,
+        $stmt = $this->db->prepare("SELECT r.*, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio, s.cedula,
                                      c.saldo_disponible
                                      FROM solicitudes_retiro r
                                      JOIN socios s ON r.id_socio = s.id_socio
@@ -40,12 +40,12 @@ class RetiroController extends BaseController {
             $idCobro = UUIDGenerator::generar();
             $hash = hash('sha256', $s['id_socio'] . $id . 'retiro_ahorro' . $s['monto'] . date('Y-m-d H:i:s'));
 
-            $this->db->prepare("UPDATE cuentas_ahorro SET saldo_disponible = saldo_disponible - ?, fecha_último_movimiento = NOW() WHERE id_socio = ?")
+            $this->db->prepare("UPDATE cuentas_ahorro SET saldo_disponible = saldo_disponible - ?, fecha_ultimo_movimiento = NOW() WHERE id_socio = ?")
                 ->execute([$s['monto'], $s['id_socio']]);
 
-            $idSesion = $this->db->query("SELECT id_sesión FROM sesiones_mensuales WHERE estado = 'abierta' LIMIT 1")->fetchColumn();
+            $idSesion = $this->db->query("SELECT id_sesion FROM sesiones_mensuales WHERE estado = 'abierta' LIMIT 1")->fetchColumn();
 
-            $this->db->prepare("INSERT INTO cobros (id_cobro, id_socio, id_sesión, tipo, monto, medio_pago, hash_integridad, usuario_registra)
+            $this->db->prepare("INSERT INTO cobros (id_cobro, id_socio, id_sesion, tipo, monto, medio_pago, hash_integridad, usuario_registra)
                 VALUES (?, ?, ?, 'otro', ?, 'efectivo', ?, ?)")
                 ->execute([$idCobro, $s['id_socio'], $idSesion ?: null, $s['monto'], $hash, $_SESSION['usuario_id']]);
 

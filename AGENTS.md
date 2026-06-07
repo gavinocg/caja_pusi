@@ -52,11 +52,12 @@ caja/
 │   └── logs/
 ├── vendor/            # PHPMailer v6.12
 ├── composer.json
-└── AGENTS.md
+├── AGENTS.md
+└── CHANGELOG.md
 ```
 
-## Base de datos — 25 tablas
-archivos, usuarios, roles, permisos, roles_usuarios, roles_permisos, socios, sesiones_mensuales, asistencias, cuentas_ahorro, productos_financieros, créditos, amortizaciones, inversiones, cobros, multas, historial_operaciones, notificaciones, parámetros, provincias, cantones, catastro_entidades_públicas, garantes, solicitudes_retiro
+## Base de datos — 25 tablas (nombres clean ASCII)
+archivos, usuarios, roles, permisos, roles_usuarios, roles_permisos, socios, sesiones_mensuales, asistencias, cuentas_ahorro, productos_financieros, creditos, amortizaciones, inversiones, cobros, multas, historial_operaciones, notificaciones, parametros, provincias, cantones, catastro_entidades_publicas, garantes, solicitudes_retiro
 
 ## RBAC
 - **28 permisos** en 7 módulos
@@ -65,7 +66,7 @@ archivos, usuarios, roles, permisos, roles_usuarios, roles_permisos, socios, ses
 - Sidebar bifurcado: usuarios con solo rol "Socio" ven menú simplificado (Inicio, Pagar, Solicitar, Inversión)
 
 ## Controladores (23)
-Auth, Socio, Parametro, Usuario, Rol, Catalogo, Imagen, Producto, Sesion, Cobro, Calculo (CalculadoraInteres: Simple, Francés, Alemán), Credito, Inversion, Reporte, Dashboard, Documento, Notificacion, Portal, Multa, Retiro, Asistencia, Archivo
+Auth, Socio, Parametro, Usuario, Rol, Catalogo, Imagen, Producto, Sesion, Cobro, Calculo (CalculadoraInteres: Simple, Frances, Aleman), Credito, Inversion, Reporte, Dashboard, Documento, Notificacion, Portal, Multa, Retiro, Asistencia, Archivo
 
 ## Ayudantes (12)
 UUIDGenerator, CedulaEcuador, Validator, Auth, RBAC, CSRFMiddleware, PDFGenerator, PusherHelper, NotificacionHelper, EmailHelper, CalculadoraInteres, **FileManager**
@@ -88,7 +89,7 @@ UUIDGenerator, CedulaEcuador, Validator, Auth, RBAC, CSRFMiddleware, PDFGenerato
 - **Roles**: CRUD + matriz permisos por módulo + endosable
 - **Catálogos**: Provincias, cantones, entidades públicas
 - **Imagen corporativa**: Logo + color picker, carga vía FileManager (logo_sidebar, logo_sd)
-- **Productos financieros**: CRUD + toggle estado
+- **Productos financieros**: CRUD + toggle estado, formulario tipo-aware (crédito/inversión) con Summernote WYSIWYG
 - **Sesiones y Cobros**: Abrir sesión, check-in, registro cobro AJAX, cierre con acta + multas automáticas + historial, anular cobro, pago cuota crédito
 - **Cálculos**: Simulador 3 métodos, tabla amortización, excedentes + aprobar, intereses de ahorro mensuales
 - **Créditos**: Solicitar (con garantes), ver, aprobar, desembolsar, rechazar, mora automática
@@ -117,13 +118,13 @@ UUIDGenerator, CedulaEcuador, Validator, Auth, RBAC, CSRFMiddleware, PDFGenerato
 - Media queries en style.css
 
 ## Convenciones
-- Nombres columnas en español con acentos (cédula, correo_electrónico, etc.)
+- Nombres columnas en clean ASCII (sin acentos/ñ): cedula, correo_electronico, contrasena, etc.
 - UUIDs como PK (`UUIDGenerator::generate()`)
 - CONCAT_WS para nombres completos
 - Ruteo híbrido: mapa explícito + fallback por convención
 - Historial operaciones: `historialInsert()` en BaseController
 - Roles endosables heredan todos los permisos
-- Interés moratorio: `total * tasa * (días/30)` desde parámetro `multa_mora_crédito`
+- Interés moratorio: `total * tasa * (días/30)` desde parámetro `multa_mora_credito`
 - Interés ahorro: `saldo * tasa / 100 / 12`, acredita a `saldo_excedente`
 - PHPMailer vía Composer
 - Archivos siempre por FileManager (upload/serve/delete), nunca acceso directo
@@ -139,15 +140,17 @@ UUIDGenerator, CedulaEcuador, Validator, Auth, RBAC, CSRFMiddleware, PDFGenerato
 - ~110 archivos PHP propios, 75 vendor (PHPMailer) = ~185 total
 - 0 errores de sintaxis
 - Todas las rutas HTTP funcionales (200/302/403 según permisos)
+- Base de datos migrada a clean ASCII: ~65 columnas, 3 tablas, 6 ENUMs renombrados
+- Productos financieros: formulario tipo-aware con Summernote WYSIWYG, secciones por tipo
 - SMTP funcional con PHPMailer
 - Pusher configurado con credenciales reales
 - FileManager operativo con tabla archivos en BD
 - Sidebar bifurcado: sidebar completo para admin, simplificado para Socio
-- Portal socio con Inicio (cards resumen), Pagar, Solicitar (Crédito placeholder / Certificado funcional), Inversión (placeholder)
+- Portal socio con Inicio (cards resumen), Pagar, Solicitar (Crédito funcional / Certificado funcional), Inversión (placeholder)
 - Dump MySQL en `basedatos/caja_ahorro_pujota.sql`
 
 ## Próximos pasos
 - Población de datos de prueba (socios, sesiones, cobros, créditos, inversiones)
-- Implementar páginas Solicitar/Crédito e Inversión en portal socio
+- Implementar página Inversión en portal socio
 - Pruebas de integración end-to-end
 - Despliegue a producción

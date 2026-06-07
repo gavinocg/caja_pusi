@@ -7,7 +7,7 @@ class Socio extends BaseModel {
     }
 
     public function getByCedula($cedula) {
-        return $this->getOneWhere('cédula = ?', [$cedula]);
+        return $this->getOneWhere('cedula = ?', [$cedula]);
     }
 
     public function getActivos() {
@@ -29,7 +29,7 @@ class Socio extends BaseModel {
     public function buscar($termino) {
         $term = "%$termino%";
         return $this->getWhere(
-            "(cédula LIKE ? OR apellido1 LIKE ? OR nombre1 LIKE ?)",
+            "(cedula LIKE ? OR apellido1 LIKE ? OR nombre1 LIKE ?)",
             [$term, $term, $term],
             'apellido1, apellido2, nombre1'
         );

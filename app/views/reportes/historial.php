@@ -12,7 +12,7 @@
                 <tr>
                     <td><?= $h['fecha_registro'] ?></td>
                     <td><?= htmlspecialchars($h['socio']) ?></td>
-                    <td><span class="badge bg-info"><?= ucfirst(str_replace('_', ' ', $h['tipo_operación'])) ?></span></td>
+                    <td><span class="badge bg-info"><?= ucfirst(str_replace('_', ' ', $h['tipo_operacion'])) ?></span></td>
                     <td>$<?= number_format($h['monto'], 2) ?></td>
                     <td>$<?= number_format($h['saldo_anterior'], 2) ?></td>
                     <td>$<?= number_format($h['saldo_posterior'], 2) ?></td>

@@ -2,7 +2,7 @@
     <h4>Inicio</h4>
 
     <?php if (!$socio): ?>
-    <div class="alert alert-info">No se encontró un socio asociado a tu cédula. Contacta al administrador.</div>
+    <div class="alert alert-info">No se encontró un socio asociado a tu cedula. Contacta al administrador.</div>
     <?php return; endif; ?>
 
     <div class="row g-3 mb-3">
@@ -10,9 +10,9 @@
             <div class="card card-dashboard">
                 <div class="card-body">
                     <h5><?= htmlspecialchars($socio['apellido1'] . ' ' . $socio['apellido2'] . ' ' . $socio['nombre1'] . ' ' . $socio['nombre2']) ?></h5>
-                    <p class="mb-1 small">Cédula: <?= $socio['cédula'] ?></p>
+                    <p class="mb-1 small">Cédula: <?= $socio['cedula'] ?></p>
                     <p class="mb-1 small">Estado: <span class="badge bg-<?= $socio['estado'] === 'activo' ? 'success' : 'warning' ?>"><?= $socio['estado'] ?></span></p>
-                    <p class="mb-0 small">Correo: <?= htmlspecialchars($socio['correo_electrónico']) ?></p>
+                    <p class="mb-0 small">Correo: <?= htmlspecialchars($socio['correo_electronico']) ?></p>
                 </div>
             </div>
         </div>
@@ -95,7 +95,7 @@
             <div class="card card-dashboard">
                 <div class="card-body p-0">
                     <h5 class="p-3 pb-0">Créditos</h5>
-                    <?php if (empty($creditos)): ?><p class="p-3 text-muted small">Sin créditos</p><?php else: ?>
+                    <?php if (empty($creditos)): ?><p class="p-3 text-muted small">Sin creditos</p><?php else: ?>
                     <div class="table-responsive"><table class="table table-sm mb-0 table-responsive-stack">
                         <thead><tr><th>Producto</th><th>Monto</th><th>Estado</th><th>Fecha</th></tr></thead>
                         <tbody>
@@ -143,7 +143,7 @@
         <a href="<?= BASE_URL ?>/portal/multas" class="btn btn-outline-warning btn-sm"><i class="bi bi-exclamation-triangle"></i> Multas</a>
         <a href="<?= BASE_URL ?>/portal/asistencias" class="btn btn-outline-secondary btn-sm"><i class="bi bi-calendar-check"></i> Asistencias</a>
         <a href="<?= BASE_URL ?>/portal/notificaciones" class="btn btn-outline-info btn-sm"><i class="bi bi-bell"></i> Notificaciones</a>
-        <a href="<?= BASE_URL ?>/portal/password" class="btn btn-outline-danger btn-sm"><i class="bi bi-key"></i> Cambiar contraseña</a>
+        <a href="<?= BASE_URL ?>/portal/password" class="btn btn-outline-danger btn-sm"><i class="bi bi-key"></i> Cambiar contrasena</a>
     </div>
 
     <div class="card card-dashboard mt-3">
@@ -156,7 +156,7 @@
                 <?php foreach ($cobros as $c): ?>
                 <tr>
                     <td data-label="Fecha"><?= $c['fecha_registro'] ?></td>
-                    <td data-label="Sesión">#<?= $c['número_sesión'] ?? '-' ?></td>
+                    <td data-label="Sesión">#<?= $c['numero_sesion'] ?? '-' ?></td>
                     <td data-label="Tipo"><?= ucfirst(str_replace('_', ' ', $c['tipo'])) ?></td>
                     <td data-label="Monto"><strong>$<?= number_format($c['monto'], 2) ?></strong></td>
                     <td data-label="Comp."><a href="<?= BASE_URL ?>/documento/comprobante/<?= $c['id_cobro'] ?>" class="btn btn-sm btn-outline-info"><i class="bi bi-file-earmark-pdf"></i></a></td>

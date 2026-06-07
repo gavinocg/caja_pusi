@@ -19,7 +19,7 @@
                     </div>
                     <div class="col-md-8">
                         <label class="form-label">Título (opcional)</label>
-                        <input type="text" name="título" class="form-control" placeholder="Ej: Sesión Ordinaria Junio 2026">
+                        <input type="text" name="titulo" class="form-control" placeholder="Ej: Sesión Ordinaria Junio 2026">
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary mt-3"><i class="bi bi-play-circle"></i> Abrir sesión</button>

@@ -38,16 +38,16 @@
     if ($loggedIn) {
         $ndb = Database::getInstance();
         $uid = $_SESSION['usuario_id'];
-        $nstmt = $ndb->prepare("SELECT COUNT(*) FROM notificaciones WHERE (id_usuario = ? OR (id_usuario IS NULL AND id_socio IS NULL)) AND leída = FALSE");
+        $nstmt = $ndb->prepare("SELECT COUNT(*) FROM notificaciones WHERE (id_usuario = ? OR (id_usuario IS NULL AND id_socio IS NULL)) AND leida = FALSE");
         $nstmt->execute([$uid]);
         $notifCount = (int)$nstmt->fetchColumn();
         $cedula = $_SESSION['usuario_cedula'] ?? '';
         if ($cedula) {
-            $nstmt = $ndb->prepare("SELECT id_socio FROM socios WHERE cédula = ?");
+            $nstmt = $ndb->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
             $nstmt->execute([$cedula]);
             $idSocio = $nstmt->fetchColumn();
             if ($idSocio) {
-                $nstmt = $ndb->prepare("SELECT COUNT(*) FROM notificaciones WHERE id_socio = ? AND leída = FALSE");
+                $nstmt = $ndb->prepare("SELECT COUNT(*) FROM notificaciones WHERE id_socio = ? AND leida = FALSE");
                 $nstmt->execute([$idSocio]);
                 $notifCount += (int)$nstmt->fetchColumn();
             }
@@ -64,7 +64,7 @@
                             <?php
                             $logoSrc = $baseUrl . '/public/assets/images/favicon.svg';
                             try {
-                                $logoStmt = $ndb->prepare("SELECT valor FROM parámetros WHERE código = 'logo_sidebar'");
+                                $logoStmt = $ndb->prepare("SELECT valor FROM parametros WHERE codigo = 'logo_sidebar'");
                                 $logoStmt->execute();
                                 $logoId = $logoStmt->fetchColumn();
                                 if ($logoId) $logoSrc = $baseUrl . '/archivo/ver/' . $logoId;
@@ -195,6 +195,14 @@
                         <a href="<?= $baseUrl ?>/credito/listar" class="sidebar-link">
                             <i class="bi bi-bank"></i>
                             <span>Créditos</span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if ($uid && RBAC::tienePermiso($uid, 'credito.aprobar')): ?>
+                    <li class="sidebar-item <?= mazerActive('credito/bandejaAprobados') ?>">
+                        <a href="<?= $baseUrl ?>/credito/bandejaAprobados" class="sidebar-link">
+                            <i class="bi bi-inbox"></i>
+                            <span>Bandeja creditos</span>
                         </a>
                     </li>
                     <?php endif; ?>

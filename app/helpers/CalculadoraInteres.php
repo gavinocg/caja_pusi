@@ -5,8 +5,8 @@ class CalculadoraInteres {
         $tasaMensual = ($tasaAnual / 100) / 12;
         return match ($metodo) {
             'simple' => self::simple($monto, $tasaMensual, $plazoMeses),
-            'francés' => self::frances($monto, $tasaMensual, $plazoMeses),
-            'alemán' => self::aleman($monto, $tasaMensual, $plazoMeses),
+            'frances' => self::frances($monto, $tasaMensual, $plazoMeses),
+            'aleman' => self::aleman($monto, $tasaMensual, $plazoMeses),
             default => throw new InvalidArgumentException('Método no soportado'),
         };
     }
@@ -21,9 +21,9 @@ class CalculadoraInteres {
             $saldo -= $capital;
             if ($i === $plazo) $saldo = 0;
             $cuotas[] = [
-                'número' => $i,
+                'numero' => $i,
                 'capital' => round($capital, 2),
-                'interés' => round($interes, 2),
+                'interes' => round($interes, 2),
                 'total' => round($total, 2),
                 'saldo' => round(max($saldo, 0), 2),
             ];
@@ -45,9 +45,9 @@ class CalculadoraInteres {
                 $saldo = 0;
             }
             $cuotas[] = [
-                'número' => $i,
+                'numero' => $i,
                 'capital' => round($capital, 2),
-                'interés' => round($interes, 2),
+                'interes' => round($interes, 2),
                 'total' => round($capital + $interes, 2),
                 'saldo' => round(max($saldo, 0), 2),
             ];
@@ -65,9 +65,9 @@ class CalculadoraInteres {
             $saldo -= $capitalFijo;
             if ($i === $plazo) $saldo = 0;
             $cuotas[] = [
-                'número' => $i,
+                'numero' => $i,
                 'capital' => round($capitalFijo, 2),
-                'interés' => round($interes, 2),
+                'interes' => round($interes, 2),
                 'total' => round($total, 2),
                 'saldo' => round(max($saldo, 0), 2),
             ];

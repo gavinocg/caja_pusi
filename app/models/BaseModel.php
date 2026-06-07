@@ -16,12 +16,12 @@ class BaseModel {
         return $stmt->fetch();
     }
 
-    public function getAll($orderBy = 'fecha_creación DESC') {
+    public function getAll($orderBy = 'fecha_creacion DESC') {
         $stmt = $this->db->query("SELECT * FROM {$this->table} ORDER BY {$orderBy}");
         return $stmt->fetchAll();
     }
 
-    public function getWhere($where, $params = [], $orderBy = 'fecha_creación DESC') {
+    public function getWhere($where, $params = [], $orderBy = 'fecha_creacion DESC') {
         $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE {$where} ORDER BY {$orderBy}");
         $stmt->execute($params);
         return $stmt->fetchAll();
@@ -63,7 +63,7 @@ class BaseModel {
         return $this->count($where, $params) > 0;
     }
 
-    public function paginate($page = 1, $perPage = 20, $where = '1=1', $params = [], $orderBy = 'fecha_creación DESC') {
+    public function paginate($page = 1, $perPage = 20, $where = '1=1', $params = [], $orderBy = 'fecha_creacion DESC') {
         $offset = ($page - 1) * $perPage;
         $total = $this->count($where, $params);
         $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE {$where} ORDER BY {$orderBy} LIMIT ? OFFSET ?");

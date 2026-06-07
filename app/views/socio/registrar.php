@@ -15,9 +15,9 @@
                     <h6 class="text-muted">Datos personales</h6>
                     <div class="col-md-3">
                         <label class="form-label">Cédula *</label>
-                        <input type="text" name="cedula" class="form-control <?= isset($errors['cédula']) ? 'is-invalid' : '' ?>"
+                        <input type="text" name="cedula" class="form-control <?= isset($errors['cedula']) ? 'is-invalid' : '' ?>"
                                value="<?= htmlspecialchars($data['cedula'] ?? '') ?>" required maxlength="10">
-                        <?php if (isset($errors['cédula'])): ?><div class="invalid-feedback"><?= $errors['cédula'] ?></div><?php endif; ?>
+                        <?php if (isset($errors['cedula'])): ?><div class="invalid-feedback"><?= $errors['cedula'] ?></div><?php endif; ?>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Primer apellido *</label>
@@ -69,9 +69,9 @@
                     <h6 class="text-muted">Contacto</h6>
                     <div class="col-md-4">
                         <label class="form-label">Dirección *</label>
-                        <input type="text" name="direccion" class="form-control <?= isset($errors['dirección']) ? 'is-invalid' : '' ?>"
+                        <input type="text" name="direccion" class="form-control <?= isset($errors['direccion']) ? 'is-invalid' : '' ?>"
                                value="<?= htmlspecialchars($data['direccion'] ?? '') ?>" required>
-                        <?php if (isset($errors['dirección'])): ?><div class="invalid-feedback"><?= $errors['dirección'] ?></div><?php endif; ?>
+                        <?php if (isset($errors['direccion'])): ?><div class="invalid-feedback"><?= $errors['direccion'] ?></div><?php endif; ?>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Teléfono</label>
@@ -83,9 +83,9 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Correo electrónico *</label>
-                        <input type="email" name="correo" class="form-control <?= isset($errors['correo_electrónico']) ? 'is-invalid' : '' ?>"
+                        <input type="email" name="correo" class="form-control <?= isset($errors['correo_electronico']) ? 'is-invalid' : '' ?>"
                                value="<?= htmlspecialchars($data['correo'] ?? '') ?>" required>
-                        <?php if (isset($errors['correo_electrónico'])): ?><div class="invalid-feedback"><?= $errors['correo_electrónico'] ?></div><?php endif; ?>
+                        <?php if (isset($errors['correo_electronico'])): ?><div class="invalid-feedback"><?= $errors['correo_electronico'] ?></div><?php endif; ?>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Profesión</label>

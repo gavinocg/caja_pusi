@@ -21,7 +21,7 @@
                         <tbody>
                             <?php $grupo = ''; ?>
                             <?php foreach ($permisos as $p):
-                                $g = explode('.', $p['código'])[0];
+                                $g = explode('.', $p['codigo'])[0];
                                 if ($g !== $grupo):
                                     $grupo = $g;
                             ?>
@@ -35,9 +35,9 @@
                                            value="1" id="perm_<?= $p['id_permiso'] ?>"
                                            <?= isset($asignados[$p['id_permiso']]) ? 'checked' : '' ?>>
                                 </td>
-                                <td><code><?= htmlspecialchars($p['código']) ?></code></td>
+                                <td><code><?= htmlspecialchars($p['codigo']) ?></code></td>
                                 <td><label for="perm_<?= $p['id_permiso'] ?>"><?= htmlspecialchars($p['nombre']) ?></label></td>
-                                <td class="text-muted small"><?= htmlspecialchars($p['descripción'] ?? '') ?></td>
+                                <td class="text-muted small"><?= htmlspecialchars($p['descripcion'] ?? '') ?></td>
                             </tr>
                             <?php endforeach; ?>
                         </tbody>

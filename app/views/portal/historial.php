@@ -15,7 +15,7 @@
                 <?php foreach ($historial as $h): ?>
                 <tr>
                     <td data-label="Fecha"><?= $h['fecha_registro'] ?></td>
-                    <td data-label="Tipo"><span class="badge bg-info"><?= ucfirst(str_replace('_', ' ', $h['tipo_operación'])) ?></span></td>
+                    <td data-label="Tipo"><span class="badge bg-info"><?= ucfirst(str_replace('_', ' ', $h['tipo_operacion'])) ?></span></td>
                     <td data-label="Monto"><strong>$<?= number_format($h['monto'], 2) ?></strong></td>
                     <td data-label="Saldo ant.">$<?= number_format($h['saldo_anterior'], 2) ?></td>
                     <td data-label="Saldo post.">$<?= number_format($h['saldo_posterior'], 2) ?></td>

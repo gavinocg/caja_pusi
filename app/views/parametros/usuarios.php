@@ -25,8 +25,8 @@
                         <tr>
                             <td><strong><?= htmlspecialchars($u['nombre_usuario']) ?></strong></td>
                             <td><?= htmlspecialchars($u['nombres'] . ' ' . $u['apellidos']) ?></td>
-                            <td><?= htmlspecialchars($u['cédula']) ?></td>
-                            <td><?= htmlspecialchars($u['correo_electrónico']) ?></td>
+                            <td><?= htmlspecialchars($u['cedula']) ?></td>
+                            <td><?= htmlspecialchars($u['correo_electronico']) ?></td>
                             <td>
                                 <?php
                                 $stmt = $this->db->prepare("SELECT r.nombre FROM roles_usuarios ru JOIN roles r ON ru.id_rol = r.id_rol WHERE ru.id_usuario = ?");

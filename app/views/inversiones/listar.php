@@ -38,7 +38,7 @@
                         </td>
                         <td>
                             <?php if ($i['estado'] === 'activa'): ?>
-                            <a href="#" onclick="retirar('<?= $i['id_inversión'] ?>')" class="btn btn-sm btn-outline-warning"><i class="bi bi-box-arrow-left"></i></a>
+                            <a href="#" onclick="retirar('<?= $i['id_inversion'] ?>')" class="btn btn-sm btn-outline-warning"><i class="bi bi-box-arrow-left"></i></a>
                             <?php endif; ?>
                         </td>
                     </tr>

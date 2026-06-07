@@ -66,7 +66,7 @@ class PusherHelper {
 
     private static function persistirNotificacion($usuarioId, $socioId, $titulo, $mensaje) {
         $db = Database::getInstance();
-        $stmt = $db->prepare("INSERT INTO notificaciones (id_notificación, id_usuario, id_socio, tipo, título, mensaje, enviada_pusher)
+        $stmt = $db->prepare("INSERT INTO notificaciones (id_notificacion, id_usuario, id_socio, tipo, titulo, mensaje, enviada_pusher)
                                VALUES (?, ?, ?, 'sistema', ?, ?, ?)");
         $stmt->execute([UUIDGenerator::generate(), $usuarioId, $socioId, $titulo, $mensaje, defined('PUSHER_APP_KEY') && PUSHER_APP_KEY ? 1 : 0]);
     }

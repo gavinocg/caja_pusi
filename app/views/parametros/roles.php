@@ -20,7 +20,7 @@
                     <?php foreach ($roles as $r): ?>
                     <tr>
                         <td><strong><?= htmlspecialchars($r['nombre']) ?></strong></td>
-                        <td><?= htmlspecialchars($r['descripción'] ?? '-') ?></td>
+                        <td><?= htmlspecialchars($r['descripcion'] ?? '-') ?></td>
                         <td><?= $r['endosable'] ? '<span class="text-success">Sí</span>' : '<span class="text-muted">No</span>' ?></td>
                         <td><span class="badge bg-secondary"><?= $r['usuarios'] ?></span></td>
                         <td>

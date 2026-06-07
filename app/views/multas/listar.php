@@ -9,7 +9,7 @@
                 <option value="retraso_10min" <?= $filtroTipo === 'retraso_10min' ? 'selected' : '' ?>>Retraso 10 min</option>
                 <option value="retraso_30min" <?= $filtroTipo === 'retraso_30min' ? 'selected' : '' ?>>Retraso 30 min</option>
                 <option value="inasistencia" <?= $filtroTipo === 'inasistencia' ? 'selected' : '' ?>>Inasistencia</option>
-                <option value="mora_crédito" <?= $filtroTipo === 'mora_crédito' ? 'selected' : '' ?>>Mora crédito</option>
+                <option value="mora_crédito" <?= $filtroTipo === 'mora_credito' ? 'selected' : '' ?>>Mora crédito</option>
             </select>
         </div>
         <div class="col-auto">
@@ -38,17 +38,17 @@
                 <tbody>
                     <?php foreach ($multas as $m): ?>
                     <tr>
-                        <td><?= $m['fecha_generación'] ?></td>
+                        <td><?= $m['fecha_generacion'] ?></td>
                         <?php if (!$esSocio): ?>
                         <td><?= htmlspecialchars($m['socio']) ?></td>
                         <?php endif; ?>
-                        <td><span class="badge bg-<?= $m['tipo'] === 'inasistencia' ? 'danger' : ($m['tipo'] === 'mora_crédito' ? 'warning' : 'info') ?>"><?= str_replace('_', ' ', $m['tipo']) ?></span></td>
+                        <td><span class="badge bg-<?= $m['tipo'] === 'inasistencia' ? 'danger' : ($m['tipo'] === 'mora_credito' ? 'warning' : 'info') ?>"><?= str_replace('_', ' ', $m['tipo']) ?></span></td>
                         <td><strong>$<?= number_format($m['monto'], 2) ?></strong></td>
                         <td>
-                            <?php if ($m['justificación']): ?>
+                            <?php if ($m['justificacion']): ?>
                             <span class="badge bg-success">Sí</span>
-                            <?php if ($m['justificación_aprobada'] === '1'): ?><span class="badge bg-primary">Aprobada</span>
-                            <?php elseif ($m['justificación_aprobada'] === '0'): ?><span class="badge bg-danger">Rechazada</span>
+                            <?php if ($m['justificacion_aprobada'] === '1'): ?><span class="badge bg-primary">Aprobada</span>
+                            <?php elseif ($m['justificacion_aprobada'] === '0'): ?><span class="badge bg-danger">Rechazada</span>
                             <?php else: ?><span class="badge bg-warning">Pendiente</span><?php endif; ?>
                             <?php else: ?>
                             <span class="badge bg-secondary">No</span>

@@ -15,7 +15,7 @@
                         <select name="id_socio" class="form-select <?= isset($errors['id_socio']) ? 'is-invalid' : '' ?>" required>
                             <option value="">Seleccione...</option>
                             <?php foreach ($socios as $s): ?>
-                            <option value="<?= $s['id_socio'] ?>"><?= htmlspecialchars($s['cédula'] . ' — ' . $s['nombre']) ?></option>
+                            <option value="<?= $s['id_socio'] ?>"><?= htmlspecialchars($s['cedula'] . ' — ' . $s['nombre']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -24,7 +24,7 @@
                         <select name="id_producto" id="selProd" class="form-select <?= isset($errors['id_producto']) ? 'is-invalid' : '' ?>" required onchange="cargarLimites()">
                             <option value="">Seleccione...</option>
                             <?php foreach ($productos as $p): ?>
-                            <option value="<?= $p['id_producto'] ?>" data-tasa="<?= $p['tasa_interés_anual'] ?>" data-min="<?= $p['plazo_mín_meses'] ?>" data-max="<?= $p['plazo_máx_meses'] ?>" data-monto-min="<?= $p['monto_mín'] ?>" data-monto-max="<?= $p['monto_máx'] ?>"><?= htmlspecialchars($p['nombre']) ?></option>
+                            <option value="<?= $p['id_producto'] ?>" data-tasa="<?= $p['tasa_interes_anual'] ?>" data-min="<?= $p['plazo_min_meses'] ?>" data-max="<?= $p['plazo_max_meses'] ?>" data-monto-min="<?= $p['monto_min'] ?>" data-monto-max="<?= $p['monto_max'] ?>"><?= htmlspecialchars($p['nombre']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -38,7 +38,7 @@
                         <small id="plazoAyuda" class="text-muted"></small>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Tasa interés anual</label>
+                        <label class="form-label">Tasa interes anual</label>
                         <input type="text" id="tasaDisplay" class="form-control" readonly>
                     </div>
                     <div class="col-md-12">
@@ -52,7 +52,7 @@
                             <div class="col-md-4">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="garantes[]" value="<?= $s['id_socio'] ?>" id="g<?= substr($s['id_socio'], 0, 8) ?>">
-                                    <label class="form-check-label" for="g<?= substr($s['id_socio'], 0, 8) ?>"><?= htmlspecialchars($s['cédula'] . ' — ' . $s['nombre']) ?></label>
+                                    <label class="form-check-label" for="g<?= substr($s['id_socio'], 0, 8) ?>"><?= htmlspecialchars($s['cedula'] . ' — ' . $s['nombre']) ?></label>
                                 </div>
                             </div>
                             <?php endforeach; ?>

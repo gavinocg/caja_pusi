@@ -1,11 +1,11 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h4>Sesión #<?= $sesion['número_sesión'] ?> — <?= $sesion['fecha'] ?></h4>
-            <small class="text-muted"><?= htmlspecialchars($sesion['título'] ?? '') ?></small>
+            <h4>Sesión #<?= $sesion['numero_sesion'] ?> — <?= $sesion['fecha'] ?></h4>
+            <small class="text-muted"><?= htmlspecialchars($sesion['titulo'] ?? '') ?></small>
         </div>
         <div>
-            <a href="<?= BASE_URL ?>/cobro/registrar/<?= $sesion['id_sesión'] ?>" class="btn btn-outline-primary"><i class="bi bi-cash-coin"></i> Nuevo cobro</a>
+            <a href="<?= BASE_URL ?>/cobro/registrar/<?= $sesion['id_sesion'] ?>" class="btn btn-outline-primary"><i class="bi bi-cash-coin"></i> Nuevo cobro</a>
             <a href="<?= BASE_URL ?>/sesion/listar" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
         </div>
     </div>
@@ -29,10 +29,10 @@
                         <tbody>
                             <?php foreach ($socios as $s): ?>
                             <tr class="<?= isset($asistencias[$s['id_socio']]) ? 'table-success' : '' ?>">
-                                <td><?= htmlspecialchars($s['cédula']) ?></td>
+                                <td><?= htmlspecialchars($s['cedula']) ?></td>
                                 <td><?= htmlspecialchars($s['nombre_completo']) ?></td>
                                 <td>
-                                    <form method="POST" class="d-flex gap-1" action="<?= BASE_URL ?>/sesion/checkin/<?= $sesion['id_sesión'] ?>">
+                                    <form method="POST" class="d-flex gap-1" action="<?= BASE_URL ?>/sesion/checkin/<?= $sesion['id_sesion'] ?>">
                                         <?= CSRFMiddleware::campoHTML() ?>
                                         <input type="hidden" name="accion" value="asistencia">
                                         <input type="hidden" name="id_socio" value="<?= $s['id_socio'] ?>">

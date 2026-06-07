@@ -19,7 +19,7 @@
                     <tr>
                         <td><?= $s['fecha_solicitud'] ?></td>
                         <td><?= htmlspecialchars($s['socio']) ?></td>
-                        <td><?= $s['cédula'] ?></td>
+                        <td><?= $s['cedula'] ?></td>
                         <td><strong>$<?= number_format($s['monto'], 2) ?></strong></td>
                         <td>$<?= number_format($s['saldo_disponible'] ?? 0, 2) ?></td>
                         <td><span class="badge bg-<?= $s['estado'] === 'aprobado' ? 'success' : ($s['estado'] === 'rechazado' ? 'danger' : 'warning') ?>"><?= ucfirst($s['estado']) ?></span></td>

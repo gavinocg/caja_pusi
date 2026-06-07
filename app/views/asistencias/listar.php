@@ -18,7 +18,7 @@
             <select name="sesion" class="form-select form-select-sm">
                 <option value="">Todas las sesiones</option>
                 <?php foreach ($sesiones as $ses): ?>
-                <option value="<?= $ses['id_sesión'] ?>" <?= $filtroSesion === $ses['id_sesión'] ? 'selected' : '' ?>>#<?= $ses['número_sesión'] ?> Ã¢â‚¬â€ <?= $ses['fecha'] ?></option>
+                <option value="<?= $ses['id_sesion'] ?>" <?= $filtroSesion === $ses['id_sesion'] ? 'selected' : '' ?>>#<?= $ses['numero_sesion'] ?> Ã¢â‚¬â€ <?= $ses['fecha'] ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
@@ -38,19 +38,19 @@
                     <?php foreach ($asistencias as $a): ?>
                     <tr>
                         <td><?= $a['fecha_registro'] ?></td>
-                        <td>#<?= $a['número_sesión'] ?> (<?= $a['fecha_sesión'] ?>)</td>
+                        <td>#<?= $a['numero_sesion'] ?> (<?= $a['fecha_sesión'] ?>)</td>
                         <td><?= htmlspecialchars($a['socio']) ?></td>
-                        <td><?= $a['cédula'] ?></td>
+                        <td><?= $a['cedula'] ?></td>
                         <td>
                             <span class="badge bg-<?= match($a['tipo']) { 'a_tiempo'=>'success', 'retraso_10min'=>'warning', 'retraso_30min'=>'danger', 'falta'=>'dark', default=>'secondary' } ?>">
                                 <?= str_replace('_', ' ', $a['tipo']) ?>
                             </span>
                         </td>
                         <td>
-                            <?php if ($a['justificación']): ?>
+                            <?php if ($a['justificacion']): ?>
                             <span class="badge bg-info">Enviada</span>
-                            <?php if ($a['justificación_aprobada'] === '1'): ?><span class="badge bg-success">Aprobada</span>
-                            <?php elseif ($a['justificación_aprobada'] === '0'): ?><span class="badge bg-danger">Rechazada</span>
+                            <?php if ($a['justificacion_aprobada'] === '1'): ?><span class="badge bg-success">Aprobada</span>
+                            <?php elseif ($a['justificacion_aprobada'] === '0'): ?><span class="badge bg-danger">Rechazada</span>
                             <?php endif; ?>
                             <?php else: ?>
                             <span class="text-muted">Ã¢â‚¬â€</span>
@@ -58,10 +58,10 @@
                         </td>
                         <?php if (RBAC::tienePermiso($_SESSION['usuario_id'], 'socio.cambiar_estado')): ?>
                         <td>
-                            <?php if ($a['justificación'] && $a['justificación_aprobada'] === '0'): ?>
+                            <?php if ($a['justificacion'] && $a['justificacion_aprobada'] === '0'): ?>
                             <button class="btn btn-sm btn-outline-success" onclick="aprobarJustif('<?= $a['id_asistencia'] ?>','aprobar')"><i class="bi bi-check-lg"></i></button>
                             <?php endif; ?>
-                            <?php if ($a['justificación'] && $a['justificación_aprobada'] === '0'): ?>
+                            <?php if ($a['justificacion'] && $a['justificacion_aprobada'] === '0'): ?>
                             <button class="btn btn-sm btn-outline-danger" onclick="aprobarJustif('<?= $a['id_asistencia'] ?>','rechazar')"><i class="bi bi-x-lg"></i></button>
                             <?php endif; ?>
                         </td>
@@ -86,7 +86,7 @@
 <?php if (RBAC::tienePermiso($_SESSION['usuario_id'], 'socio.cambiar_estado')): ?>
 <script>
 function aprobarJustif(id, accion) {
-    if (!confirm('Ã‚¿' + (accion === 'aprobar' ? 'Aprobar' : 'Rechazar') + ' esta justificación?')) return;
+    if (!confirm("\u00bf" + (accion === 'aprobar' ? 'Aprobar' : 'Rechazar') + ' esta justificacion?')) return;
     var formData = new FormData();
     formData.append('csrf_token', '<?= $csrfToken ?? '' ?>');
     formData.append('accion', accion);

@@ -1,7 +1,7 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>Registrar cobro — Sesión #<?= $sesion['número_sesión'] ?></h4>
-        <a href="<?= BASE_URL ?>/sesion/checkin/<?= $sesion['id_sesión'] ?>" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+        <h4>Registrar cobro — Sesión #<?= $sesion['numero_sesion'] ?></h4>
+        <a href="<?= BASE_URL ?>/sesion/checkin/<?= $sesion['id_sesion'] ?>" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
     </div>
 
     <div class="card card-dashboard">
@@ -14,7 +14,7 @@
                         <select name="id_socio" class="form-select" required>
                             <option value="">Seleccione...</option>
                             <?php foreach ($socios as $s): ?>
-                            <option value="<?= $s['id_socio'] ?>"><?= htmlspecialchars($s['cédula'] . ' — ' . $s['nombre']) ?></option>
+                            <option value="<?= $s['id_socio'] ?>"><?= htmlspecialchars($s['cedula'] . ' — ' . $s['nombre']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -53,7 +53,7 @@ document.getElementById('formCobro').addEventListener('submit', function(e) {
     e.preventDefault();
     var f = new FormData(this);
     f.append('csrf_token', document.querySelector('[name="csrf_token"]').value);
-    fetch('<?= BASE_URL ?>/cobro/registrar/<?= $sesion['id_sesión'] ?>', {
+    fetch('<?= BASE_URL ?>/cobro/registrar/<?= $sesion['id_sesion'] ?>', {
         method: 'POST', body: f
     }).then(function(r) { return r.json(); }).then(function(d) {
         if (d.error) {

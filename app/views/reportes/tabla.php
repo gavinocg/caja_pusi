@@ -19,7 +19,7 @@
                     <tr>
                         <?php foreach ($campos as $c):
                             $v = $f[$c] ?? '-';
-                            if (is_numeric($v) && $c !== 'cédula' && $c !== 'teléfono' && strpos($c, 'saldo') !== false):
+                            if (is_numeric($v) && $c !== 'cedula' && $c !== 'telefono' && strpos($c, 'saldo') !== false):
                         ?>
                         <td class="text-end">$<?= number_format($v, 2) ?></td>
                         <?php elseif ($c === 'anulado'): ?>

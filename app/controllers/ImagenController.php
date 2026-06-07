@@ -5,7 +5,7 @@ class ImagenController extends BaseController {
 
     public function index() {
         $this->requirePermission('param.imagen');
-        $stmt = $this->db->query("SELECT * FROM parámetros WHERE código LIKE 'color.%' OR código IN ('logo_sidebar', 'logo_sd') ORDER BY código");
+        $stmt = $this->db->query("SELECT * FROM parametros WHERE codigo LIKE 'color.%' OR codigo IN ('logo_sidebar', 'logo_sd') ORDER BY codigo");
         $params = $stmt->fetchAll();
         $this->render('parametros/imagen', [
             'titulo' => 'Imagen corporativa',
@@ -30,7 +30,7 @@ class ImagenController extends BaseController {
         if (!$result['success']) {
             $this->json(['error' => $result['error']], 400);
         }
-        $stmt = $this->db->prepare("UPDATE parámetros SET valor = ? WHERE código = ?");
+        $stmt = $this->db->prepare("UPDATE parametros SET valor = ? WHERE codigo = ?");
         $stmt->execute([$result['id_archivo'], $codigo]);
         $this->json(['mensaje' => 'Imagen actualizada', 'id_archivo' => $result['id_archivo']]);
     }
@@ -41,7 +41,7 @@ class ImagenController extends BaseController {
             $this->validateCSRF();
             $codigo = $_POST['codigo'] ?? '';
             $valor = $_POST['valor'] ?? '';
-            $stmt = $this->db->prepare("UPDATE parámetros SET valor = ? WHERE código = ?");
+            $stmt = $this->db->prepare("UPDATE parametros SET valor = ? WHERE codigo = ?");
             $stmt->execute([$valor, $codigo]);
             $this->json(['mensaje' => 'Color actualizado']);
         }

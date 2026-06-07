@@ -15,7 +15,7 @@
                     <div class="col-md-4">
                         <label class="form-label">Cédula *</label>
                         <input type="text" name="cedula" class="form-control <?= isset($errors['cedula']) ? 'is-invalid' : '' ?>"
-                               value="<?= htmlspecialchars($data['cédula'] ?? $data['cedula'] ?? '') ?>" <?= $editando ? 'readonly' : 'required' ?> maxlength="10">
+                               value="<?= htmlspecialchars($data['cedula'] ?? $data['cedula'] ?? '') ?>" <?= $editando ? 'readonly' : 'required' ?> maxlength="10">
                         <?php if (isset($errors['cedula'])): ?><div class="invalid-feedback"><?= $errors['cedula'] ?></div><?php endif; ?>
                     </div>
                     <div class="col-md-4">
@@ -33,12 +33,12 @@
                     <div class="col-md-4">
                         <label class="form-label">Correo electrónico *</label>
                         <input type="email" name="correo" class="form-control <?= isset($errors['correo']) ? 'is-invalid' : '' ?>"
-                               value="<?= htmlspecialchars($data['correo_electrónico'] ?? $data['correo'] ?? '') ?>" required>
+                               value="<?= htmlspecialchars($data['correo_electronico'] ?? $data['correo'] ?? '') ?>" required>
                         <?php if (isset($errors['correo'])): ?><div class="invalid-feedback"><?= $errors['correo'] ?></div><?php endif; ?>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Teléfono</label>
-                        <input type="text" name="telefono" class="form-control" value="<?= htmlspecialchars($data['teléfono'] ?? '') ?>">
+                        <input type="text" name="telefono" class="form-control" value="<?= htmlspecialchars($data['telefono'] ?? '') ?>">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Nombre de usuario *</label>

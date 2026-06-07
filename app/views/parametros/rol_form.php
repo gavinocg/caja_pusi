@@ -16,7 +16,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Descripción</label>
-                    <textarea name="descripcion" class="form-control" rows="3"><?= htmlspecialchars($data['descripción'] ?? '') ?></textarea>
+                    <textarea name="descripcion" class="form-control" rows="3"><?= htmlspecialchars($data['descripcion'] ?? '') ?></textarea>
                 </div>
                 <div class="mb-3">
                     <div class="form-check">
