@@ -16,6 +16,19 @@ class RBAC {
         return $stmt->fetchAll();
     }
 
+    public static function obtenerUsuariosPorRol($idRol) {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("SELECT u.id_usuario FROM roles_usuarios ru JOIN usuarios u ON ru.id_usuario = u.id_usuario WHERE ru.id_rol = ? AND u.activo = TRUE");
+        $stmt->execute([$idRol]);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    public static function obtenerUsuariosAdmin() {
+        $db = Database::getInstance();
+        $stmt = $db->query("SELECT u.id_usuario FROM usuarios u JOIN roles_usuarios ru ON u.id_usuario = ru.id_usuario JOIN roles r ON ru.id_rol = r.id_rol WHERE u.activo = TRUE AND r.nombre != 'Socio' GROUP BY u.id_usuario");
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
     public static function obtenerPermisosUsuario($usuarioId) {
         $db = Database::getInstance();
         $roles = self::obtenerRolesUsuario($usuarioId);

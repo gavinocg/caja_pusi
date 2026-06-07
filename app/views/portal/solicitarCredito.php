@@ -4,6 +4,10 @@
         <a href="<?= BASE_URL ?>/portal" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
     </div>
 
+    <?php if (!empty($errors['general'])): ?>
+    <div class="alert alert-danger"><?= htmlspecialchars($errors['general']) ?></div>
+    <?php endif; ?>
+
     <?php if (!empty($exito)): ?>
     <div class="alert alert-success alert-dismissible fade show">
         <i class="bi bi-check-circle"></i> <?= htmlspecialchars($exito) ?>
@@ -12,24 +16,26 @@
     <?php else: ?>
 
     <!-- Steps progress -->
-    <div class="mb-4">
-        <div class="d-flex justify-content-center gap-4">
-            <div class="text-center step-indicator" id="step1Indicator">
-                <div class="step-circle bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:36px;height:36px">1</div>
-                <div class="small mt-1">Simular</div>
-            </div>
-            <div class="align-self-center" style="width:80px;height:2px;background:#ddd"></div>
-            <div class="text-center step-indicator" id="step2Indicator">
-                <div class="step-circle bg-light border rounded-circle d-inline-flex align-items-center justify-content-center" style="width:36px;height:36px">2</div>
-                <div class="small mt-1 text-muted">Condiciones</div>
-            </div>
-            <div class="align-self-center" style="width:80px;height:2px;background:#ddd"></div>
-            <div class="text-center step-indicator" id="step3Indicator">
-                <div class="step-circle bg-light border rounded-circle d-inline-flex align-items-center justify-content-center" style="width:36px;height:36px">3</div>
-                <div class="small mt-1 text-muted">Confirmar</div>
-            </div>
-        </div>
-    </div>
+    <ul class="nav nav-pills nav-justified step-wizard mb-4">
+        <li class="nav-item" id="step1Indicator">
+            <span class="nav-link active">
+                <span class="step-circle">1</span>
+                <span class="step-label d-none d-sm-inline">Simular</span>
+            </span>
+        </li>
+        <li class="nav-item" id="step2Indicator">
+            <span class="nav-link disabled">
+                <span class="step-circle">2</span>
+                <span class="step-label d-none d-sm-inline">Condiciones</span>
+            </span>
+        </li>
+        <li class="nav-item" id="step3Indicator">
+            <span class="nav-link disabled">
+                <span class="step-circle">3</span>
+                <span class="step-label d-none d-sm-inline">Confirmar</span>
+            </span>
+        </li>
+    </ul>
 
     <form method="POST" id="creditoForm">
         <?= CSRFMiddleware::campoHTML() ?>
@@ -82,32 +88,40 @@
                 <div class="mt-3">
                     <button type="button" class="btn btn-primary" onclick="simular()"><i class="bi bi-calculator"></i> Simular</button>
                 </div>
+            </div>
+        </div>
 
-                <div id="simResult" class="mt-3" style="display:none">
-                    <hr>
-                    <h6>Tabla de amortización estimada</h6>
-                    <div class="table-responsive"><table class="table table-sm table-bordered" id="tablaAmort">
+        <!-- Simulation result (hidden until Simular is clicked) -->
+        <div id="simResult" class="card card-dashboard mt-3" style="display:none">
+            <div class="card-body">
+                <h6 class="fw-semibold">Tabla de amortización estimada</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered mb-0" id="tablaAmort">
                         <thead class="table-light"><tr><th>#</th><th>Capital</th><th>Interés</th><th>Total</th><th>Saldo</th></tr></thead>
                         <tbody></tbody>
-                    </table></div>
-                    <p class="mb-0"><strong>Total a pagar:</strong> $<span id="totalPagar">0.00</span></p>
-                    <div class="mt-2">
-                        <span id="elegibilidadMsg" class="d-none"></span>
-                    </div>
+                    </table>
                 </div>
+                <p class="mt-2 mb-0"><strong>Total a pagar:</strong> $<span id="totalPagar">0.00</span></p>
+                <div class="mt-2" id="elegibilidadMsg" class="d-none"></div>
             </div>
         </div>
 
         <!-- STEP 2: Condiciones -->
-        <div class="card card-dashboard" id="step2" style="display:none">
+        <div class="card card-dashboard mt-3" id="step2" style="display:none">
             <div class="card-body">
                 <h5>Paso 2: Condiciones del crédito</h5>
                 <div id="condicionesDisplay" class="p-3 bg-light rounded mb-3"></div>
 
+                <div class="form-check mb-3">
+                    <input type="checkbox" name="acepta_condiciones" class="form-check-input" value="1" id="aceptaCheck" required onchange="checkStep2Ready()">
+                    <label class="form-check-label" for="aceptaCheck">Acepto las condiciones del crédito</label>
+                    <div class="invalid-feedback"><?= $errors['acepta'] ?? '' ?></div>
+                </div>
+
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Destino del crédito</label>
-                        <textarea name="destino" class="form-control" rows="2" placeholder="Propósito del crédito..."><?= htmlspecialchars($_POST['destino'] ?? '') ?></textarea>
+                        <textarea name="destino" id="destinoInput" class="form-control" rows="2" placeholder="Propósito del crédito (mín. 10 caracteres)..." oninput="checkStep2Ready()"><?= htmlspecialchars($_POST['destino'] ?? '') ?></textarea>
                     </div>
                     <div class="col-md-6" id="garantesGroup" style="display:none">
                         <label class="form-label">Seleccionar garante(s)</label>
@@ -122,7 +136,7 @@
         </div>
 
         <!-- STEP 3: Confirmar -->
-        <div class="card card-dashboard" id="step3" style="display:none">
+        <div class="card card-dashboard mt-3" id="step3" style="display:none">
             <div class="card-body">
                 <h5>Paso 3: Confirmar y enviar</h5>
                 <div class="p-3 bg-light rounded mb-3">
@@ -142,12 +156,6 @@
                 <?php if (isset($errors['elegibilidad'])): ?>
                 <div class="alert alert-warning"><?= htmlspecialchars($errors['elegibilidad']) ?></div>
                 <?php endif; ?>
-
-                <div class="form-check mb-3">
-                    <input type="checkbox" name="acepta_condiciones" class="form-check-input" value="1" id="aceptaCheck" required>
-                    <label class="form-check-label" for="aceptaCheck">Acepto las condiciones del crédito</label>
-                    <div class="invalid-feedback"><?= $errors['acepta'] ?? '' ?></div>
-                </div>
 
                 <button type="submit" class="btn btn-success btn-lg"><i class="bi bi-send"></i> Enviar solicitud</button>
             </div>
@@ -219,11 +227,15 @@
             renderTable(d);
             document.getElementById('simResult').style.display = 'block';
 
-            // Check elegibilidad
             var permanencia = parseInt(opt.dataset.min_permanencia);
             var ahorroReq = parseFloat(opt.dataset.min_ahorro);
             elegible = true;
             var msgs = [];
+
+            <?php if ($tieneSolicitudActiva): ?>
+            elegible = false;
+            msgs.push('Ya tiene una solicitud de crédito activa — espere a que sea procesada');
+            <?php endif; ?>
 
             <?php if ($socio): ?>
             var fechaIngreso = new Date('<?= $socio['fecha_ingreso'] ?>');
@@ -268,48 +280,73 @@
         document.getElementById('resTotal').textContent = total.toFixed(2);
     }
 
+    function checkStep2Ready() {
+        var checked = document.getElementById('aceptaCheck').checked;
+        var destino = document.getElementById('destinoInput').value.trim().length >= 10;
+        var btn = document.getElementById('btnNext');
+        if (checked && destino) {
+            btn.removeAttribute('disabled');
+        } else {
+            btn.setAttribute('disabled', 'disabled');
+        }
+    }
+
     function updateStepUI() {
         for (var i = 1; i <= totalSteps; i++) {
             var indicator = document.getElementById('step' + i + 'Indicator');
+            var link = indicator.querySelector('.nav-link');
             var circle = indicator.querySelector('.step-circle');
             var card = document.getElementById('step' + i);
             card.style.display = i === step ? 'block' : 'none';
+            link.className = 'nav-link';
+            circle.className = 'step-circle';
             if (i < step) {
-                circle.className = 'step-circle bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center';
-                circle.style.width = '36px'; circle.style.height = '36px';
+                link.classList.add('completed');
+                circle.classList.add('bg-success', 'text-white');
                 circle.innerHTML = '<i class="bi bi-check"></i>';
             } else if (i === step) {
-                circle.className = 'step-circle bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center';
-                circle.style.width = '36px'; circle.style.height = '36px';
+                link.classList.add('active');
+                circle.classList.add('bg-primary', 'text-white');
                 circle.textContent = i;
             } else {
-                circle.className = 'step-circle bg-light border rounded-circle d-inline-flex align-items-center justify-content-center';
-                circle.style.width = '36px'; circle.style.height = '36px';
+                link.classList.add('disabled');
+                circle.classList.add('bg-light', 'border', 'text-secondary');
                 circle.textContent = i;
             }
         }
         document.getElementById('btnPrev').style.display = step > 1 ? 'inline-block' : 'none';
         document.getElementById('btnNext').style.display = step < totalSteps ? 'inline-block' : 'none';
+
+        if (step === 2) {
+            checkStep2Ready();
+        } else {
+            document.getElementById('btnNext').removeAttribute('disabled');
+        }
+
+        // When viewing step 2 or 3, hide simResult
+        if (step > 1) document.getElementById('simResult').style.display = 'none';
     }
 
     function nextStep() {
         if (step === 1) {
+            <?php if ($tieneSolicitudActiva): ?>
+            alert('Ya tiene una solicitud de crédito activa. Espere a que sea procesada.');
+            return;
+            <?php endif; ?>
+
             var sel = document.getElementById('selProducto');
             var opt = sel.options[sel.selectedIndex];
             if (!opt || !opt.value) { alert('Seleccione un producto'); return; }
             if (!simData) { alert('Ejecute la simulación primero'); return; }
 
-            // Fill step 2
             document.getElementById('condicionesDisplay').innerHTML = opt.dataset.condiciones || '<p class="text-muted">El producto no tiene condiciones específicas.</p>';
 
-            // Show garantes if needed
             if (opt.dataset.requiere_garante == 1) {
                 document.getElementById('garantesGroup').style.display = 'block';
             } else {
                 document.getElementById('garantesGroup').style.display = 'none';
             }
 
-            // Fill step 3
             document.getElementById('resProducto').textContent = opt.textContent;
             document.getElementById('resMonto').textContent = document.getElementById('inpMonto').value;
             document.getElementById('resPlazo').textContent = document.getElementById('inpPlazo').value;
@@ -318,6 +355,10 @@
         }
 
         if (step === 2) {
+            if (!document.getElementById('aceptaCheck').checked) {
+                alert('Debe aceptar las condiciones del crédito para continuar');
+                return;
+            }
             if (!elegible) {
                 if (!confirm('No cumple todos los requisitos de elegibilidad. ¿Desea continuar de todos modos?')) return;
             }

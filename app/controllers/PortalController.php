@@ -1,4 +1,5 @@
 <?php
+require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php';
 class PortalController extends BaseController {
 
     public function index() {
@@ -113,7 +114,7 @@ class PortalController extends BaseController {
                 $id = UUIDGenerator::generar();
                 $this->db->prepare("INSERT INTO solicitudes_retiro (id_solicitud, id_socio, monto, motivo) VALUES (?, ?, ?, ?)")
                     ->execute([$id, $socio['id_socio'], $monto, $motivo]);
-                NotificacionHelper::crearCobro($id, $cedula, $monto, 'Solicitud de retiro');
+                NotificacionHelper::crearCobro($socio['id_socio'], $cedula, $monto, 'Solicitud de retiro');
                 $this->redirect('/portal');
             }
         }
@@ -245,6 +246,10 @@ class PortalController extends BaseController {
 
         $productos = $this->db->query("SELECT * FROM productos_financieros WHERE tipo = 'credito' AND activo = TRUE ORDER BY nombre")->fetchAll();
 
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM creditos WHERE id_socio = ? AND estado IN ('ingresado','pendiente','aprobado','legalizado')");
+        $stmt->execute([$socio['id_socio']]);
+        $tieneSolicitudActiva = $stmt->fetchColumn() > 0;
+
         $errors = [];
         $exito = '';
 
@@ -277,6 +282,12 @@ class PortalController extends BaseController {
             $ahorroTotal = floatval($socio['saldo_obligatorio'] ?? 0) + floatval($socio['saldo_excedente'] ?? 0);
             if ($ahorroReq > 0 && $ahorroTotal < $ahorroReq) {
                 $errors['elegibilidad'] = ($errors['elegibilidad'] ?? '') . " Requiere mínimo $" . number_format($ahorroReq, 2) . " de ahorro (tiene $" . number_format($ahorroTotal, 2) . ")";
+            }
+
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM creditos WHERE id_socio = ? AND estado IN ('ingresado','pendiente','aprobado','legalizado')");
+            $stmt->execute([$socio['id_socio']]);
+            if ($stmt->fetchColumn() > 0) {
+                $errors['general'] = 'Ya tiene una solicitud de crédito activa. Espere a que sea procesada.';
             }
 
             if (empty($errors)) {
@@ -319,6 +330,7 @@ class PortalController extends BaseController {
             'sociosActivos' => $sociosActivos,
             'errors' => $errors,
             'exito' => $exito,
+            'tieneSolicitudActiva' => $tieneSolicitudActiva,
         ]);
     }
 
@@ -340,6 +352,24 @@ class PortalController extends BaseController {
             'titulo' => 'Certificaciones',
             'id_socio' => $idSocio,
             'socio_nombre' => $socioData['nombre'] ?? '',
+        ]);
+    }
+
+    public function detalleAhorro() {
+        $this->requireAuth();
+        $cedula = $_SESSION['usuario_cedula'] ?? '';
+        $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
+        $stmt->execute([$cedula]);
+        $socio = $stmt->fetch();
+        if (!$socio) $this->redirect('/portal');
+
+        $stmt = $this->db->prepare("SELECT c.*, ses.numero_sesion FROM cobros c LEFT JOIN sesiones_mensuales ses ON c.id_sesion = ses.id_sesion WHERE c.id_socio = ? AND c.tipo = 'aporte_obligatorio' AND c.anulado = FALSE ORDER BY c.fecha_registro DESC");
+        $stmt->execute([$socio['id_socio']]);
+        $pagos = $stmt->fetchAll();
+
+        $this->render('portal/detalleAhorro', [
+            'titulo' => 'Detalle de ahorro',
+            'pagos' => $pagos,
         ]);
     }
 

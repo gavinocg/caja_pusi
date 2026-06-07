@@ -13,10 +13,12 @@ class CalculadoraInteres {
 
     private static function simple($monto, $tasaMensual, $plazo) {
         $cuotas = [];
+        $interesFijo = $monto * $tasaMensual;
+        $capitalFijo = $monto / $plazo;
         $saldo = $monto;
         for ($i = 1; $i <= $plazo; $i++) {
-            $interes = $saldo * $tasaMensual;
-            $capital = $monto / $plazo;
+            $capital = $capitalFijo;
+            $interes = $interesFijo;
             $total = $capital + $interes;
             $saldo -= $capital;
             if ($i === $plazo) $saldo = 0;
