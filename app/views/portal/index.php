@@ -38,7 +38,5 @@
         </div>
     </div>
 
-    <div class="mt-3">
-        <a href="<?= BASE_URL ?>/portal/inversion" class="btn btn-outline-success btn-sm"><i class="bi bi-wallet2"></i> Inversion</a>
-    </div>
+
 </div>
