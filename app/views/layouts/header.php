@@ -102,6 +102,7 @@
                 <?php if ($esSoloSocio): ?>
                 <ul class="menu">
                     <?php
+                    global $currentUrlP;
                     $currentUrlP = $_GET['url'] ?? '';
                     function mazerActiveP($prefix) {
                         global $currentUrlP;
@@ -219,7 +220,7 @@
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if ($uid && RBAC::tienePermiso($uid, 'cobro.inversión')): ?>
+                    <?php if ($uid && RBAC::tienePermiso($uid, 'cobro.inversion')): ?>
                     <li class="sidebar-item <?= mazerActive('inversion') ?>">
                         <a href="<?= $baseUrl ?>/inversion/listar" class="sidebar-link">
                             <i class="bi bi-piggy-bank-fill"></i>
@@ -243,7 +244,7 @@
                         </ul>
                     </li>
                     <?php endif; ?>
-                    <?php if ($uid && RBAC::tienePermiso($uid, 'cálculo.intereses')): ?>
+                    <?php if ($uid && RBAC::tienePermiso($uid, 'calculo.intereses')): ?>
                     <li class="sidebar-item <?= mazerActive('calculo') ?>">
                         <a href="<?= $baseUrl ?>/calculo/simulador" class="sidebar-link">
                             <i class="bi bi-calculator-fill"></i>

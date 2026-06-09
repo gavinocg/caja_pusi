@@ -26,7 +26,7 @@
                     <?php foreach ($cobros as $c): ?>
                     <tr>
                         <td><?= $c['fecha_registro'] ?></td>
-                        <td>#<?= $c['numero_sesion'] ?> (<?= $c['fecha_sesión'] ?>)</td>
+                        <td>#<?= $c['numero_sesion'] ?> (<?= $c['fecha_sesion'] ?>)</td>
                         <td><?= htmlspecialchars($c['socio']) ?></td>
                         <td><span class="badge bg-info"><?= $tiposCobro[$c['tipo']] ?? $c['tipo'] ?></span></td>
                         <td><strong>$<?= number_format($c['monto'], 2) ?></strong></td>

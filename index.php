@@ -13,6 +13,7 @@ require_once ROOT_PATH . '/app/helpers/FileManager.php';
 require_once ROOT_PATH . '/config/pusher.php';
 
 session_start();
+header('Content-Type: text/html; charset=utf-8');
 
 if (isset($_SESSION['usuario_id']) && isset($_SESSION['last_activity'])) {
     $inactive = time() - $_SESSION['last_activity'];

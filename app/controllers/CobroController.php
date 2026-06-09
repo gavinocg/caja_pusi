@@ -73,7 +73,7 @@ class CobroController extends BaseController {
                 $this->actualizarCuentaAhorro($idSocio, $tipo, $monto);
 
                 if ($tipo === 'cuota_credito') {
-                    $this->requirePermission('cobro.cuota_crédito');
+                    $this->requirePermission('cobro.cuota_credito');
                     $this->aplicarPagoCuota($idSocio, $monto, $idCobro);
                 }
 

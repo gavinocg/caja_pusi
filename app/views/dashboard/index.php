@@ -102,7 +102,7 @@
                 <?php if (in_array('cobro.desembolso', $permisos)): ?>
                 <a href="<?= BASE_URL ?>/credito/listar" class="btn btn-outline-warning btn-sm">Créditos</a>
                 <?php endif; ?>
-                <?php if (in_array('cálculo.intereses', $permisos)): ?>
+                <?php if (in_array('calculo.intereses', $permisos)): ?>
                 <a href="<?= BASE_URL ?>/calculo/simulador" class="btn btn-outline-info btn-sm">Simulador</a>
                 <?php endif; ?>
             </div>

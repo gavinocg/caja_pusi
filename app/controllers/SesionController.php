@@ -94,7 +94,7 @@ class SesionController extends BaseController {
             }
 
             if ($accion === 'cierre') {
-                $this->requirePermission('cobro.cierre_sesión');
+                $this->requirePermission('cobro.cierre_sesion');
                 return $this->ejecutarCierre($sesion);
             }
         }

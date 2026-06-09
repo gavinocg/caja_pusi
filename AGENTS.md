@@ -117,7 +117,16 @@ UUIDGenerator, CedulaEcuador, Validator, Auth, RBAC, CSRFMiddleware, PDFGenerato
 - Portal con `table-responsive-stack` (cards apiladas en móvil)
 - Media queries en style.css
 
-## Convenciones
+## Codificación
+- Todos los archivos PHP en **UTF-8 sin BOM**
+- Cabecera `Content-Type: text/html; charset=utf-8` en `index.php`
+- PDO con `charset=utf8mb4` y `SET NAMES utf8mb4`
+- Cliente MySQL con `--default-character-set=utf8mb4` para import/export
+
+## Convenciones de nomenclatura
+- **Texto de interfaz** (labels, select options, mensajes, títulos, descripciones): usar acentos y ñ (ej: `'Cédula'`, `'Inversión'`, `'Aprobación'`)
+- **Identificadores de código** (variables, nombres de tabla, nombres de columna, nombres de índice, códigos de permiso, constantes): **sin acentos ni ñ** (ej: `cedula`, `inversion`, `aprobacion`, `param.catalogos`, `calculo.intereses`)
+- **Nombres de base de datos**: solo ASCII limpio (ej: `caja_ahorro_pujota`, no `caja_ahorro_pujota_con_acentos`)
 - Nombres columnas en clean ASCII (sin acentos/ñ): cedula, correo_electronico, contrasena, etc.
 - UUIDs como PK (`UUIDGenerator::generate()`)
 - CONCAT_WS para nombres completos

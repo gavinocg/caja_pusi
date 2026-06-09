@@ -11,7 +11,7 @@
             <?php foreach ($asistencias as $a): ?>
             <tr>
                 <td>#<?= $a['numero_sesion'] ?></td>
-                <td><?= $a['fecha_sesión'] ?></td>
+                <td><?= $a['fecha_sesion'] ?></td>
                 <td><?= str_replace('_', ' ', ucfirst($a['tipo'])) ?></td>
                 <td><?= htmlspecialchars(substr($a['justificacion'] ?? '-', 0, 60)) ?></td>
                 <td>

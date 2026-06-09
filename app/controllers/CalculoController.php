@@ -4,7 +4,7 @@ require_once ROOT_PATH . '/app/helpers/CalculadoraInteres.php';
 class CalculoController extends BaseController {
 
     public function simulador() {
-        $this->requirePermission('cálculo.intereses');
+        $this->requirePermission('calculo.intereses');
         $resultado = null;
         $productos = $this->db->query("SELECT id_producto, nombre, tipo, tasa_interes_anual, metodo_interes, plazo_min_meses, plazo_max_meses FROM productos_financieros WHERE activo = TRUE ORDER BY nombre")->fetchAll();
 
@@ -32,7 +32,7 @@ class CalculoController extends BaseController {
     }
 
     public function generarTabla($idCredito) {
-        $this->requirePermission('cálculo.intereses');
+        $this->requirePermission('calculo.intereses');
         $stmt = $this->db->prepare("SELECT c.*, p.metodo_interes FROM creditos c
                                      JOIN productos_financieros p ON c.id_producto = p.id_producto
                                      WHERE c.id_credito = ? AND c.estado = 'aprobado'");
@@ -75,7 +75,7 @@ class CalculoController extends BaseController {
     }
 
     public function excedentes() {
-        $this->requirePermission('cálculo.excedentes');
+        $this->requirePermission('calculo.excedentes');
         $errors = [];
         $resultado = null;
 
@@ -123,7 +123,7 @@ class CalculoController extends BaseController {
     }
 
     public function interesesAhorro() {
-        $this->requirePermission('cálculo.intereses');
+        $this->requirePermission('calculo.intereses');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Método no permitido'], 405);
         $this->validateCSRF();
 
@@ -163,7 +163,7 @@ class CalculoController extends BaseController {
     }
 
     public function aprobarExcedentes() {
-        $this->requirePermission('cálculo.aprobar_excedentes');
+        $this->requirePermission('calculo.aprobar_excedentes');
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->validateCSRF();
             $totalExcedente = str_replace(',', '.', $_POST['total_excedente'] ?? '0');

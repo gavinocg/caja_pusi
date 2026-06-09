@@ -3,7 +3,7 @@ require_once ROOT_PATH . '/app/helpers/PDFGenerator.php';
 class InversionController extends BaseController {
 
     public function listar() {
-        $this->requirePermission('cobro.inversión');
+        $this->requirePermission('cobro.inversion');
         $stmt = $this->db->query("SELECT i.*, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio,
                                    p.nombre AS producto
                                    FROM inversiones i
@@ -18,7 +18,7 @@ class InversionController extends BaseController {
     }
 
     public function apertura() {
-        $this->requirePermission('cobro.inversión');
+        $this->requirePermission('cobro.inversion');
         $errors = [];
         $productos = $this->db->query("SELECT id_producto, nombre, tasa_interes_anual, plazo_min_meses, plazo_max_meses, monto_min, monto_max FROM productos_financieros WHERE tipo = 'inversion' AND activo = TRUE ORDER BY nombre")->fetchAll();
         $socios = $this->db->query("SELECT id_socio, cedula, CONCAT_WS(' ', apellido1, apellido2, nombre1, nombre2) AS nombre FROM socios WHERE estado = 'activo' ORDER BY apellido1, nombre1")->fetchAll();
@@ -106,7 +106,7 @@ class InversionController extends BaseController {
     }
 
     public function cerrarVencidas() {
-        $this->requirePermission('cobro.inversión');
+        $this->requirePermission('cobro.inversion');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Método no permitido'], 405);
         $this->validateCSRF();
 
@@ -133,7 +133,7 @@ class InversionController extends BaseController {
     }
 
     public function retirar($id) {
-        $this->requirePermission('cobro.inversión');
+        $this->requirePermission('cobro.inversion');
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->validateCSRF();
             $stmt = $this->db->prepare("SELECT i.*, p.penalidad_retiro_anticipado FROM inversiones i JOIN productos_financieros p ON i.id_producto = p.id_producto WHERE i.id_inversion = ? AND i.estado = 'activa'");

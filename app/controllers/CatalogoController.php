@@ -2,7 +2,7 @@
 class CatalogoController extends BaseController {
 
     public function provincias() {
-        $this->requirePermission('param.catálogos');
+        $this->requirePermission('param.catalogos');
         $stmt = $this->db->query("SELECT * FROM provincias ORDER BY nombre");
         $provincias = $stmt->fetchAll();
         $this->render('parametros/catalogos', [
@@ -14,7 +14,7 @@ class CatalogoController extends BaseController {
     }
 
     public function cantones() {
-        $this->requirePermission('param.catálogos');
+        $this->requirePermission('param.catalogos');
         $stmt = $this->db->query("SELECT c.id_canton, c.nombre, p.nombre AS provincia
                                    FROM cantones c JOIN provincias p ON c.id_provincia = p.id_provincia
                                    ORDER BY p.nombre, c.nombre");
@@ -30,7 +30,7 @@ class CatalogoController extends BaseController {
     }
 
     public function entidades() {
-        $this->requirePermission('param.catálogos');
+        $this->requirePermission('param.catalogos');
         $stmt = $this->db->query("SELECT * FROM catastro_entidades_publicas ORDER BY razon_social");
         $items = $stmt->fetchAll();
         $this->render('parametros/catalogos', [
@@ -45,7 +45,7 @@ class CatalogoController extends BaseController {
     }
 
     public function agregar($tipo) {
-        $this->requirePermission('param.catálogos');
+        $this->requirePermission('param.catalogos');
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->validateCSRF();
             if ($tipo === 'provincias') {
@@ -67,7 +67,7 @@ class CatalogoController extends BaseController {
     }
 
     public function agregarCanton() {
-        $this->requirePermission('param.catálogos');
+        $this->requirePermission('param.catalogos');
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->validateCSRF();
             $idProvincia = intval($_POST['id_provincia'] ?? 0);
@@ -80,7 +80,7 @@ class CatalogoController extends BaseController {
     }
 
     public function editar($tipo, $id) {
-        $this->requirePermission('param.catálogos');
+        $this->requirePermission('param.catalogos');
         $tables = ['provincias' => 'provincias', 'cantones' => 'cantones', 'entidades' => 'catastro_entidades_publicas'];
         $pk = ['provincias' => 'id_provincia', 'cantones' => 'id_canton', 'entidades' => 'id_entidad'];
         $cols = ['provincias' => ['nombre' => 'nombre'], 'cantones' => ['nombre' => 'nombre', 'id_provincia' => 'id_provincia'], 'entidades' => ['ruc' => 'ruc', 'razon_social' => 'razon_social']];
@@ -118,7 +118,7 @@ class CatalogoController extends BaseController {
     }
 
     public function eliminar($tipo, $id) {
-        $this->requirePermission('param.catálogos');
+        $this->requirePermission('param.catalogos');
         $tables = ['provincias' => 'provincias', 'cantones' => 'cantones', 'entidades' => 'catastro_entidades_publicas'];
         $pk = ['provincias' => 'id_provincia', 'cantones' => 'id_canton', 'entidades' => 'id_entidad'];
         if (isset($tables[$tipo])) {

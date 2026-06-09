@@ -38,7 +38,7 @@
                     <?php foreach ($asistencias as $a): ?>
                     <tr>
                         <td><?= $a['fecha_registro'] ?></td>
-                        <td>#<?= $a['numero_sesion'] ?> (<?= $a['fecha_sesión'] ?>)</td>
+                        <td>#<?= $a['numero_sesion'] ?> (<?= $a['fecha_sesion'] ?>)</td>
                         <td><?= htmlspecialchars($a['socio']) ?></td>
                         <td><?= $a['cedula'] ?></td>
                         <td>
