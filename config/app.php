@@ -1,7 +1,10 @@
 <?php
 define('APP_NAME', 'Caja de Ahorro y Crédito Solidaria Familiar Pujota-Simbaña');
 define('APP_VERSION', '1.0.0');
-define('BASE_URL', 'http://localhost/caja');
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : ($_SERVER['REQUEST_SCHEME'] ?? 'http');
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+define('BASE_URL', $protocol . '://' . $host . $scriptDir);
 define('DEBUG', true);
 define('TIMEZONE', 'America/Guayaquil');
 define('SESSION_TIMEOUT_MINUTES', 30);
