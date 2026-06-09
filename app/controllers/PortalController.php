@@ -34,13 +34,8 @@ class PortalController extends BaseController {
         $stmt->execute([$idSocio]);
         $multasRes = $stmt->fetch();
 
-        $stmt = $this->db->prepare("SELECT IFNULL(SUM(a.total), 0) AS cuotas_credito FROM amortizaciones a JOIN creditos cr ON a.id_credito = cr.id_credito WHERE cr.id_socio = ? AND a.estado != 'pagada'");
-        $stmt->execute([$idSocio]);
-        $creditosRes = $stmt->fetch();
-
-        $valoresPagar = floatval($cuenta['saldo_obligatorio'] ?? 0)
-            + floatval($multasRes['multas'] ?? 0)
-            + floatval($creditosRes['cuotas_credito'] ?? 0);
+        $aporteMensual = floatval($this->db->query("SELECT valor FROM parametros WHERE codigo = 'aporte_obligatorio_mensual'")->fetchColumn() ?: 10);
+        $valoresPagar = $aporteMensual + floatval($multasRes['multas'] ?? 0);
 
         $this->render('portal/index', [
             'titulo' => 'Inicio',
@@ -219,44 +214,16 @@ class PortalController extends BaseController {
         if ($socio) {
             $idSocio = $socio['id_socio'];
 
-            $stmt = $this->db->prepare("SELECT saldo_obligatorio, saldo_excedente FROM cuentas_ahorro WHERE id_socio = ?");
-            $stmt->execute([$idSocio]);
-            $cuenta = $stmt->fetch();
+            $aporteMensual = floatval($this->db->query("SELECT valor FROM parametros WHERE codigo = 'aporte_obligatorio_mensual'")->fetchColumn() ?: 10);
 
             $stmt = $this->db->prepare("SELECT IFNULL(SUM(monto), 0) AS multas_pendientes FROM multas WHERE id_socio = ? AND pagada = FALSE");
             $stmt->execute([$idSocio]);
             $multas = $stmt->fetch();
 
-            $stmt = $this->db->prepare("SELECT IFNULL(SUM(a.total), 0) AS cuotas_pendientes
-                                        FROM amortizaciones a
-                                        JOIN creditos cr ON a.id_credito = cr.id_credito
-                                        WHERE cr.id_socio = ? AND a.estado != 'pagada'");
-            $stmt->execute([$idSocio]);
-            $creditos = $stmt->fetch();
-
-            $stmt = $this->db->prepare("SELECT a.total AS siguiente_cuota, a.fecha_vencimiento, a.numero_cuota, cr.id_credito
-                                        FROM amortizaciones a
-                                        JOIN creditos cr ON a.id_credito = cr.id_credito
-                                        WHERE cr.id_socio = ? AND a.estado IN ('pendiente','vencida')
-                                        ORDER BY a.fecha_vencimiento ASC
-                                        LIMIT 1");
-            $stmt->execute([$idSocio]);
-            $siguienteCuota = $stmt->fetch();
-
-            $aporteObligatorioTotal = floatval($cuenta['saldo_obligatorio'] ?? 0)
-                + floatval($multas['multas_pendientes'] ?? 0)
-                + floatval($creditos['cuotas_pendientes'] ?? 0);
-
             $pendientes = [
-                'aporte_obligatorio_mensual' => $aporteObligatorioTotal,
-                'aporte_obligatorio' => $aporteObligatorioTotal,
-                'aporte_excedente' => $cuenta['saldo_excedente'] ?? 0,
+                'aporte_mensual' => $aporteMensual,
                 'multas' => $multas['multas_pendientes'] ?? 0,
-                'cuotas_credito' => $creditos['cuotas_pendientes'] ?? 0,
-                'saldo_obligatorio' => $cuenta['saldo_obligatorio'] ?? 0,
-                'siguiente_cuota' => floatval($siguienteCuota['siguiente_cuota'] ?? 0),
-                'siguiente_cuota_fecha' => $siguienteCuota['fecha_vencimiento'] ?? null,
-                'siguiente_numero_cuota' => $siguienteCuota['numero_cuota'] ?? null,
+                'total' => $aporteMensual + floatval($multas['multas_pendientes'] ?? 0),
             ];
         }
 
