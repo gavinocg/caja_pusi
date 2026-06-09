@@ -27,7 +27,7 @@
     <div class="card mt-3">
         <div class="card-body text-center">
             <h5>Total a pagar: <strong class="text-primary">$ <?= number_format($pendientes['total'] ?? 0, 2) ?></strong></h5>
-            <p class="text-muted mb-0">Los pagos deben ser realizados en sesion por el tesorero.</p>
+            <p class="text-muted mb-0">Valores a pagar en la siguiente Reunion.</p>
         </div>
     </div>
 
