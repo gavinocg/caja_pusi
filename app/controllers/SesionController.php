@@ -173,20 +173,13 @@ class SesionController extends BaseController {
                 $this->redirect('/sesion/checkin/' . $id);
             }
 
-            if ($accion === 'pagar_todo_socio') {
-                $idSocio = $_POST['id_socio'] ?? '';
-                $stmt = $this->db->prepare("SELECT id_obligacion FROM obligaciones_sesion WHERE id_sesion = ? AND id_socio = ? AND pagada = FALSE");
-                $stmt->execute([$id, $idSocio]);
-
             if ($accion === 'pagar_seleccion') {
                 $ids = $_POST['obligaciones'] ?? [];
                 if (!empty($ids)) {
                     foreach ($ids as $oid) {
                         $this->procesarPagoObligacion($oid, $id);
-        }
-    }
-
-}
+                    }
+                }
                 $this->redirect('/sesion/checkin/' . $id);
             }
 
