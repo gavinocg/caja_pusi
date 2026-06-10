@@ -257,5 +257,4 @@ class DocumentoController extends BaseController {
         header('Location: ' . BASE_URL . '/storage/documentos/' . $filename);
         exit;
     }
-
-    public function actaCierre($idSesion) {
+}
