@@ -24,7 +24,6 @@ class CobroController extends BaseController {
                                    FROM cobros c
                                    JOIN socios s ON c.id_socio = s.id_socio
                                    LEFT JOIN sesiones_mensuales ses ON c.id_sesion = ses.id_sesion
-                                   WHERE c.anulado = FALSE
                                    ORDER BY c.fecha_registro DESC");
         $cobros = $stmt->fetchAll();
         $sesionAbierta = $this->db->query("SELECT id_sesion FROM sesiones_mensuales WHERE estado = 'abierta' LIMIT 1")->fetchColumn();

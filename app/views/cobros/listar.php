@@ -19,21 +19,31 @@
                         <th>Tipo</th>
                         <th>Monto</th>
                         <th>Medio</th>
+                        <th>Estado</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($cobros as $c): ?>
-                    <tr>
+                    <tr class="<?= $c['anulado'] ? 'table-danger text-muted' : '' ?>">
                         <td><?= $c['fecha_registro'] ?></td>
                         <td>#<?= $c['numero_sesion'] ?> (<?= $c['fecha_sesion'] ?>)</td>
                         <td><?= htmlspecialchars($c['socio']) ?></td>
                         <td><span class="badge bg-info"><?= $tiposCobro[$c['tipo']] ?? $c['tipo'] ?></span></td>
-                        <td><strong>$<?= number_format($c['monto'], 2) ?></strong></td>
+                        <td><strong class="<?= $c['anulado'] ? 'text-danger' : 'text-success' ?>"><?= $c['anulado'] ? '-' : '+' ?>$<?= number_format($c['monto'], 2) ?></strong></td>
                         <td><?= $mediosPago[$c['medio_pago']] ?? $c['medio_pago'] ?></td>
                         <td>
+                            <?php if ($c['anulado']): ?>
+                            <span class="badge bg-danger">Anulado</span>
+                            <?php else: ?>
+                            <span class="badge bg-success">Activo</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
                             <a href="<?= BASE_URL ?>/documento/comprobante/<?= $c['id_cobro'] ?>" class="btn btn-sm btn-outline-info" title="Comprobante"><i class="bi bi-file-earmark-pdf"></i></a>
+                            <?php if (!$c['anulado']): ?>
                             <a href="#" onclick="anularCobro('<?= $c['id_cobro'] ?>')" class="btn btn-sm btn-outline-danger" title="Anular"><i class="bi bi-x-circle"></i></a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                     <?php endforeach; ?>
