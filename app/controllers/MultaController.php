@@ -62,7 +62,16 @@ class MultaController extends BaseController {
             'filtroPagada' => $filtroPagada,
             'filtroSocio' => $filtroSocio,
             'esSocio' => $esSocio,
+            'esPresidente' => $this->esPresidente(),
         ]);
+    }
+
+    private function esPresidente() {
+        $roles = RBAC::obtenerRolesUsuario($_SESSION['usuario_id']);
+        foreach ($roles as $r) {
+            if ($r['nombre'] === 'Presidente') return true;
+        }
+        return false;
     }
 
     public function ver($id) {
@@ -79,6 +88,7 @@ class MultaController extends BaseController {
         $this->render('multas/ver', [
             'titulo' => 'Multa',
             'multa' => $multa,
+            'esPresidente' => $this->esPresidente(),
         ]);
     }
 
@@ -149,5 +159,71 @@ class MultaController extends BaseController {
             $this->db->rollBack();
             $this->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+    public function impugnar($id) {
+        $this->requireAuth();
+        $stmt = $this->db->prepare("SELECT m.*, s.cedula FROM multas m JOIN socios s ON m.id_socio = s.id_socio WHERE m.id_multa = ?");
+        $stmt->execute([$id]);
+        $multa = $stmt->fetch();
+        if (!$multa) $this->json(['error' => 'No encontrada'], 404);
+        if ($multa['pagada']) $this->json(['error' => 'No se puede impugnar una multa ya pagada'], 400);
+        if ($multa['impugnada']) $this->json(['error' => 'Ya fue impugnada'], 400);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->validateCSRF();
+            $texto = trim($_POST['justificacion'] ?? '');
+            if (empty($texto)) $this->json(['error' => 'Escriba una justificacion'], 400);
+
+            $archivo = null;
+            if (!empty($_FILES['archivo']) && $_FILES['archivo']['error'] === UPLOAD_ERR_OK) {
+                $ext = strtolower(pathinfo($_FILES['archivo']['name'], PATHINFO_EXTENSION));
+                if (!in_array($ext, ['pdf', 'jpg', 'jpeg', 'png'])) {
+                    $this->json(['error' => 'Solo PDF, JPG o PNG'], 400);
+                }
+                $nombre = 'impugnacion_' . substr($id, 0, 8) . '.' . $ext;
+                move_uploaded_file($_FILES['archivo']['tmp_name'], ROOT_PATH . '/storage/documentos/' . $nombre);
+                $archivo = $nombre;
+            }
+
+            $this->db->prepare("UPDATE multas SET justificacion = ?, justificacion_pdf = COALESCE(?, justificacion_pdf), impugnada = TRUE WHERE id_multa = ?")
+                ->execute([$texto, $archivo, $id]);
+
+            try {
+                require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php';
+                NotificacionHelper::crear([
+                    'id_socio' => $multa['id_socio'],
+                    'tipo' => 'multa',
+                    'titulo' => 'Multa impugnada',
+                    'mensaje' => 'Su multa ha sido registrada como impugnada y queda sin efecto.',
+                    'enviar_pusher' => true,
+                ]);
+            } catch (Exception $e) {}
+
+            $this->json(['mensaje' => 'Multa impugnada correctamente']);
+        }
+    }
+
+    public function eliminar($id) {
+        $this->requireAuth();
+        // Solo Presidente puede eliminar
+        $roles = RBAC::obtenerRolesUsuario($_SESSION['usuario_id']);
+        $esPresidente = false;
+        foreach ($roles as $r) {
+            if ($r['nombre'] === 'Presidente') { $esPresidente = true; break; }
+        }
+        if (!$esPresidente) $this->json(['error' => 'Solo el Presidente puede eliminar multas'], 403);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Metodo no permitido'], 405);
+        $this->validateCSRF();
+
+        $stmt = $this->db->prepare("SELECT pagada FROM multas WHERE id_multa = ?");
+        $stmt->execute([$id]);
+        $m = $stmt->fetch();
+        if (!$m) $this->json(['error' => 'No encontrada'], 404);
+        if ($m['pagada']) $this->json(['error' => 'No se puede eliminar una multa pagada'], 400);
+
+        $this->db->prepare("DELETE FROM multas WHERE id_multa = ?")->execute([$id]);
+        $this->json(['mensaje' => 'Multa eliminada']);
     }
 }

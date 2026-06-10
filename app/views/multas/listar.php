@@ -56,10 +56,17 @@
                         </td>
                         <td>
                             <?php if ($m['pagada']): ?><span class="badge bg-success">Pagada</span>
+                            <?php elseif ($m['impugnada']): ?><span class="badge bg-secondary">Impugnada</span>
                             <?php else: ?><span class="badge bg-danger">Pendiente</span><?php endif; ?>
                         </td>
                         <td>
                             <a href="<?= BASE_URL ?>/multa/ver/<?= $m['id_multa'] ?>" class="btn btn-sm btn-outline-info"><i class="bi bi-eye"></i></a>
+                            <?php if (!$m['pagada'] && !$m['impugnada']): ?>
+                            <a href="<?= BASE_URL ?>/multa/ver/<?= $m['id_multa'] ?>" class="btn btn-sm btn-outline-warning" title="Impugnar"><i class="bi bi-shield-exclamation"></i></a>
+                            <?php endif; ?>
+                            <?php if (!$m['pagada'] && $esPresidente): ?>
+                            <a href="#" onclick="eliminarMulta('<?= $m['id_multa'] ?>')" class="btn btn-sm btn-outline-danger" title="Eliminar (Presidente)"><i class="bi bi-trash"></i></a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -78,3 +85,15 @@
     </ul></nav>
     <?php endif; ?>
 </div>
+<script>
+function eliminarMulta(id) {
+    if (!confirm('¿Eliminar esta multa definitivamente? Esta acción no se puede deshacer.')) return;
+    fetch('<?= BASE_URL ?>/multa/eliminar/' + id, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'csrf_token=<?= CSRFMiddleware::generarToken() ?>'
+    }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.error) { alert(d.error); } else { location.reload(); }
+    });
+}
+</script>
