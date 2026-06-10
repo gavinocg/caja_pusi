@@ -7,7 +7,7 @@
     <div class="card mb-3">
         <div class="card-body text-center">
             <h5>Total pendiente: <strong class="text-danger">$ <?= number_format($totalPendiente, 2) ?></strong></h5>
-            <p class="text-muted mb-0">Los pagos deben realizarse en la proxima sesion por el tesorero.</p>
+            <p class="text-muted mb-0">La recaudacion de valores se realizara en la proxima sesion por Tesoreria.</p>
         </div>
     </div>
 
