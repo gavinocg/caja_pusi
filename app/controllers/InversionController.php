@@ -1,6 +1,7 @@
 <?php
 require_once ROOT_PATH . '/app/helpers/PDFGenerator.php';
 require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php';
+require_once ROOT_PATH . '/app/helpers/PusherHelper.php';
 class InversionController extends BaseController {
 
     public function listar() {
@@ -80,6 +81,7 @@ class InversionController extends BaseController {
                     $st->execute([$idSocio]);
                     $soc = $st->fetch();
                     try { require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php'; NotificacionHelper::crearInversion($idSocio, $soc['nombre'], $monto, 'apertura'); } catch (Exception $e) {}
+                    try { PusherHelper::actualizarPortal($idSocio); } catch (Exception $e) {}
                     PDFGenerator::generarContratoInversion([
                         'inversion' => $id,
                         'socio' => $soc['nombre'] ?? '',
@@ -133,6 +135,7 @@ class InversionController extends BaseController {
                 $this->historialInsert($v['id_socio'], 'inversion_retiro', $devolucion, $v['id_inversion']);
                 $this->db->commit();
                 try { $st2 = $this->db->prepare("SELECT CONCAT_WS(' ', apellido1, apellido2, nombre1, nombre2) AS nombre FROM socios WHERE id_socio = ?"); $st2->execute([$v['id_socio']]); $nom = $st2->fetchColumn(); require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php'; NotificacionHelper::crearRetornoInversion($v['id_socio'], $nom, $devolucion, $v['destino_final']); } catch (Exception $e) {}
+                try { PusherHelper::actualizarPortal($v['id_socio']); } catch (Exception $e) {}
                 $count++;
             } catch (Exception $e) {
                 $this->db->rollBack();
@@ -163,6 +166,7 @@ class InversionController extends BaseController {
 
                 $this->historialInsert($inv['id_socio'], 'inversion_retiro', $devolucion, $id);
                 $this->db->commit();
+                try { PusherHelper::actualizarPortal($inv['id_socio']); } catch (Exception $e) {}
                 $this->json(['mensaje' => 'Retiro procesado', 'devolucion' => round($devolucion, 2), 'penalidad' => round($penalidad, 2)]);
             } catch (Exception $e) {
                 $this->db->rollBack();
@@ -222,6 +226,7 @@ class InversionController extends BaseController {
                     $this->historialInsert($idSocio, 'deposito_capital_inversion', $monto, $idCobro, $idSesion ?: null);
                     $this->db->commit();
                     try { $st = $this->db->prepare("SELECT CONCAT_WS(' ', apellido1, apellido2, nombre1, nombre2) AS nombre FROM socios WHERE id_socio = ?"); $st->execute([$idSocio]); $nom = $st->fetchColumn(); require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php'; NotificacionHelper::crearDepositoCapital($idSocio, $nom, $monto); } catch (Exception $e) {}
+                    try { PusherHelper::actualizarPortal($idSocio); } catch (Exception $e) {}
                     $this->redirect('/inversion/listar');
                 } catch (Exception $e) {
                     $this->db->rollBack();

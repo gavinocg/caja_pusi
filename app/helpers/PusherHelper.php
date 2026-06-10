@@ -60,6 +60,39 @@ class PusherHelper {
         self::persistirNotificacion(null, $socioId, $titulo, $mensaje);
     }
 
+    public static function actualizarPortal($socioId) {
+        if (empty(PUSHER_APP_KEY)) return;
+        try {
+            $db = Database::getInstance()->getConnection();
+            $stmt = $db->prepare("SELECT saldo_obligatorio, saldo_excedente FROM cuentas_ahorro WHERE id_socio = ?");
+            $stmt->execute([$socioId]);
+            $cuenta = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $stmt = $db->prepare("SELECT COALESCE(saldo, 0) FROM capital_inversion WHERE id_socio = ?");
+            $stmt->execute([$socioId]);
+            $capitalInv = floatval($stmt->fetchColumn());
+
+            $stmt = $db->prepare("SELECT IFNULL(SUM(monto), 0) AS multas FROM multas WHERE id_socio = ? AND pagada = FALSE");
+            $stmt->execute([$socioId]);
+            $multas = floatval($stmt->fetchColumn());
+
+            $aporteMensual = floatval($db->query("SELECT valor FROM parametros WHERE codigo = 'aporte_obligatorio_mensual'")->fetchColumn() ?: 10);
+            $valoresPagar = $aporteMensual + $multas;
+
+            $data = [
+                'id_socio' => $socioId,
+                'saldo_obligatorio' => floatval($cuenta['saldo_obligatorio'] ?? 0),
+                'saldo_excedente' => floatval($cuenta['saldo_excedente'] ?? 0),
+                'ahorro_total' => floatval($cuenta['saldo_obligatorio'] ?? 0) + floatval($cuenta['saldo_excedente'] ?? 0),
+                'capital_inversion' => $capitalInv,
+                'valores_pagar' => $valoresPagar,
+            ];
+            self::enviar('actualizar-portal', $data);
+        } catch (Exception $e) {
+            error_log("Pusher actualizarPortal error: " . $e->getMessage());
+        }
+    }
+
     public static function notificarUsuario($usuarioId, $titulo, $mensaje, $url = '') {
         self::persistirNotificacion($usuarioId, null, $titulo, $mensaje);
     }

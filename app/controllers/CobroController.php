@@ -1,5 +1,6 @@
 <?php
 require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php';
+require_once ROOT_PATH . '/app/helpers/PusherHelper.php';
 
 class CobroController extends BaseController {
 
@@ -86,6 +87,7 @@ class CobroController extends BaseController {
                 $stmt->execute([$idSocio]);
                 $nombreSocio = $stmt->fetchColumn();
                 NotificacionHelper::crearCobro($idSocio, $nombreSocio, $monto, $this->tiposCobro[$tipo]);
+                try { PusherHelper::actualizarPortal($idSocio); } catch (Exception $e) {}
 
                 $this->json(['mensaje' => 'Cobro registrado', 'id_cobro' => $idCobro]);
             }
@@ -129,6 +131,7 @@ class CobroController extends BaseController {
                 } else {
                     $this->historialInsert($c['id_socio'], 'anulacion', $c['monto'], $id, $c['id_sesion']);
                 }
+                try { PusherHelper::actualizarPortal($c['id_socio']); } catch (Exception $e) {}
             }
             $this->json(['mensaje' => 'Cobro anulado']);
         }

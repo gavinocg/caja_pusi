@@ -64,6 +64,35 @@ if (typeof Pusher !== 'undefined' && typeof PUSHER_KEY !== 'undefined' && PUSHER
             showToast(data.titulo + ': ' + (data.mensaje || ''), 'info');
         }
     });
+    channel.bind('actualizar-portal', function(data) {
+        if (typeof data === 'string') { try { data = JSON.parse(data); } catch(e) { return; } }
+        var socioId = data.id_socio;
+        var prefix = '/caja';
+        // Update ahorro card
+        var ahorroCard = document.querySelector('[data-portal="ahorro"]');
+        if (ahorroCard) {
+            ahorroCard.textContent = '$' + (data.ahorro_total || 0).toFixed(2);
+            ahorroCard.style.transition = 'background 0.3s';
+            ahorroCard.style.background = '#d4edda';
+            setTimeout(function() { ahorroCard.style.background = ''; }, 1500);
+        }
+        // Update capital inversion card
+        var capInvCard = document.querySelector('[data-portal="capital_inversion"]');
+        if (capInvCard) {
+            capInvCard.textContent = '$' + (data.capital_inversion || 0).toFixed(2);
+            capInvCard.style.transition = 'background 0.3s';
+            capInvCard.style.background = '#d4edda';
+            setTimeout(function() { capInvCard.style.background = ''; }, 1500);
+        }
+        // Update valores a pagar card
+        var pagarCard = document.querySelector('[data-portal="valores_pagar"]');
+        if (pagarCard) {
+            pagarCard.textContent = '$' + (data.valores_pagar || 0).toFixed(2);
+            pagarCard.style.transition = 'background 0.3s';
+            pagarCard.style.background = '#f8d7da';
+            setTimeout(function() { pagarCard.style.background = ''; }, 1500);
+        }
+    });
 } else {
     setInterval(actualizarNotifBadge, 30000);
 }

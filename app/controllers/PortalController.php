@@ -480,6 +480,7 @@ class PortalController extends BaseController {
                     $st->execute([$idSocio]);
                     $nom = $st->fetchColumn();
                     try { require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php'; NotificacionHelper::crearInversion($idSocio, $nom, $monto, 'creada'); } catch (Exception $e) {}
+                    try { require_once ROOT_PATH . '/app/helpers/PusherHelper.php'; PusherHelper::actualizarPortal($idSocio); } catch (Exception $e) {}
 
                     $this->redirect('/portal/inversion?ok=1');
                 } catch (Exception $e) {
