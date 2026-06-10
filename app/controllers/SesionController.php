@@ -79,6 +79,37 @@ class SesionController extends BaseController {
         ]);
     }
 
+    public function editar($id) {
+        $this->requirePermission('cobro.aporte');
+        $stmt = $this->db->prepare("SELECT * FROM sesiones_mensuales WHERE id_sesion = ?");
+        $stmt->execute([$id]);
+        $sesion = $stmt->fetch();
+        if (!$sesion) $this->redirect('/sesion/listar');
+
+        $errors = [];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->validateCSRF();
+            $fechaSesion = $_POST['fecha_sesion'] ?? '';
+            $titulo = trim($_POST['titulo'] ?? '');
+
+            if (empty($fechaSesion)) $errors['fecha_sesion'] = 'La fecha es obligatoria';
+            if (empty($titulo)) $errors['titulo'] = 'El titulo es obligatorio';
+
+            if (empty($errors)) {
+                $this->db->prepare("UPDATE sesiones_mensuales SET fecha_sesion = ?, titulo = ? WHERE id_sesion = ?")
+                    ->execute([$fechaSesion, $titulo, $id]);
+                $this->redirect('/sesion/listar');
+            }
+        }
+
+        $this->render('sesiones/form', [
+            'titulo' => 'Editar sesion #' . $sesion['numero_sesion'],
+            'sesion' => $sesion,
+            'errors' => $errors,
+        ]);
+    }
+
     private function generarObligaciones($idSesion, $fechaCorte) {
         $socios = $this->db->query("SELECT id_socio, cedula FROM socios WHERE estado = 'activo'")->fetchAll();
         $aporteMensual = floatval($this->db->query("SELECT valor FROM parametros WHERE codigo = 'aporte_obligatorio_mensual'")->fetchColumn() ?: 10);
