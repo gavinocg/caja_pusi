@@ -19,8 +19,9 @@
                         <small class="text-muted">Las obligaciones se calculan con corte a esta fecha.</small>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Titulo (opcional)</label>
-                        <input type="text" name="titulo" class="form-control" placeholder="Ej: Sesion Ordinaria Junio 2026">
+                        <label class="form-label">Titulo *</label>
+                        <input type="text" name="titulo" class="form-control <?= isset($errors['titulo']) ? 'is-invalid' : '' ?>" placeholder="Ej: Sesion Ordinaria Junio 2026" required>
+                        <?php if (isset($errors['titulo'])): ?><div class="invalid-feedback"><?= $errors['titulo'] ?></div><?php endif; ?>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary mt-3"><i class="bi bi-play-circle"></i> Abrir sesion</button>

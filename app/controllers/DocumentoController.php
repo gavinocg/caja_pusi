@@ -128,4 +128,62 @@ class DocumentoController extends BaseController {
         header('Location: ' . BASE_URL . '/storage/documentos/' . $filename);
         exit;
     }
+
+    public function comprobanteSesion($idSesion) {
+        $this->requireAuth();
+        $sesion = $this->db->prepare("SELECT * FROM sesiones_mensuales WHERE id_sesion = ?");
+        $sesion->execute([$idSesion]);
+        $s = $sesion->fetch();
+        if (!$s) { http_response_code(404); exit; }
+
+        $cobros = $this->db->prepare("SELECT c.*, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio_nombre, s.cedula
+                                       FROM cobros c JOIN socios s ON c.id_socio = s.id_socio
+                                       WHERE c.id_sesion = ? AND c.anulado = FALSE
+                                       ORDER BY s.apellido1, c.fecha_registro");
+        $cobros->execute([$idSesion]);
+        $items = $cobros->fetchAll();
+
+        $html = '<h2>Comprobante de cobro</h2>';
+        $html .= '<p><strong>Sesion:</strong> #' . $s['numero_sesion'] . ' — ' . htmlspecialchars($s['titulo'] ?? '') . '</p>';
+        $html .= '<p><strong>Fecha:</strong> ' . $s['fecha_sesion'] . '</p>';
+        $html .= '<table border="1" cellpadding="6" cellspacing="0" style="width:100%;border-collapse:collapse;margin-top:15px">';
+        $html .= '<tr style="background:#1a3a5c;color:#fff">
+                    <th>#</th><th>Socio</th><th>Cedula</th><th>Concepto</th><th>Monto</th>
+                  </tr>';
+        $total = 0;
+        $num = 1;
+        foreach ($items as $c) {
+            $tipoLabel = ucfirst(str_replace('_', ' ', $c['tipo']));
+            $html .= '<tr>
+                        <td>' . $num++ . '</td>
+                        <td>' . htmlspecialchars($c['socio_nombre']) . '</td>
+                        <td>' . $c['cedula'] . '</td>
+                        <td>' . $tipoLabel . '</td>
+                        <td style="text-align:right">$' . number_format($c['monto'], 2) . '</td>
+                      </tr>';
+            $total += floatval($c['monto']);
+        }
+        $html .= '<tr style="font-weight:bold;background:#f0f0f0">
+                    <td colspan="4" style="text-align:right">TOTAL COBRADO:</td>
+                    <td style="text-align:right">$' . number_format($total, 2) . '</td>
+                  </tr>';
+        $html .= '</table>';
+        $html .= '<p style="margin-top:20px;font-size:10pt;color:#666">Documento generado el ' . date('d/m/Y H:i:s') . '</p>';
+        $html .= '<div class="no-print" style="text-align:center;margin-top:20px">
+                    <button onclick="window.print()" style="padding:10px 30px;font-size:14px;cursor:pointer">Imprimir</button>
+                  </div>';
+
+        $htmlCompleto = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><style>
+            body{font-family:Arial,sans-serif;margin:2cm;font-size:12pt}
+            table{width:100%;border-collapse:collapse}
+            th,td{border:1px solid #999;padding:6px;text-align:left}
+            th{background:#1a3a5c;color:#fff}
+            .no-print{text-align:center;margin-top:20px}
+            @media print{.no-print{display:none}}
+        </style></head><body>' . $html . '</body></html>';
+
+        file_put_contents(dirname(__DIR__, 1) . '/storage/documentos/comprobante_sesion_' . $s['numero_sesion'] . '.html', $htmlCompleto);
+        header('Location: ' . BASE_URL . '/storage/documentos/comprobante_sesion_' . $s['numero_sesion'] . '.html');
+        exit;
+    }
 }

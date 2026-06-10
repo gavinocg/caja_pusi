@@ -40,6 +40,13 @@ class SesionController extends BaseController {
             }
 
             if (empty($errors)) {
+                $titulo = trim($_POST['titulo'] ?? '');
+                if (empty($titulo)) {
+                    $errors['titulo'] = 'El titulo es obligatorio';
+                }
+            }
+
+            if (empty($errors)) {
                 $stmt = $this->db->query("SELECT COALESCE(MAX(numero_sesion), 0) + 1 FROM sesiones_mensuales");
                 $num = $stmt->fetchColumn();
 

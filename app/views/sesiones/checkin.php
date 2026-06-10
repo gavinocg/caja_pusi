@@ -5,6 +5,7 @@
             <small class="text-muted"><?= htmlspecialchars($sesion['titulo'] ?? '') ?> — Reunion: <?= date('d/m/Y', strtotime($sesion['fecha_sesion'])) ?></small>
         </div>
         <div>
+            <a href="<?= BASE_URL ?>/documento/comprobanteSesion/<?= $sesion['id_sesion'] ?>" target="_blank" class="btn btn-sm btn-outline-info"><i class="bi bi-printer"></i> Comprobante</a>
             <a href="<?= BASE_URL ?>/sesion/listar" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
         </div>
     </div>
