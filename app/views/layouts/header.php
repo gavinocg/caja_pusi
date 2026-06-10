@@ -1,4 +1,34 @@
 <!DOCTYPE html>
+<?php
+$loggedIn = isset($_SESSION['usuario_id']) && isset($_SESSION['2fa_verified']) && $_SESSION['2fa_verified'];
+$uid = $_SESSION['usuario_id'] ?? null;
+$idSocio = null;
+$esSoloSocio = false;
+if ($uid) {
+    $userRoles = RBAC::obtenerRolesUsuario($uid);
+    $roleNames = array_column($userRoles, 'nombre');
+    $esSoloSocio = count($roleNames) === 1 && in_array('Socio', $roleNames);
+}
+$notifCount = 0;
+if ($loggedIn) {
+    $ndb = Database::getInstance();
+    $uid = $_SESSION['usuario_id'];
+    $nstmt = $ndb->prepare("SELECT COUNT(*) FROM notificaciones WHERE (id_usuario = ? OR (id_usuario IS NULL AND id_socio IS NULL)) AND leida = FALSE");
+    $nstmt->execute([$uid]);
+    $notifCount = (int)$nstmt->fetchColumn();
+    $cedula = $_SESSION['usuario_cedula'] ?? '';
+    if ($cedula) {
+        $nstmt = $ndb->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
+        $nstmt->execute([$cedula]);
+        $idSocio = $nstmt->fetchColumn();
+        if ($idSocio) {
+            $nstmt = $ndb->prepare("SELECT COUNT(*) FROM notificaciones WHERE id_socio = ? AND leida = FALSE");
+            $nstmt->execute([$idSocio]);
+            $notifCount += (int)$nstmt->fetchColumn();
+        }
+    }
+}
+?>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -31,33 +61,6 @@
     <script src="https://cdn.jsdelivr.net/gh/zuramai/mazer@docs/demo/assets/static/js/initTheme.js"></script>
     <div id="app">
     <?php
-    $loggedIn = isset($_SESSION['usuario_id']) && isset($_SESSION['2fa_verified']) && $_SESSION['2fa_verified'];
-    $uid = $_SESSION['usuario_id'] ?? null;
-    $esSoloSocio = false;
-    if ($uid) {
-        $userRoles = RBAC::obtenerRolesUsuario($uid);
-        $roleNames = array_column($userRoles, 'nombre');
-        $esSoloSocio = count($roleNames) === 1 && in_array('Socio', $roleNames);
-    }
-    $notifCount = 0;
-    if ($loggedIn) {
-        $ndb = Database::getInstance();
-        $uid = $_SESSION['usuario_id'];
-        $nstmt = $ndb->prepare("SELECT COUNT(*) FROM notificaciones WHERE (id_usuario = ? OR (id_usuario IS NULL AND id_socio IS NULL)) AND leida = FALSE");
-        $nstmt->execute([$uid]);
-        $notifCount = (int)$nstmt->fetchColumn();
-        $cedula = $_SESSION['usuario_cedula'] ?? '';
-        if ($cedula) {
-            $nstmt = $ndb->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
-            $nstmt->execute([$cedula]);
-            $idSocio = $nstmt->fetchColumn();
-            if ($idSocio) {
-                $nstmt = $ndb->prepare("SELECT COUNT(*) FROM notificaciones WHERE id_socio = ? AND leida = FALSE");
-                $nstmt->execute([$idSocio]);
-                $notifCount += (int)$nstmt->fetchColumn();
-            }
-        }
-    }
     if ($loggedIn):
     ?>
     <div id="sidebar">
