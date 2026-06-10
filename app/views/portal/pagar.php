@@ -29,6 +29,12 @@
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
+                    <tfoot class="table-light fw-bold">
+                        <tr>
+                            <td>TOTAL PENDIENTE</td>
+                            <td class="text-end text-danger">$<?= number_format($totalPendiente, 2) ?></td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
