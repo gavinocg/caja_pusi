@@ -38,14 +38,13 @@
                                     <th>Cedula</th>
                                     <th>Socio</th>
                                     <th>Asistencia</th>
-                                    <th>Obligaciones</th>
-                                    <th>Total</th>
+                                    <th class="text-end">Total adeudado</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($socios)): ?>
-                                <tr><td colspan="6" class="text-center text-muted py-3">No se encontraron socios</td></tr>
+                                <tr><td colspan="5" class="text-center text-muted py-3">No se encontraron socios</td></tr>
                                 <?php else: foreach ($socios as $s):
                                     $socOblig = $obligaciones[$s['id_socio']] ?? [];
                                     $totalSocio = array_sum(array_map(function($o) { return floatval($o['monto']); }, $socOblig));
@@ -71,25 +70,12 @@
                                             <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-check"></i></button>
                                         </form>
                                     </td>
-                                    <td>
-                                        <?php if (!empty($socOblig)): ?>
-                                        <ul class="list-unstyled mb-0 small">
-                                            <?php foreach ($socOblig as $o): ?>
-                                            <li class="<?= $o['pagada'] ? 'text-success text-decoration-line-through' : '' ?>">
-                                                <?= htmlspecialchars($o['concepto']) ?>: <strong>$<?= number_format($o['monto'], 2) ?></strong>
-                                                <?php if ($o['pagada']): ?><i class="bi bi-check-circle-fill text-success"></i><?php endif; ?>
-                                            </li>
-                                            <?php endforeach; ?>
-                                        </ul>
-                                        <?php else: ?>
-                                        <span class="text-muted small">Sin obligaciones</span>
-                                        <?php endif; ?>
-                                    </td>
                                     <td class="text-end">
-                                        <strong>$<?= number_format($totalSocio, 2) ?></strong><br>
-                                        <small class="text-success">Pagado: $<?= number_format($totalPagado, 2) ?></small><br>
                                         <?php if ($pendiente > 0): ?>
-                                        <small class="text-danger">Pendiente: $<?= number_format($pendiente, 2) ?></small>
+                                        <strong class="text-danger">$<?= number_format($pendiente, 2) ?></strong>
+                                        <?php if ($totalPagado > 0): ?><br><small class="text-success">Pagado: $<?= number_format($totalPagado, 2) ?></small><?php endif; ?>
+                                        <?php else: ?>
+                                        <span class="text-muted">$0.00</span>
                                         <?php endif; ?>
                                     </td>
                                     <td>
