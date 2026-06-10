@@ -192,8 +192,14 @@ class MultaController extends BaseController {
                     ->execute([$texto, $archivo, $id]);
 
                 // Marcar la obligacion como pagada (para que no cuente en valores pendientes)
-                $this->db->prepare("UPDATE obligaciones_sesion SET pagada = TRUE WHERE id_referencia = ? AND tipo = 'multa' AND pagada = FALSE")
-                    ->execute([$id]);
+                $updObl = $this->db->prepare("UPDATE obligaciones_sesion SET pagada = TRUE WHERE id_referencia = ? AND tipo = 'multa' AND pagada = FALSE");
+                $updObl->execute([$id]);
+                if ($updObl->rowCount() === 0) {
+                    // Fallback: buscar obligacion por concepto
+                    $fallback = $this->db->prepare("UPDATE obligaciones_sesion SET pagada = TRUE WHERE id_socio = ? AND tipo = 'multa' AND pagada = FALSE AND (concepto LIKE ? OR id_referencia = ?)");
+                    $fallback->execute([$multa['id_socio'], '%' . substr($id, 0, 8) . '%', $id]);
+                    error_log("impugnar: obligacion no encontrada por id_referencia=$id, fallback actualizo=" . $fallback->rowCount());
+                }
 
                 $this->db->commit();
 
