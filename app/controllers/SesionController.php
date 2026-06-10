@@ -207,6 +207,18 @@ class SesionController extends BaseController {
                     $stmt = $this->db->prepare("INSERT INTO asistencias (id_asistencia, id_socio, id_sesion, tipo, usuario_registra) VALUES (?, ?, ?, ?, ?)");
                     $stmt->execute([UUIDGenerator::generar(), $idSocio, $id, $tipo, $_SESSION['usuario_id']]);
                 }
+
+                // Si la asistencia es a tiempo, eliminar multa existente por este concepto
+                if ($tipo === 'a_tiempo') {
+                    $tiposMulta = ['retraso_10min', 'retraso_30min', 'inasistencia'];
+                    foreach ($tiposMulta as $tm) {
+                        $this->db->prepare("DELETE FROM obligaciones_sesion WHERE id_sesion = ? AND id_socio = ? AND tipo = 'multa' AND id_referencia IN (SELECT id_multa FROM multas WHERE id_socio = ? AND id_sesion = ? AND tipo = ?)")
+                            ->execute([$id, $idSocio, $idSocio, $id, $tm]);
+                        $this->db->prepare("DELETE FROM multas WHERE id_socio = ? AND id_sesion = ? AND tipo = ?")
+                            ->execute([$idSocio, $id, $tm]);
+                    }
+                }
+
                 $this->redirect('/sesion/checkin/' . $id);
             }
 
