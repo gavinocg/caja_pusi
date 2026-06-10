@@ -75,8 +75,10 @@ if (typeof Pusher !== 'undefined' && typeof PUSHER_KEY !== 'undefined' && PUSHER
     });
     channel.bind('actualizar-portal', function(data) {
         if (typeof data === 'string') { try { data = JSON.parse(data); } catch(e) { return; } }
-        var socioId = data.id_socio;
-        var prefix = '/caja';
+        // Only update if this event is for the current user
+        if (typeof SOCIO_ID !== 'undefined' && SOCIO_ID && data.id_socio && data.id_socio !== SOCIO_ID) {
+            return;
+        }
         // Update ahorro card
         var ahorroCard = document.querySelector('[data-portal="ahorro"]');
         if (ahorroCard) {
