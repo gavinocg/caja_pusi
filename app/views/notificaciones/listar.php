@@ -41,6 +41,9 @@
                     <?php if ($buzonActual === 'entrada' && !empty($notificaciones)): ?>
                     <button class="btn btn-sm btn-outline-secondary" onclick="leerTodas()"><i class="bi bi-check2-all"></i> Leidas todas</button>
                     <?php endif; ?>
+                    <?php if ($buzonActual === 'papelera' && !empty($notificaciones)): ?>
+                    <button class="btn btn-sm btn-outline-danger" onclick="vaciarPapelera()"><i class="bi bi-trash"></i> Vaciar papelera</button>
+                    <?php endif; ?>
                 </div>
                 <div class="card-body p-0">
                     <?php if (empty($notificaciones)): ?>
@@ -72,6 +75,7 @@
                                         <a href="#" onclick="eliminarNotif('<?= $n['id_notificacion'] ?>')" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash"></i></a>
                                     <?php elseif ($buzonActual === 'papelera'): ?>
                                         <a href="#" onclick="restaurar('<?= $n['id_notificacion'] ?>')" class="btn btn-sm btn-outline-primary" title="Restaurar"><i class="bi bi-inbox"></i></a>
+                                        <a href="#" onclick="destruir('<?= $n['id_notificacion'] ?>')" class="btn btn-sm btn-outline-danger" title="Eliminar definitivamente"><i class="bi bi-trash-fill"></i></a>
                                         <?php if ($n['fecha_eliminacion']): ?>
                                         <small class="text-muted" style="font-size:10px"><?= $retencionDias ?> dias</small>
                                         <?php endif; ?>
@@ -132,6 +136,24 @@ function eliminarNotif(id) {
 
 function restaurar(id) {
     fetch('<?= BASE_URL ?>/notificacion/restaurar/' + id, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'csrf_token=<?= CSRFMiddleware::generarToken() ?>'
+    }).then(function(r) { return r.json(); }).then(function() { location.reload(); });
+}
+
+function destruir(id) {
+    if (!confirm('¿Eliminar esta notificacion definitivamente? No se puede deshacer.')) return;
+    fetch('<?= BASE_URL ?>/notificacion/destruir/' + id, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'csrf_token=<?= CSRFMiddleware::generarToken() ?>'
+    }).then(function(r) { return r.json(); }).then(function() { location.reload(); });
+}
+
+function vaciarPapelera() {
+    if (!confirm('¿Vaciar la papelera? Todas las notificaciones se eliminaran definitivamente.')) return;
+    fetch('<?= BASE_URL ?>/notificacion/vaciarPapelera', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'csrf_token=<?= CSRFMiddleware::generarToken() ?>'

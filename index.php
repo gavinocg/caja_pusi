@@ -43,6 +43,8 @@ $routeMap = [
     'notificacion/archivar' => ['controller' => 'NotificacionController', 'method' => 'archivar'],
     'notificacion/eliminar' => ['controller' => 'NotificacionController', 'method' => 'eliminar'],
     'notificacion/restaurar' => ['controller' => 'NotificacionController', 'method' => 'restaurar'],
+    'notificacion/destruir' => ['controller' => 'NotificacionController', 'method' => 'destruir'],
+    'notificacion/vaciarPapelera' => ['controller' => 'NotificacionController', 'method' => 'vaciarPapelera'],
     'login' => ['controller' => 'AuthController', 'method' => 'login'],
     'logout' => ['controller' => 'AuthController', 'method' => 'logout'],
     'password' => ['controller' => 'AuthController', 'method' => 'password'],

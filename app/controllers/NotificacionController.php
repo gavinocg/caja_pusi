@@ -105,4 +105,20 @@ class NotificacionController extends BaseController {
         $this->db->prepare("UPDATE notificaciones SET buzon = 'entrada', fecha_eliminacion = NULL WHERE id_notificacion = ?")->execute([$id]);
         $this->json(['mensaje' => 'Restaurada a entrada']);
     }
+
+    public function destruir($id) {
+        $this->requireAuth();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Metodo no permitido'], 405);
+        $this->validateCSRF();
+        $this->db->prepare("DELETE FROM notificaciones WHERE id_notificacion = ?")->execute([$id]);
+        $this->json(['mensaje' => 'Eliminada definitivamente']);
+    }
+
+    public function vaciarPapelera() {
+        $this->requireAuth();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Metodo no permitido'], 405);
+        $this->validateCSRF();
+        $this->db->prepare("DELETE FROM notificaciones WHERE buzon = 'papelera'")->execute();
+        $this->json(['mensaje' => 'Papelera vaciada']);
+    }
 }
