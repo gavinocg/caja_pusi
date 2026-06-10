@@ -254,8 +254,15 @@ class SesionController extends BaseController {
                 }
 
                 foreach ($tiposMultaAnterior as $tm) {
-                    $this->db->prepare("DELETE FROM obligaciones_sesion WHERE id_sesion = ? AND id_socio = ? AND tipo = 'multa' AND id_referencia IN (SELECT id_multa FROM multas WHERE id_socio = ? AND id_sesion = ? AND tipo = ?)")
-                        ->execute([$id, $idSocio, $idSocio, $id, $tm]);
+                    // Obtener IDs de multas a eliminar
+                    $idsMultas = $this->db->prepare("SELECT id_multa FROM multas WHERE id_socio = ? AND id_sesion = ? AND tipo = ?");
+                    $idsMultas->execute([$idSocio, $id, $tm]);
+                    $ids = $idsMultas->fetchAll(PDO::FETCH_COLUMN);
+                    if (!empty($ids)) {
+                        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                        $this->db->prepare("DELETE FROM obligaciones_sesion WHERE id_sesion = ? AND id_socio = ? AND tipo = 'multa' AND id_referencia IN ($placeholders)")
+                            ->execute(array_merge([$id, $idSocio], $ids));
+                    }
                     $this->db->prepare("DELETE FROM multas WHERE id_socio = ? AND id_sesion = ? AND tipo = ?")
                         ->execute([$idSocio, $id, $tm]);
                 }
