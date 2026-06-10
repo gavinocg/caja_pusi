@@ -153,10 +153,6 @@ class SesionController extends BaseController {
             $obligaciones[$o['id_socio']][] = $o;
         }
 
-        $cobros_stmt = $this->db->prepare("SELECT tipo, COUNT(*) AS total, SUM(monto) AS suma FROM cobros WHERE id_sesion = ? AND anulado = FALSE GROUP BY tipo");
-        $cobros_stmt->execute([$id]);
-        $resumen_cobros = $cobros_stmt->fetchAll();
-
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             $this->validateCSRF();
             $accion = $_POST['accion'];
@@ -214,7 +210,6 @@ class SesionController extends BaseController {
             'socios' => $socios,
             'asistencias' => $asistencias,
             'obligaciones' => $obligaciones,
-            'resumen_cobros' => $resumen_cobros,
         ]);
     }
 

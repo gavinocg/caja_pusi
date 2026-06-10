@@ -36,6 +36,11 @@
                         <td>
                             <?php if ($s['estado'] === 'abierta'): ?>
                             <a href="<?= BASE_URL ?>/sesion/checkin/<?= $s['id_sesion'] ?>" class="btn btn-sm btn-outline-success"><i class="bi bi-check-circle"></i> Gestion</a>
+                            <form method="POST" action="<?= BASE_URL ?>/sesion/checkin/<?= $s['id_sesion'] ?>" style="display:inline" onsubmit="return confirm('¿Cerrar la sesion? No se podran registrar mas cobros.')">
+                                <?= CSRFMiddleware::campoHTML() ?>
+                                <input type="hidden" name="accion" value="cierre">
+                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-lock"></i> Cerrar</button>
+                            </form>
                             <?php else: ?>
                             <form method="POST" action="<?= BASE_URL ?>/sesion/reaperturar/<?= $s['id_sesion'] ?>" style="display:inline" onsubmit="return confirm('¿Reaperturar esta sesion para registrar nuevos cobros?')">
                                 <?= CSRFMiddleware::campoHTML() ?>

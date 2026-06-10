@@ -96,30 +96,6 @@
 
         <div class="col-md-4">
             <div class="card card-dashboard mb-3">
-                <div class="card-body">
-                    <h5>Resumen de cobros</h5>
-                    <?php if (empty($resumen_cobros)): ?>
-                    <p class="text-muted small">Sin cobros registrados</p>
-                    <?php else: ?>
-                    <div class="table-responsive"><table class="table table-sm mb-0">
-                        <?php foreach ($resumen_cobros as $r): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($r['tipo']) ?></td>
-                            <td><?= $r['total'] ?></td>
-                            <td class="text-end">$<?= number_format($r['suma'], 2) ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </table></div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <form method="POST" onsubmit="return confirm('¿Cerrar la sesión? No se podrán registrar más cobros.')">
-                <?= CSRFMiddleware::campoHTML() ?>
-                <input type="hidden" name="accion" value="cierre">
-                <button type="submit" class="btn btn-danger w-100"><i class="bi bi-lock"></i> Cerrar sesion</button>
-            </form>
-        </div>
     </div>
 </div>
 
