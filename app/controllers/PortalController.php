@@ -397,7 +397,20 @@ class PortalController extends BaseController {
         ];
 
         $movs = [];
-        foreach ($movimientos as $m) {
+        $runningBalance = $saldoObligatorio + $saldoExcedente;
+        // Process in reverse chronological order (current query is DESC)
+        // To calculate running balance, we process from oldest to newest
+        $movimientosAsc = array_reverse($movimientos);
+        $runningBalance = 0;
+        foreach ($movimientosAsc as $m) {
+            $esDebito = in_array($m['tipo_operacion'], [
+                'retiro_ahorro', 'desembolso_credito', 'inversion_apertura',
+                'retiro_capital_inversion', 'pago_cuota', 'pago_multa', 'anulacion'
+            ]);
+            $monto = floatval($m['monto']);
+            $m['saldo_anterior'] = $runningBalance;
+            $runningBalance += $esDebito ? -$monto : $monto;
+            $m['saldo_posterior'] = $runningBalance;
             $label = $conceptos[$m['tipo_operacion']] ?? $m['tipo_operacion'];
             if ($m['numero_sesion']) {
                 $fechaSesion = $m['sesion_fecha'] ? date('d/m/Y', strtotime($m['sesion_fecha'])) : '';
@@ -406,6 +419,7 @@ class PortalController extends BaseController {
             $m['concepto'] = $label;
             $movs[] = $m;
         }
+        $movs = array_reverse($movs); // Back to newest-first for display
 
         $this->render('portal/detalleAhorro', [
             'titulo' => 'Estado de cuenta',
