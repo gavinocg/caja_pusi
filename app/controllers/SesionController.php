@@ -228,11 +228,11 @@ class SesionController extends BaseController {
             if ($accion === 'asistencia') {
                 $idSocio = $_POST['id_socio'] ?? '';
                 $tipo = $_POST['tipo'] ?? 'falta';
-                $stmt = $this->db->prepare("SELECT COUNT(*), MAX(tipo) FROM asistencias WHERE id_socio = ? AND id_sesion = ?");
+                $stmt = $this->db->prepare("SELECT COUNT(*) AS cnt, MAX(tipo) AS old_tipo FROM asistencias WHERE id_socio = ? AND id_sesion = ?");
                 $stmt->execute([$idSocio, $id]);
                 $row = $stmt->fetch();
-                $existe = $row[0] > 0;
-                $oldTipo = $existe ? $row[1] : null;
+                $existe = intval($row['cnt']) > 0;
+                $oldTipo = $existe ? $row['old_tipo'] : null;
 
                 if ($existe) {
                     $stmt = $this->db->prepare("UPDATE asistencias SET tipo = ?, usuario_registra = ? WHERE id_socio = ? AND id_sesion = ?");
