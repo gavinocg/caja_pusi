@@ -314,7 +314,7 @@ class SesionController extends BaseController {
                 WHERE id_sesion = ? AND estado = 'abierta'")
                 ->execute([$_SESSION['usuario_id'], $total_recaudado, $total_desembolsado, $saldo, $htmlFile, $id]);
 
-            // Notificar a cada socio con multa
+            // Notificar a cada socio con multa y actualizar su portal
             foreach ($multasGeneradas as $m) {
                 $tipoMulta = str_replace('_', ' ', ucfirst($m['tipo']));
                 try {
@@ -325,6 +325,8 @@ class SesionController extends BaseController {
                         'mensaje' => "Se ha generado una multa por {$tipoMulta} de \${$m['monto']} en la sesion #{$numSesion}",
                         'enviar_pusher' => true,
                     ]);
+                    require_once ROOT_PATH . '/app/helpers/PusherHelper.php';
+                    PusherHelper::actualizarPortal($m['id_socio']);
                 } catch (Exception $e) {}
             }
 
