@@ -279,7 +279,11 @@ class SesionController extends BaseController {
 
             // Si es multa, marcar como pagada
             if ($tipoCobro === 'multa' && $o['id_referencia']) {
-                $this->db->prepare("UPDATE multas SET pagada = TRUE WHERE id_multa = ?")->execute([$o['id_referencia']]);
+                $upd = $this->db->prepare("UPDATE multas SET pagada = TRUE WHERE id_multa = ?");
+                $upd->execute([$o['id_referencia']]);
+                if ($upd->rowCount() === 0) {
+                    error_log("procesarPagoObligacion: multa no encontrada o ya pagada, id_referencia={$o['id_referencia']}, obligacion={$idObligacion}");
+                }
             }
 
             // Marcar obligacion como pagada
