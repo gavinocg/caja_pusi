@@ -5,7 +5,6 @@
             <small class="text-muted"><?= htmlspecialchars($sesion['titulo'] ?? '') ?> — Reunion: <?= date('d/m/Y', strtotime($sesion['fecha_sesion'])) ?></small>
         </div>
         <div>
-            <a href="<?= BASE_URL ?>/documento/comprobanteSesion/<?= $sesion['id_sesion'] ?>" target="_blank" class="btn btn-sm btn-outline-info"><i class="bi bi-printer"></i> Comprobante</a>
             <a href="<?= BASE_URL ?>/sesion/listar" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
         </div>
     </div>
@@ -84,6 +83,9 @@
                                                 onclick="abrirModalCobro('<?= $s['id_socio'] ?>', '<?= htmlspecialchars($s['nombre_completo'], ENT_QUOTES) ?>')">
                                             <i class="bi bi-cash-coin"></i>
                                         </button>
+                                        <?php endif; ?>
+                                        <?php if (!empty($socOblig)): ?>
+                                        <a href="<?= BASE_URL ?>/documento/comprobanteSocio/<?= $sesion['id_sesion'] ?>/<?= $s['id_socio'] ?>" target="_blank" class="btn btn-sm btn-outline-info" title="Comprobante"><i class="bi bi-printer"></i></a>
                                         <?php endif; ?>
                                     </td>
                                 </tr>

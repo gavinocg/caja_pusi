@@ -36,6 +36,7 @@ $routeMap = [
     'documento/constanciaSocio' => ['controller' => 'DocumentoController', 'method' => 'constanciaSocio'],
     'documento/libreDeuda' => ['controller' => 'DocumentoController', 'method' => 'libreDeuda'],
     'documento/comprobanteSesion' => ['controller' => 'DocumentoController', 'method' => 'comprobanteSesion'],
+    'documento/comprobanteSocio' => ['controller' => 'DocumentoController', 'method' => 'comprobanteSocio'],
     'documento/actaCierre' => ['controller' => 'DocumentoController', 'method' => 'actaCierre'],
     'notificacion' => ['controller' => 'NotificacionController', 'method' => 'listar'],
     'notificacion/contar' => ['controller' => 'NotificacionController', 'method' => 'contar'],

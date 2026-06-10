@@ -186,4 +186,75 @@ class DocumentoController extends BaseController {
         header('Location: ' . BASE_URL . '/storage/documentos/comprobante_sesion_' . $s['numero_sesion'] . '.html');
         exit;
     }
+
+    public function comprobanteSocio($idSesion, $idSocio) {
+        $this->requireAuth();
+        $sesion = $this->db->prepare("SELECT * FROM sesiones_mensuales WHERE id_sesion = ?");
+        $sesion->execute([$idSesion]);
+        $s = $sesion->fetch();
+        if (!$s) { http_response_code(404); exit; }
+
+        $socio = $this->db->prepare("SELECT CONCAT_WS(' ', apellido1, apellido2, nombre1, nombre2) AS nombre, cedula FROM socios WHERE id_socio = ?");
+        $socio->execute([$idSocio]);
+        $soc = $socio->fetch();
+        if (!$soc) { http_response_code(404); exit; }
+
+        // Get all obligations for this socio in this session
+        $obligaciones = $this->db->prepare("SELECT * FROM obligaciones_sesion WHERE id_sesion = ? AND id_socio = ? ORDER BY tipo");
+        $obligaciones->execute([$idSesion, $idSocio]);
+        $items = $obligaciones->fetchAll();
+
+        $totalPagado = 0;
+        $totalPendiente = 0;
+
+        $html = '<h2>Comprobante de pago</h2>';
+        $html .= '<p><strong>Sesion:</strong> #' . $s['numero_sesion'] . ' — ' . htmlspecialchars($s['titulo'] ?? '') . '</p>';
+        $html .= '<p><strong>Fecha:</strong> ' . $s['fecha_sesion'] . '</p>';
+        $html .= '<p><strong>Socio:</strong> ' . htmlspecialchars($soc['nombre']) . ' — <strong>Cedula:</strong> ' . $soc['cedula'] . '</p>';
+
+        $html .= '<table border="1" cellpadding="6" cellspacing="0" style="width:100%;border-collapse:collapse;margin-top:15px">';
+        $html .= '<tr style="background:#1a3a5c;color:#fff">
+                    <th>Concepto</th><th>Monto</th><th>Estado</th>
+                  </tr>';
+        foreach ($items as $o) {
+            $pagada = !empty($o['pagada']);
+            $estado = $pagada ? '<span style="color:green;font-weight:bold">COBRADO</span>' : '<span style="color:red;font-weight:bold">PENDIENTE</span>';
+            if ($pagada) $totalPagado += floatval($o['monto']);
+            else $totalPendiente += floatval($o['monto']);
+            $html .= '<tr>
+                        <td>' . htmlspecialchars($o['concepto']) . '</td>
+                        <td style="text-align:right">$' . number_format($o['monto'], 2) . '</td>
+                        <td>' . $estado . '</td>
+                      </tr>';
+        }
+        $html .= '<tr style="font-weight:bold;background:#e8f5e9">
+                    <td>TOTAL COBRADO</td>
+                    <td style="text-align:right">$' . number_format($totalPagado, 2) . '</td>
+                    <td><span style="color:green">✓</span></td>
+                  </tr>';
+        $html .= '<tr style="font-weight:bold;background:#fbe9e7">
+                    <td>TOTAL PENDIENTE</td>
+                    <td style="text-align:right">$' . number_format($totalPendiente, 2) . '</td>
+                    <td><span style="color:red">✗</span></td>
+                  </tr>';
+        $html .= '</table>';
+        $html .= '<p style="margin-top:20px;font-size:10pt;color:#666">Documento generado el ' . date('d/m/Y H:i:s') . '</p>';
+        $html .= '<div class="no-print" style="text-align:center;margin-top:20px">
+                    <button onclick="window.print()" style="padding:10px 30px;font-size:14px;cursor:pointer">Imprimir</button>
+                  </div>';
+
+        $htmlCompleto = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><style>
+            body{font-family:Arial,sans-serif;margin:2cm;font-size:12pt}
+            table{width:100%;border-collapse:collapse}
+            th,td{border:1px solid #999;padding:8px;text-align:left}
+            th{background:#1a3a5c;color:#fff}
+            .no-print{text-align:center;margin-top:20px}
+            @media print{.no-print{display:none}}
+        </style></head><body>' . $html . '</body></html>';
+
+        $filename = 'comprobante_socio_' . substr($idSocio, 0, 8) . '_sesion_' . $s['numero_sesion'] . '.html';
+        file_put_contents(dirname(__DIR__, 1) . '/storage/documentos/' . $filename, $htmlCompleto);
+        header('Location: ' . BASE_URL . '/storage/documentos/' . $filename);
+        exit;
+    }
 }
