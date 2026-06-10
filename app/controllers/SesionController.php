@@ -258,6 +258,17 @@ class SesionController extends BaseController {
             $this->db->commit();
 
             try {
+                require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php';
+                $labelTipo = $o['tipo'] === 'cuota_mensual' ? 'Cuota mensual' : ($o['tipo'] === 'cuota_credito' ? 'Cuota de credito' : ($o['tipo'] === 'multa' ? 'Multa' : 'Pago'));
+                NotificacionHelper::crear([
+                    'id_socio' => $o['id_socio'],
+                    'tipo' => 'cobro',
+                    'titulo' => 'Pago registrado',
+                    'mensaje' => "{$labelTipo} de \${$o['monto']} ha sido registrada en la sesion",
+                    'enviar_pusher' => true,
+                ]);
+            } catch (Exception $e) {}
+            try {
                 require_once ROOT_PATH . '/app/helpers/PusherHelper.php';
                 PusherHelper::actualizarPortal($o['id_socio']);
             } catch (Exception $e) {}
