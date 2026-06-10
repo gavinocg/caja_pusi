@@ -37,6 +37,7 @@
                                     $pagadas = array_filter($socOblig, function($o) { return $o['pagada']; });
                                     $totalPagado = array_sum(array_map(function($o) { return floatval($o['monto']); }, $pagadas));
                                     $pendiente = $totalSocio - $totalPagado;
+                                    $pendientes = array_filter($socOblig, function($o) { return !$o['pagada']; });
                                 ?>
                                 <tr class="<?= isset($asistencias[$s['id_socio']]) ? 'table-success' : '' ?>">
                                     <td><?= htmlspecialchars($s['cedula']) ?></td>
@@ -77,13 +78,11 @@
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <?php if ($pendiente > 0): ?>
-                                        <form method="POST" style="display:inline">
-                                            <?= CSRFMiddleware::campoHTML() ?>
-                                            <input type="hidden" name="accion" value="pagar_todo_socio">
-                                            <input type="hidden" name="id_socio" value="<?= $s['id_socio'] ?>">
-                                            <button type="submit" class="btn btn-sm btn-success" title="Pagar todo"><i class="bi bi-cash"></i></button>
-                                        </form>
+                                        <?php if (!empty($pendientes)): ?>
+                                        <button type="button" class="btn btn-sm btn-success" title="Cobrar"
+                                                onclick="abrirModalCobro('<?= $s['id_socio'] ?>', '<?= htmlspecialchars($s['nombre_completo'], ENT_QUOTES) ?>')">
+                                            <i class="bi bi-cash-coin"></i>
+                                        </button>
                                         <?php endif; ?>
                                     </td>
                                 </tr>
@@ -123,3 +122,89 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Cobro -->
+<div class="modal fade" id="modalCobro" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST" action="<?= BASE_URL ?>/sesion/checkin/<?= $sesion['id_sesion'] ?>">
+                <?= CSRFMiddleware::campoHTML() ?>
+                <input type="hidden" name="accion" value="pagar_seleccion">
+                <input type="hidden" name="id_socio" id="cobroIdSocio" value="">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cobro a: <strong id="cobroNombreSocio"></strong></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="seleccionarTodo" onchange="toggleSeleccionarTodo()">
+                            <label class="form-check-label fw-bold" for="seleccionarTodo">Seleccionar / Deseleccionar todo</label>
+                        </div>
+                    </div>
+                    <div id="obligacionesLista" class="list-group"></div>
+                    <div class="mt-3 text-end">
+                        <strong>Total seleccionado: $<span id="totalSeleccionado">0.00</span></strong>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success" id="btnCobrar"><i class="bi bi-cash-coin"></i> Cobrar seleccionados</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+var obligacionesData = {};
+
+<?php foreach ($socios as $s):
+    $pends = array_values(array_filter($obligaciones[$s['id_socio']] ?? [], function($o) { return !$o['pagada']; }));
+    if (!empty($pends)): ?>
+obligacionesData['<?= $s['id_socio'] ?>'] = <?= json_encode($pends) ?>;
+<?php endif; endforeach; ?>
+
+function abrirModalCobro(idSocio, nombre) {
+    document.getElementById('cobroIdSocio').value = idSocio;
+    document.getElementById('cobroNombreSocio').textContent = nombre;
+    var lista = document.getElementById('obligacionesLista');
+    lista.innerHTML = '';
+    document.getElementById('seleccionarTodo').checked = false;
+
+    var obligs = obligacionesData[idSocio] || [];
+    var total = 0;
+
+    obligs.forEach(function(o, idx) {
+        var div = document.createElement('div');
+        div.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+        div.innerHTML = '<div class="form-check">' +
+            '<input type="checkbox" class="form-check-input oblig-check" name="obligaciones[]" value="' + o.id_obligacion + '" id="chk_' + idx + '" onchange="actualizarTotalCobro()">' +
+            '<label class="form-check-label" for="chk_' + idx + '">' + o.concepto + '</label>' +
+            '</div>' +
+            '<strong>$' + parseFloat(o.monto).toFixed(2) + '</strong>';
+        lista.appendChild(div);
+        total += parseFloat(o.monto);
+    });
+
+    document.getElementById('totalSeleccionado').textContent = '0.00';
+    var modal = new bootstrap.Modal(document.getElementById('modalCobro'));
+    modal.show();
+}
+
+function toggleSeleccionarTodo() {
+    var checked = document.getElementById('seleccionarTodo').checked;
+    document.querySelectorAll('.oblig-check').forEach(function(el) { el.checked = checked; });
+    actualizarTotalCobro();
+}
+
+function actualizarTotalCobro() {
+    var total = 0;
+    document.querySelectorAll('.oblig-check:checked').forEach(function(el) {
+        var parent = el.closest('.list-group-item');
+        var monto = parseFloat(parent.querySelector('strong').textContent.replace('$', '')) || 0;
+        total += monto;
+    });
+    document.getElementById('totalSeleccionado').textContent = total.toFixed(2);
+}
+</script>
