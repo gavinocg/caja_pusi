@@ -171,8 +171,9 @@ class CobroController extends BaseController {
                     $this->historialInsert($c['id_socio'], 'anulacion', $c['monto'], $id, $c['id_sesion']);
 
                 } elseif ($c['tipo'] === 'multa' && !empty($c['id_referencia'])) {
-                    // Anular multa por directivo: marcarla como anulada con el motivo
+                    // Anular multa por directivo: marcarla como anulada y eliminar obligacion
                     $this->db->prepare("UPDATE multas SET estado = 'anulada', justificacion = COALESCE(CONCAT(justificacion, '\n\nANULACION: ', ?), ?) WHERE id_multa = ?")->execute([$motivo, $motivo, $c['id_referencia']]);
+                    $this->db->prepare("DELETE FROM obligaciones_sesion WHERE id_cobro = ?")->execute([$id]);
                     $this->historialInsert($c['id_socio'], 'anulacion', $c['monto'], $id, $c['id_sesion']);
 
                 } else {
