@@ -171,8 +171,8 @@ class CobroController extends BaseController {
                     $this->historialInsert($c['id_socio'], 'anulacion', $c['monto'], $id, $c['id_sesion']);
 
                 } elseif ($c['tipo'] === 'multa' && !empty($c['id_referencia'])) {
-                    // Anular multa: marcarla como impugnada para que no reaparezca
-                    $this->db->prepare("UPDATE multas SET impugnada = TRUE WHERE id_multa = ?")->execute([$c['id_referencia']]);
+                    // Anular multa: marcarla como impugnada con el motivo
+                    $this->db->prepare("UPDATE multas SET impugnada = TRUE, justificacion = COALESCE(CONCAT(justificacion, '\n\nANULACION: ', ?), ?) WHERE id_multa = ?")->execute([$motivo, $motivo, $c['id_referencia']]);
                     $this->historialInsert($c['id_socio'], 'anulacion', $c['monto'], $id, $c['id_sesion']);
 
                 } else {

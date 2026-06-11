@@ -148,7 +148,7 @@ class MultaController extends BaseController {
     }
 
     public function impugnar($id) {
-        $this->requireAuth();
+        $this->requirePermission('multa.impugnar');
         $stmt = $this->db->prepare("SELECT m.*, s.cedula FROM multas m JOIN socios s ON m.id_socio = s.id_socio WHERE m.id_multa = ?");
         $stmt->execute([$id]);
         $multa = $stmt->fetch();
