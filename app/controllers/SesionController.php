@@ -503,11 +503,11 @@ class SesionController extends BaseController {
                 } else {
                     $idMulta = UUIDGenerator::generar();
                     $this->db->prepare("INSERT INTO multas (id_multa, id_socio, id_sesion, tipo, monto) VALUES (?, ?, ?, 'cuota_impaga', ?)")->execute([$idMulta, $sp['id_socio'], $id, $montoMultaCuota]);
+                    $multasGeneradas[] = ['id_socio' => $sp['id_socio'], 'tipo' => 'cuota_impaga', 'monto' => $montoMultaCuota];
                 }
                 $concepto = "Multa por cuota impaga - Sesion #{$numSesion} del " . date('d/m/Y', strtotime($sesion['fecha_sesion']));
                 $this->db->prepare("DELETE FROM obligaciones_sesion WHERE id_referencia = ? AND tipo = 'multa' AND pagada = FALSE")->execute([$idMulta]);
                 $this->db->prepare("INSERT INTO obligaciones_sesion (id_obligacion, id_sesion, id_socio, tipo, concepto, monto, id_referencia) VALUES (?, ?, ?, 'multa', ?, ?, ?)")->execute([UUIDGenerator::generar(), $id, $sp['id_socio'], $concepto, $montoMultaCuota, $idMulta]);
-                $multasGeneradas[] = ['id_socio' => $sp['id_socio'], 'tipo' => 'cuota_impaga', 'monto' => $montoMultaCuota];
             }
         }
 
@@ -519,11 +519,15 @@ class SesionController extends BaseController {
 
         $this->db->beginTransaction();
         try {
-            $this->db->prepare("UPDATE sesiones_mensuales SET
+            $upd = $this->db->prepare("UPDATE sesiones_mensuales SET
                 estado = 'cerrada', fecha_cierre = NOW(), usuario_cierre = ?,
                 total_recaudado = ?, total_desembolsado = ?, saldo_caja = ?, acta_cierre_pdf = ?
-                WHERE id_sesion = ? AND estado = 'abierta'")
-                ->execute([$_SESSION['usuario_id'], $total_recaudado, $total_desembolsado, $saldo, $htmlFile, $id]);
+                WHERE id_sesion = ? AND estado = 'abierta'");
+            $upd->execute([$_SESSION['usuario_id'], $total_recaudado, $total_desembolsado, $saldo, $htmlFile, $id]);
+            if ($upd->rowCount() === 0) {
+                $this->db->rollBack();
+                $this->redirect('/sesion/listar');
+            }
 
             // Notificar a cada socio con multa y actualizar su portal
             foreach ($multasGeneradas as $m) {
