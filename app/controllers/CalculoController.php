@@ -1,5 +1,6 @@
 <?php
 require_once ROOT_PATH . '/app/helpers/CalculadoraInteres.php';
+require_once ROOT_PATH . '/app/helpers/CajaHelper.php';
 
 class CalculoController extends BaseController {
 
@@ -155,6 +156,7 @@ class CalculoController extends BaseController {
                 $total += $interes;
             }
             $this->db->commit();
+            try { CajaHelper::registrar(['tipo'=>'egreso','concepto'=>"Intereses ahorro mensual - Total: \$" . number_format($total, 2),'categoria'=>'interes_ahorro','monto'=>$total]); } catch (Exception $e) {}
             $this->json(['mensaje' => 'Intereses calculados y acreditados para ' . count($socios) . ' socios. Total: $' . number_format($total, 2)]);
         } catch (Exception $e) {
             $this->db->rollBack();
@@ -195,6 +197,7 @@ class CalculoController extends BaseController {
                     $hist->execute([UUIDGenerator::generar(), $s['id_socio'], $monto, $_SESSION['usuario_id']]);
                 }
                 $this->db->commit();
+                try { CajaHelper::registrar(['tipo'=>'egreso','concepto'=>"Distribucion excedentes - Total: \$" . number_format($totalExcedente, 2),'categoria'=>'distribucion_excedentes','monto'=>$totalExcedente]); } catch (Exception $e) {}
                 $this->json(['mensaje' => 'Excedentes distribuidos']);
             } catch (Exception $e) {
                 $this->db->rollBack();
