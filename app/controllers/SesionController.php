@@ -293,10 +293,15 @@ class SesionController extends BaseController {
 
             if ($accion === 'pagar_seleccion') {
                 $ids = $_POST['obligaciones'] ?? [];
+                error_log("pagar_seleccion: ids count=" . count($ids) . " sesion=$id");
                 if (!empty($ids)) {
                     foreach ($ids as $oid) {
+                        error_log("pagar_seleccion: procesando oid=$oid");
                         $this->procesarPagoObligacion($oid, $id);
                     }
+                } else {
+                    error_log("pagar_seleccion: no hay ids seleccionados");
+                    $_SESSION['error'] = 'No se seleccionaron obligaciones';
                 }
                 $this->redirect('/sesion/checkin/' . $id);
             }
@@ -340,7 +345,11 @@ class SesionController extends BaseController {
         $stmt = $this->db->prepare("SELECT o.*, s.cedula FROM obligaciones_sesion o JOIN socios s ON o.id_socio = s.id_socio WHERE o.id_obligacion = ? AND o.pagada = FALSE");
         $stmt->execute([$idObligacion]);
         $o = $stmt->fetch();
-        if (!$o) return;
+        if (!$o) {
+            error_log("procesarPagoObligacion: obligacion no encontrada o ya pagada, id=$idObligacion");
+            $_SESSION['error'] = 'La obligacion no existe o ya fue pagada';
+            return;
+        }
 
         $tipoCobro = $o['tipo'] === 'cuota_mensual' ? 'aporte_obligatorio' : ($o['tipo'] === 'cuota_credito' ? 'cuota_credito' : ($o['tipo'] === 'multa' ? 'multa' : 'otro'));
         $idCobro = UUIDGenerator::generar();
@@ -405,6 +414,7 @@ class SesionController extends BaseController {
         } catch (Exception $e) {
             $this->db->rollBack();
             error_log("Error pagar obligacion: " . $e->getMessage());
+            $_SESSION['error'] = 'Error al procesar pago: ' . $e->getMessage();
         }
     }
 
