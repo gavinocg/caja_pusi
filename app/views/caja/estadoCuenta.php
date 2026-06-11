@@ -64,11 +64,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (empty($movimientos)): ?>
+                        <?php $totalIngresos = 0; $totalEgresos = 0; if (empty($movimientos)): ?>
                         <tr><td colspan="6" class="text-center text-muted py-4">No hay movimientos en el periodo seleccionado</td></tr>
-                        <?php else:
-                            $totalIngresos = 0; $totalEgresos = 0;
-                            foreach ($movimientos as $m):
+                        <?php else: foreach ($movimientos as $m):
                             $esIngreso = $m['tipo_movimiento'] === 'ingreso';
                             if ($esIngreso) $totalIngresos += floatval($m['monto']);
                             else $totalEgresos += floatval($m['monto']);
