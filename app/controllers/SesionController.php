@@ -387,11 +387,19 @@ class SesionController extends BaseController {
             try {
                 require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php';
                 $labelTipo = $o['tipo'] === 'cuota_mensual' ? 'Cuota mensual' : ($o['tipo'] === 'cuota_credito' ? 'Cuota de credito' : ($o['tipo'] === 'multa' ? 'Multa' : 'Pago'));
+                $numSesionPago = $this->db->query("SELECT numero_sesion FROM sesiones_mensuales WHERE id_sesion = '$idSesion'")->fetchColumn();
+                $fechaPago = date('d/m/Y');
+                if ($o['tipo'] === 'multa') {
+                    $conceptoOriginal = $o['concepto']; // ej: "Multa por Retraso 10min - Sesion #1 del 11/06/2026"
+                    $mensajeNotif = "{$conceptoOriginal} ha sido pagada en Sesion #{$numSesionPago} del {$fechaPago}";
+                } else {
+                    $mensajeNotif = "{$labelTipo} de \${$o['monto']} ha sido registrada en Sesion #{$numSesionPago} del {$fechaPago}";
+                }
                 NotificacionHelper::crear([
                     'id_socio' => $o['id_socio'],
                     'tipo' => 'cobro',
                     'titulo' => 'Pago registrado',
-                    'mensaje' => "{$labelTipo} de \${$o['monto']} ha sido registrada en la sesion",
+                    'mensaje' => $mensajeNotif,
                     'enviar_pusher' => true,
                 ]);
             } catch (Exception $e) {}
@@ -401,12 +409,19 @@ class SesionController extends BaseController {
             } catch (Exception $e) {}
             // Registrar en Caja
             try {
-                $numSesionCierre = $this->db->query("SELECT numero_sesion FROM sesiones_mensuales WHERE id_sesion = '$idSesion'")->fetchColumn();
+                $numSesionPago = $this->db->query("SELECT numero_sesion FROM sesiones_mensuales WHERE id_sesion = '$idSesion'")->fetchColumn();
+                $conceptoCaja = $o['tipo'] === 'multa'
+                    ? "{$o['concepto']} - pagada en Sesion #{$numSesionPago}"
+                    : "{$labelTipo} - {$o['cedula']} - Sesion #{$numSesionPago}";
                 CajaHelper::registrar([
                     'tipo' => 'ingreso',
-                    'concepto' => "{$labelTipo} - {$o['cedula']} - Sesion #{$numSesionCierre}",
+                    'concepto' => $conceptoCaja,
                     'categoria' => $tipoCobro,
                     'monto' => $o['monto'],
+                    'id_socio' => $o['id_socio'],
+                    'id_sesion' => $idSesion,
+                    'id_referencia' => $idCobro,
+                ]);
                     'id_socio' => $o['id_socio'],
                     'id_sesion' => $idSesion,
                     'id_referencia' => $idCobro,
