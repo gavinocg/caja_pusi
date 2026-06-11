@@ -31,7 +31,7 @@ class NotificacionController extends BaseController {
         // Contar por buzon
         $conteos = [];
         foreach (['entrada', 'archivadas', 'papelera'] as $b) {
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM notificaciones WHERE (id_usuario = ? OR id_usuario IS NULL OR id_socio = ?) AND buzon = ?");
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM notificaciones WHERE (id_usuario = ? OR id_usuario IS NULL OR id_socio = ?) AND buzon = ? AND leida = FALSE");
             $stmt->execute([$_SESSION['usuario_id'], $idSocio, $b]);
             $conteos[$b] = (int)$stmt->fetchColumn();
         }
@@ -48,11 +48,12 @@ class NotificacionController extends BaseController {
     public function leer($id) {
         $this->requireAuth();
         $no = isset($_GET['no']);
+        $owner = $this->getOwnerFilter();
         if ($no) {
-            $this->db->prepare("UPDATE notificaciones SET leida = FALSE, fecha_lectura = NULL WHERE id_notificacion = ?")->execute([$id]);
+            $this->db->prepare("UPDATE notificaciones SET leida = FALSE, fecha_lectura = NULL WHERE id_notificacion = ? AND {$owner['sql']}")->execute(array_merge([$id], $owner['params']));
             $this->json(['mensaje' => 'Marcada como no leida']);
         } else {
-            $this->db->prepare("UPDATE notificaciones SET leida = TRUE, fecha_lectura = NOW() WHERE id_notificacion = ?")->execute([$id]);
+            $this->db->prepare("UPDATE notificaciones SET leida = TRUE, fecha_lectura = NOW() WHERE id_notificacion = ? AND {$owner['sql']}")->execute(array_merge([$id], $owner['params']));
             $this->json(['mensaje' => 'Marcada como leida']);
         }
     }
@@ -82,11 +83,26 @@ class NotificacionController extends BaseController {
         $this->json(['pendientes' => $entrada]);
     }
 
+    private function getOwnerFilter() {
+        $cedula = $_SESSION['usuario_cedula'] ?? '';
+        $idSocio = null;
+        if ($cedula) {
+            $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
+            $stmt->execute([$cedula]);
+            $idSocio = $stmt->fetchColumn();
+        }
+        return [
+            'sql' => $idSocio ? '(id_usuario = ? OR id_socio = ?)' : 'id_usuario = ?',
+            'params' => $idSocio ? [$_SESSION['usuario_id'], $idSocio] : [$_SESSION['usuario_id']],
+        ];
+    }
+
     public function archivar($id) {
         $this->requireAuth();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Metodo no permitido'], 405);
         $this->validateCSRF();
-        $this->db->prepare("UPDATE notificaciones SET buzon = 'archivadas' WHERE id_notificacion = ?")->execute([$id]);
+        $owner = $this->getOwnerFilter();
+        $this->db->prepare("UPDATE notificaciones SET buzon = 'archivadas' WHERE id_notificacion = ? AND {$owner['sql']}")->execute(array_merge([$id], $owner['params']));
         $this->json(['mensaje' => 'Archivada']);
     }
 
@@ -94,7 +110,8 @@ class NotificacionController extends BaseController {
         $this->requireAuth();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Metodo no permitido'], 405);
         $this->validateCSRF();
-        $this->db->prepare("UPDATE notificaciones SET buzon = 'papelera', fecha_eliminacion = NOW() WHERE id_notificacion = ?")->execute([$id]);
+        $owner = $this->getOwnerFilter();
+        $this->db->prepare("UPDATE notificaciones SET buzon = 'papelera', fecha_eliminacion = NOW(), leida = 1 WHERE id_notificacion = ? AND {$owner['sql']}")->execute(array_merge([$id], $owner['params']));
         $this->json(['mensaje' => 'Movida a papelera']);
     }
 
@@ -102,7 +119,8 @@ class NotificacionController extends BaseController {
         $this->requireAuth();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Metodo no permitido'], 405);
         $this->validateCSRF();
-        $this->db->prepare("UPDATE notificaciones SET buzon = 'entrada', fecha_eliminacion = NULL WHERE id_notificacion = ?")->execute([$id]);
+        $owner = $this->getOwnerFilter();
+        $this->db->prepare("UPDATE notificaciones SET buzon = 'entrada', fecha_eliminacion = NULL WHERE id_notificacion = ? AND {$owner['sql']}")->execute(array_merge([$id], $owner['params']));
         $this->json(['mensaje' => 'Restaurada a entrada']);
     }
 
@@ -110,7 +128,8 @@ class NotificacionController extends BaseController {
         $this->requireAuth();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Metodo no permitido'], 405);
         $this->validateCSRF();
-        $this->db->prepare("DELETE FROM notificaciones WHERE id_notificacion = ?")->execute([$id]);
+        $owner = $this->getOwnerFilter();
+        $this->db->prepare("DELETE FROM notificaciones WHERE id_notificacion = ? AND {$owner['sql']}")->execute(array_merge([$id], $owner['params']));
         $this->json(['mensaje' => 'Eliminada definitivamente']);
     }
 
@@ -118,7 +137,8 @@ class NotificacionController extends BaseController {
         $this->requireAuth();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Metodo no permitido'], 405);
         $this->validateCSRF();
-        $this->db->prepare("DELETE FROM notificaciones WHERE buzon = 'papelera'")->execute();
+        $owner = $this->getOwnerFilter();
+        $this->db->prepare("DELETE FROM notificaciones WHERE buzon = 'papelera' AND {$owner['sql']}")->execute($owner['params']);
         $this->json(['mensaje' => 'Papelera vaciada']);
     }
 }

@@ -184,7 +184,7 @@ class PortalController extends BaseController {
 
         $notificaciones = [];
         if ($socio) {
-            $stmt = $this->db->prepare("SELECT * FROM notificaciones WHERE id_socio = ? ORDER BY fecha_creacion DESC LIMIT 50");
+            $stmt = $this->db->prepare("SELECT * FROM notificaciones WHERE id_socio = ? AND buzon = 'entrada' ORDER BY fecha_creacion DESC LIMIT 50");
             $stmt->execute([$socio['id_socio']]);
             $notificaciones = $stmt->fetchAll();
         }
