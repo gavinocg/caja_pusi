@@ -49,15 +49,16 @@
                         </td>
                         <td>
                             <?php if ($m['pagada'] > 0): ?><span class="badge bg-success">Pagada</span>
-                            <?php elseif ($m['impugnada']): ?><span class="badge bg-secondary">Impugnada</span>
+                            <?php elseif ($m['estado'] === 'impugnada'): ?><span class="badge bg-secondary">Impugnada</span>
+                            <?php elseif ($m['estado'] === 'anulada'): ?><span class="badge bg-dark">Anulada</span>
                             <?php else: ?><span class="badge bg-danger">Pendiente</span><?php endif; ?>
                         </td>
                         <td>
                             <a href="<?= BASE_URL ?>/multa/ver/<?= $m['id_multa'] ?>" class="btn btn-sm btn-outline-info"><i class="bi bi-eye"></i></a>
-                            <?php if ($m['pagada'] == 0 && !$m['impugnada']): ?>
+                            <?php if ($m['pagada'] == 0 && $m['estado'] === 'activa'): ?>
                             <a href="<?= BASE_URL ?>/multa/ver/<?= $m['id_multa'] ?>" class="btn btn-sm btn-outline-warning" title="Impugnar"><i class="bi bi-shield-exclamation"></i></a>
                             <?php endif; ?>
-                            <?php if ($m['pagada'] == 0 && $esPresidente): ?>
+                            <?php if ($m['pagada'] == 0 && $m['estado'] === 'activa' && $esPresidente): ?>
                             <a href="#" onclick="eliminarMulta('<?= $m['id_multa'] ?>')" class="btn btn-sm btn-outline-danger" title="Eliminar (Presidente)"><i class="bi bi-trash"></i></a>
                             <?php endif; ?>
                         </td>

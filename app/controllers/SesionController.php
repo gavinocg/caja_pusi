@@ -149,7 +149,7 @@ class SesionController extends BaseController {
                                                SELECT o.id_referencia FROM obligaciones_sesion o
                                                WHERE o.tipo = 'multa' AND o.pagada = TRUE AND o.id_referencia IS NOT NULL
                                            )
-                                           AND m.impugnada = FALSE");
+                                           AND m.estado = 'activa'");
             $multas->execute([$idSocio]);
             foreach ($multas as $m) {
                 $tipoMulta = str_replace('_', ' ', ucfirst($m['tipo']));

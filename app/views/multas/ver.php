@@ -15,7 +15,8 @@
                     <p><strong>Generada:</strong> <?= $multa['fecha_generacion'] ?></p>
                     <p><strong>Estado:</strong>
                         <?php if ($pagada): ?><span class="badge bg-success">Pagada</span>
-                        <?php elseif ($multa['impugnada']): ?><span class="badge bg-secondary">Impugnada (sin efecto)</span>
+                        <?php elseif ($multa['estado'] === 'anulada'): ?><span class="badge bg-dark">Anulada por directivo</span>
+                        <?php elseif ($multa['estado'] === 'impugnada'): ?><span class="badge bg-secondary">Impugnada (sin efecto)</span>
                         <?php else: ?><span class="badge bg-danger">Pendiente</span><?php endif; ?>
                     </p>
                     <?php if ($multa['id_sesion']): ?><p><strong>Sesion:</strong> <?= $multa['id_sesion'] ?></p><?php endif; ?>
@@ -29,7 +30,7 @@
             <?php if ($multa['justificacion_pdf']): ?>
             <a href="<?= BASE_URL ?>/storage/documentos/<?= $multa['justificacion_pdf'] ?>" class="btn btn-sm btn-outline-primary" target="_blank"><i class="bi bi-file-earmark-pdf"></i> Ver archivo</a>
             <?php endif; ?>
-            <?php if (!$multa['impugnada']): ?>
+            <?php if (!$multa['estado'] || $multa['estado'] === 'activa'): ?>
             <p class="mt-2">
                 <strong>Estado justificacion:</strong>
                 <?php if ($multa['justificacion_aprobada'] === '1'): ?>
@@ -57,7 +58,7 @@
             <?php endif; ?>
             <?php endif; ?>
 
-            <?php if (!$pagada && !$multa['impugnada']): ?>
+            <?php if (!$pagada && $multa['estado'] === 'activa'): ?>
             <hr>
             <span class="text-muted small">El pago debe realizarse a traves de una sesion abierta.</span>
             <?php if ($esPresidente): ?>

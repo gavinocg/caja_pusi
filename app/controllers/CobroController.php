@@ -171,15 +171,15 @@ class CobroController extends BaseController {
                     $this->historialInsert($c['id_socio'], 'anulacion', $c['monto'], $id, $c['id_sesion']);
 
                 } elseif ($c['tipo'] === 'multa' && !empty($c['id_referencia'])) {
-                    // Anular multa: marcarla como impugnada con el motivo
-                    $this->db->prepare("UPDATE multas SET impugnada = TRUE, justificacion = COALESCE(CONCAT(justificacion, '\n\nANULACION: ', ?), ?) WHERE id_multa = ?")->execute([$motivo, $motivo, $c['id_referencia']]);
+                    // Anular multa por directivo: marcarla como anulada con el motivo
+                    $this->db->prepare("UPDATE multas SET estado = 'anulada', justificacion = COALESCE(CONCAT(justificacion, '\n\nANULACION: ', ?), ?) WHERE id_multa = ?")->execute([$motivo, $motivo, $c['id_referencia']]);
                     $this->historialInsert($c['id_socio'], 'anulacion', $c['monto'], $id, $c['id_sesion']);
 
                 } else {
                     $this->historialInsert($c['id_socio'], 'anulacion', $c['monto'], $id, $c['id_sesion']);
                 }
 
-                // Revertir obligacion si estaba marcada como pagada (multas quedan pagadas, la multa se marca impugnada)
+                // Revertir obligacion si estaba marcada como pagada (multas quedan pagadas, la multa se marca anulada)
                 try {
                     if ($c['tipo'] !== 'multa') {
                         $this->db->prepare("UPDATE obligaciones_sesion SET pagada = FALSE, id_cobro = NULL WHERE id_cobro = ?")->execute([$id]);

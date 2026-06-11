@@ -158,7 +158,8 @@ class MultaController extends BaseController {
         $stmtPag = $this->db->prepare("SELECT COUNT(*) FROM obligaciones_sesion WHERE id_referencia = ? AND tipo = 'multa' AND pagada = TRUE");
         $stmtPag->execute([$id]);
         if ($stmtPag->fetchColumn() > 0) $this->json(['error' => 'No se puede impugnar una multa ya pagada'], 400);
-        if ($multa['impugnada']) $this->json(['error' => 'Ya fue impugnada'], 400);
+        if ($multa['estado'] === 'impugnada') $this->json(['error' => 'Ya fue impugnada'], 400);
+        if ($multa['estado'] === 'anulada') $this->json(['error' => 'La multa fue anulada por un directivo'], 400);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->validateCSRF();
@@ -178,7 +179,7 @@ class MultaController extends BaseController {
 
             $this->db->beginTransaction();
             try {
-                $this->db->prepare("UPDATE multas SET justificacion = ?, justificacion_pdf = COALESCE(?, justificacion_pdf), impugnada = TRUE WHERE id_multa = ?")
+                $this->db->prepare("UPDATE multas SET justificacion = ?, justificacion_pdf = COALESCE(?, justificacion_pdf), estado = 'impugnada' WHERE id_multa = ?")
                     ->execute([$texto, $archivo, $id]);
 
                 $this->db->prepare("UPDATE obligaciones_sesion SET pagada = TRUE WHERE id_referencia = ? AND tipo = 'multa' AND pagada = FALSE")
