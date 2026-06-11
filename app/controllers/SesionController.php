@@ -352,6 +352,7 @@ class SesionController extends BaseController {
         }
 
         $tipoCobro = $o['tipo'] === 'cuota_mensual' ? 'aporte_obligatorio' : ($o['tipo'] === 'cuota_credito' ? 'cuota_credito' : ($o['tipo'] === 'multa' ? 'multa' : 'otro'));
+        $tipoHistorial = $this->mapearTipoHistorial($tipoCobro);
         $idCobro = UUIDGenerator::generar();
         $hash = hash('sha256', $o['id_socio'] . $idCobro . $tipoCobro . $o['monto'] . date('Y-m-d H:i:s'));
 
@@ -380,7 +381,7 @@ class SesionController extends BaseController {
                 $this->db->prepare("UPDATE obligaciones_sesion SET pagada = TRUE, id_cobro = ? WHERE id_obligacion = ?")->execute([$idCobro, $idObligacion]);
             }
 
-            $this->historialInsert($o['id_socio'], $tipoCobro, $o['monto'], $idCobro, $idSesion);
+            $this->historialInsert($o['id_socio'], $tipoHistorial, $o['monto'], $idCobro, $idSesion);
             $this->db->commit();
 
             try {
