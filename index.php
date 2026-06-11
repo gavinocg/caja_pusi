@@ -136,7 +136,6 @@ $routeMap = [
     'multa/ver' => ['controller' => 'MultaController', 'method' => 'ver'],
     'multa/justificar' => ['controller' => 'MultaController', 'method' => 'justificar'],
     'multa/aprobarJustificacion' => ['controller' => 'MultaController', 'method' => 'aprobarJustificacion'],
-    'multa/marcarPagada' => ['controller' => 'MultaController', 'method' => 'marcarPagada'],
     'multa/impugnar' => ['controller' => 'MultaController', 'method' => 'impugnar'],
     'multa/eliminar' => ['controller' => 'MultaController', 'method' => 'eliminar'],
     'archivo/ver' => ['controller' => 'ArchivoController', 'method' => 'ver'],

@@ -13,13 +13,6 @@
             </select>
         </div>
         <div class="col-auto">
-            <select name="pagada" class="form-select form-select-sm">
-                <option value="">Pagada/No pagada</option>
-                <option value="0" <?= $filtroPagada === '0' ? 'selected' : '' ?>>No pagada</option>
-                <option value="1" <?= $filtroPagada === '1' ? 'selected' : '' ?>>Pagada</option>
-            </select>
-        </div>
-        <div class="col-auto">
             <input type="text" name="socio" class="form-control form-control-sm" placeholder="Buscar socio..." value="<?= htmlspecialchars($filtroSocio) ?>">
         </div>
         <div class="col-auto">
@@ -33,7 +26,7 @@
         <div class="card-body p-0">
             <div class="table-responsive"><table class="table table-hover mb-0">
                 <thead class="table-light">
-                    <tr><th>Fecha</th><?php if (!$esSocio): ?><th>Socio</th><?php endif; ?><th>Tipo</th><th>Monto</th><th>Justificación</th><th>Pagada</th><th></th></tr>
+                    <tr><th>Fecha</th><?php if (!$esSocio): ?><th>Socio</th><?php endif; ?><th>Tipo</th><th>Monto</th><th>Justificación</th><th>Estado</th><th></th></tr>
                 </thead>
                 <tbody>
                     <?php foreach ($multas as $m): ?>
@@ -55,16 +48,16 @@
                             <?php endif; ?>
                         </td>
                         <td>
-                            <?php if ($m['pagada']): ?><span class="badge bg-success">Pagada</span>
+                            <?php if ($m['pagada'] > 0): ?><span class="badge bg-success">Pagada</span>
                             <?php elseif ($m['impugnada']): ?><span class="badge bg-secondary">Impugnada</span>
                             <?php else: ?><span class="badge bg-danger">Pendiente</span><?php endif; ?>
                         </td>
                         <td>
                             <a href="<?= BASE_URL ?>/multa/ver/<?= $m['id_multa'] ?>" class="btn btn-sm btn-outline-info"><i class="bi bi-eye"></i></a>
-                            <?php if (!$m['pagada'] && !$m['impugnada']): ?>
+                            <?php if ($m['pagada'] == 0 && !$m['impugnada']): ?>
                             <a href="<?= BASE_URL ?>/multa/ver/<?= $m['id_multa'] ?>" class="btn btn-sm btn-outline-warning" title="Impugnar"><i class="bi bi-shield-exclamation"></i></a>
                             <?php endif; ?>
-                            <?php if (!$m['pagada'] && $esPresidente): ?>
+                            <?php if ($m['pagada'] == 0 && $esPresidente): ?>
                             <a href="#" onclick="eliminarMulta('<?= $m['id_multa'] ?>')" class="btn btn-sm btn-outline-danger" title="Eliminar (Presidente)"><i class="bi bi-trash"></i></a>
                             <?php endif; ?>
                         </td>
@@ -79,7 +72,7 @@
     <nav class="mt-3"><ul class="pagination pagination-sm">
         <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
         <li class="page-item <?= $i === $page ? 'active' : '' ?>">
-            <a class="page-link" href="?p=<?= $i ?>&tipo=<?= urlencode($filtroTipo) ?>&pagada=<?= urlencode($filtroPagada) ?>&socio=<?= urlencode($filtroSocio) ?>"><?= $i ?></a>
+            <a class="page-link" href="?p=<?= $i ?>&tipo=<?= urlencode($filtroTipo) ?>&socio=<?= urlencode($filtroSocio) ?>"><?= $i ?></a>
         </li>
         <?php endfor; ?>
     </ul></nav>

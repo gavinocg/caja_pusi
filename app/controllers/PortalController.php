@@ -143,7 +143,7 @@ class PortalController extends BaseController {
         $socio = $stmt->fetch();
         if (!$socio) { $this->redirect('/portal'); return; }
 
-        $stmt = $this->db->prepare("SELECT * FROM multas WHERE id_socio = ? ORDER BY fecha_generacion DESC");
+        $stmt = $this->db->prepare("SELECT m.*, (SELECT COUNT(*) FROM obligaciones_sesion WHERE id_referencia = m.id_multa AND tipo = 'multa' AND pagada = TRUE) AS pagada FROM multas m WHERE m.id_socio = ? ORDER BY m.fecha_generacion DESC");
         $stmt->execute([$socio['id_socio']]);
         $multas = $stmt->fetchAll();
 

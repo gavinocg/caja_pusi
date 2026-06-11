@@ -18,7 +18,8 @@ class MultaController extends BaseController {
         $offset = ($page - 1) * $porPagina;
 
         if ($esSocio) {
-            $stmt = $this->db->prepare("SELECT m.*, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio, s.cedula
+            $stmt = $this->db->prepare("SELECT m.*, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio, s.cedula,
+                                        (SELECT COUNT(*) FROM obligaciones_sesion WHERE id_referencia = m.id_multa AND tipo = 'multa' AND pagada = TRUE) AS pagada
                                         FROM multas m
                                         JOIN socios s ON m.id_socio = s.id_socio
                                         WHERE m.id_socio = ?
@@ -29,18 +30,17 @@ class MultaController extends BaseController {
             $total->execute([$idSocio]);
             $totalMultas = $total->fetchColumn();
             $totalPaginas = ceil($totalMultas / $porPagina);
-            $filtroTipo = $filtroPagada = $filtroSocio = '';
+            $filtroTipo = $filtroSocio = '';
         } else {
             $filtroTipo = $_GET['tipo'] ?? '';
-            $filtroPagada = $_GET['pagada'] ?? '';
             $filtroSocio = $_GET['socio'] ?? '';
             $where = [];
             $params = [];
             if ($filtroTipo) { $where[] = 'm.tipo = ?'; $params[] = $filtroTipo; }
-            if ($filtroPagada !== '') { $where[] = 'm.pagada = ?'; $params[] = $filtroPagada; }
             if ($filtroSocio) { $where[] = 's.apellido1 LIKE ?'; $params[] = "%$filtroSocio%"; }
             $whereClause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
-            $stmt = $this->db->prepare("SELECT m.*, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio, s.cedula
+            $stmt = $this->db->prepare("SELECT m.*, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio, s.cedula,
+                                        (SELECT COUNT(*) FROM obligaciones_sesion WHERE id_referencia = m.id_multa AND tipo = 'multa' AND pagada = TRUE) AS pagada
                                         FROM multas m
                                         JOIN socios s ON m.id_socio = s.id_socio
                                         $whereClause
@@ -58,9 +58,8 @@ class MultaController extends BaseController {
             'multas' => $multas,
             'page' => $page,
             'totalPaginas' => $totalPaginas,
-            'filtroTipo' => $filtroTipo,
-            'filtroPagada' => $filtroPagada,
-            'filtroSocio' => $filtroSocio,
+            'filtroTipo' => $filtroTipo ?? '',
+            'filtroSocio' => $filtroSocio ?? '',
             'esSocio' => $esSocio,
             'esPresidente' => $this->esPresidente(),
         ]);
@@ -85,9 +84,15 @@ class MultaController extends BaseController {
         $multa = $stmt->fetch();
         if (!$multa) $this->redirect('/multa/listar');
 
+        // Verificar si la multa tiene alguna obligacion pagada
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM obligaciones_sesion WHERE id_referencia = ? AND tipo = 'multa' AND pagada = TRUE");
+        $stmt->execute([$id]);
+        $pagada = $stmt->fetchColumn() > 0;
+
         $this->render('multas/ver', [
             'titulo' => 'Multa',
             'multa' => $multa,
+            'pagada' => $pagada,
             'esPresidente' => $this->esPresidente(),
         ]);
     }
@@ -142,32 +147,17 @@ class MultaController extends BaseController {
         $this->json(['mensaje' => $aprobada ? 'Justificación aprobada' : 'Justificación rechazada']);
     }
 
-    public function marcarPagada($id) {
-        $this->requirePermission('cobro.multa');
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Método no permitido'], 405);
-        $this->validateCSRF();
-        $idCobro = UUIDGenerator::generar();
-        $hash = hash('sha256', $id . 'multapago' . date('Y-m-d H:i:s'));
-        try {
-            $this->db->beginTransaction();
-            $this->db->prepare("UPDATE multas SET pagada = TRUE, fecha_pago = NOW(), id_cobro = ? WHERE id_multa = ? AND pagada = FALSE")
-                ->execute([$idCobro, $id]);
-            if ($this->db->affectedRows() === 0) { $this->db->rollBack(); $this->json(['error' => 'Ya pagada'], 400); }
-            $this->db->commit();
-            $this->json(['mensaje' => 'Multa marcada como pagada']);
-        } catch (Exception $e) {
-            $this->db->rollBack();
-            $this->json(['error' => $e->getMessage()], 500);
-        }
-    }
-
     public function impugnar($id) {
         $this->requireAuth();
         $stmt = $this->db->prepare("SELECT m.*, s.cedula FROM multas m JOIN socios s ON m.id_socio = s.id_socio WHERE m.id_multa = ?");
         $stmt->execute([$id]);
         $multa = $stmt->fetch();
         if (!$multa) $this->json(['error' => 'No encontrada'], 404);
-        if ($multa['pagada']) $this->json(['error' => 'No se puede impugnar una multa ya pagada'], 400);
+
+        // Verificar si ya fue pagada via obligaciones
+        $stmtPag = $this->db->prepare("SELECT COUNT(*) FROM obligaciones_sesion WHERE id_referencia = ? AND tipo = 'multa' AND pagada = TRUE");
+        $stmtPag->execute([$id]);
+        if ($stmtPag->fetchColumn() > 0) $this->json(['error' => 'No se puede impugnar una multa ya pagada'], 400);
         if ($multa['impugnada']) $this->json(['error' => 'Ya fue impugnada'], 400);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -191,15 +181,8 @@ class MultaController extends BaseController {
                 $this->db->prepare("UPDATE multas SET justificacion = ?, justificacion_pdf = COALESCE(?, justificacion_pdf), impugnada = TRUE WHERE id_multa = ?")
                     ->execute([$texto, $archivo, $id]);
 
-                // Marcar la obligacion como pagada (para que no cuente en valores pendientes)
-                $updObl = $this->db->prepare("UPDATE obligaciones_sesion SET pagada = TRUE WHERE id_referencia = ? AND tipo = 'multa' AND pagada = FALSE");
-                $updObl->execute([$id]);
-                if ($updObl->rowCount() === 0) {
-                    // Fallback: buscar obligacion por concepto
-                    $fallback = $this->db->prepare("UPDATE obligaciones_sesion SET pagada = TRUE WHERE id_socio = ? AND tipo = 'multa' AND pagada = FALSE AND (concepto LIKE ? OR id_referencia = ?)");
-                    $fallback->execute([$multa['id_socio'], '%' . substr($id, 0, 8) . '%', $id]);
-                    error_log("impugnar: obligacion no encontrada por id_referencia=$id, fallback actualizo=" . $fallback->rowCount());
-                }
+                $this->db->prepare("UPDATE obligaciones_sesion SET pagada = TRUE WHERE id_referencia = ? AND tipo = 'multa' AND pagada = FALSE")
+                    ->execute([$id]);
 
                 $this->db->commit();
 
@@ -229,7 +212,6 @@ class MultaController extends BaseController {
 
     public function eliminar($id) {
         $this->requireAuth();
-        // Solo Presidente puede eliminar
         $roles = RBAC::obtenerRolesUsuario($_SESSION['usuario_id']);
         $esPresidente = false;
         foreach ($roles as $r) {
@@ -240,11 +222,14 @@ class MultaController extends BaseController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Metodo no permitido'], 405);
         $this->validateCSRF();
 
-        $stmt = $this->db->prepare("SELECT pagada FROM multas WHERE id_multa = ?");
+        $stmt = $this->db->prepare("SELECT id_multa FROM multas WHERE id_multa = ?");
         $stmt->execute([$id]);
-        $m = $stmt->fetch();
-        if (!$m) $this->json(['error' => 'No encontrada'], 404);
-        if ($m['pagada']) $this->json(['error' => 'No se puede eliminar una multa pagada'], 400);
+        if (!$stmt->fetch()) $this->json(['error' => 'No encontrada'], 404);
+
+        // Verificar si tiene obligacion pagada
+        $stmtPag = $this->db->prepare("SELECT COUNT(*) FROM obligaciones_sesion WHERE id_referencia = ? AND tipo = 'multa' AND pagada = TRUE");
+        $stmtPag->execute([$id]);
+        if ($stmtPag->fetchColumn() > 0) $this->json(['error' => 'No se puede eliminar una multa con pagos asociados'], 400);
 
         $this->db->prepare("DELETE FROM multas WHERE id_multa = ?")->execute([$id]);
         $this->json(['mensaje' => 'Multa eliminada']);

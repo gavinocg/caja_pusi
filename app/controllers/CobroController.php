@@ -91,7 +91,7 @@ class CobroController extends BaseController {
                     $mapOblig = ['aporte_obligatorio' => 'cuota_mensual', 'cuota_credito' => 'cuota_credito', 'multa' => 'multa'];
                     $tipoOblig = $mapOblig[$tipo] ?? null;
                     if ($tipoOblig && $idSesion) {
-                        $this->db->prepare("UPDATE obligaciones_sesion SET pagada = TRUE, id_cobro = ? WHERE id_socio = ? AND id_sesion = ? AND tipo = ? AND pagada = FALSE LIMIT 1")
+                        $this->db->prepare("UPDATE obligaciones_sesion SET pagada = TRUE, id_cobro = ? WHERE id_socio = ? AND id_sesion = ? AND tipo = ? AND pagada = FALSE")
                             ->execute([$idCobro, $idSocio, $idSesion, $tipoOblig]);
                     }
                 } catch (Exception $e) {}
@@ -157,7 +157,6 @@ class CobroController extends BaseController {
                     $this->historialInsert($c['id_socio'], 'anulacion', $c['monto'], $id, $c['id_sesion']);
 
                 } elseif ($c['tipo'] === 'multa' && !empty($c['id_referencia'])) {
-                    $this->db->prepare("UPDATE multas SET pagada = FALSE WHERE id_multa = ?")->execute([$c['id_referencia']]);
                     $this->historialInsert($c['id_socio'], 'anulacion', $c['monto'], $id, $c['id_sesion']);
 
                 } else {

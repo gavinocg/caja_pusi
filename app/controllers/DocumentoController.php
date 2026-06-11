@@ -63,7 +63,7 @@ class DocumentoController extends BaseController {
         $vencidas->execute([$idSocio]);
         $tieneDeuda = $vencidas->fetchColumn() > 0;
 
-        $multas = $this->db->prepare("SELECT COUNT(*) FROM multas WHERE id_socio = ? AND pagada = FALSE");
+        $multas = $this->db->prepare("SELECT COUNT(*) FROM multas m WHERE m.id_socio = ? AND m.id_multa IN (SELECT o.id_referencia FROM obligaciones_sesion o WHERE o.tipo = 'multa' AND o.pagada = FALSE)");
         $multas->execute([$idSocio]);
         $tieneMultas = $multas->fetchColumn() > 0;
 

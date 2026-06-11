@@ -140,11 +140,16 @@ class SesionController extends BaseController {
                 ]);
             }
 
-            // 3. Multas no pagadas de sesiones anteriores
+            // 3. Multas no pagadas de sesiones anteriores (estado real en obligaciones_sesion)
             $multas = $this->db->prepare("SELECT m.id_multa, m.tipo, m.monto, ses.numero_sesion AS multa_sesion, ses.fecha_sesion AS multa_fecha
                                            FROM multas m
                                            LEFT JOIN sesiones_mensuales ses ON m.id_sesion = ses.id_sesion
-                                           WHERE m.id_socio = ? AND m.pagada = FALSE");
+                                           WHERE m.id_socio = ?
+                                           AND m.id_multa NOT IN (
+                                               SELECT o.id_referencia FROM obligaciones_sesion o
+                                               WHERE o.tipo = 'multa' AND o.pagada = TRUE AND o.id_referencia IS NOT NULL
+                                           )
+                                           AND m.impugnada = FALSE");
             $multas->execute([$idSocio]);
             foreach ($multas as $m) {
                 $tipoMulta = str_replace('_', ' ', ucfirst($m['tipo']));
@@ -355,14 +360,8 @@ class SesionController extends BaseController {
                 $this->db->prepare("UPDATE amortizaciones SET estado = 'pagada', id_cobro = ? WHERE id_amortizacion = ?")->execute([$idCobro, $o['id_referencia']]);
             }
 
-            // Si es multa, marcar como pagada
-            if ($tipoCobro === 'multa' && $o['id_referencia']) {
-                $upd = $this->db->prepare("UPDATE multas SET pagada = TRUE WHERE id_multa = ?");
-                $upd->execute([$o['id_referencia']]);
-                if ($upd->rowCount() === 0) {
-                    error_log("procesarPagoObligacion: multa no encontrada o ya pagada, id_referencia={$o['id_referencia']}, obligacion={$idObligacion}");
-                }
-            }
+            // Si es multa, marcar como pagada (el estado real esta en obligaciones_sesion)
+            // (ya no se actualiza multas.pagada porque la columna fue eliminada)
 
             // Marcar obligacion como pagada
             $this->db->prepare("UPDATE obligaciones_sesion SET pagada = TRUE, id_cobro = ? WHERE id_obligacion = ?")->execute([$idCobro, $idObligacion]);

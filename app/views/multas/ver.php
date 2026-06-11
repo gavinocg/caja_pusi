@@ -14,11 +14,10 @@
                 <div class="col-md-6">
                     <p><strong>Generada:</strong> <?= $multa['fecha_generacion'] ?></p>
                     <p><strong>Estado:</strong>
-                        <?php if ($multa['pagada']): ?><span class="badge bg-success">Pagada</span>
+                        <?php if ($pagada): ?><span class="badge bg-success">Pagada</span>
                         <?php elseif ($multa['impugnada']): ?><span class="badge bg-secondary">Impugnada (sin efecto)</span>
                         <?php else: ?><span class="badge bg-danger">Pendiente</span><?php endif; ?>
                     </p>
-                    <?php if ($multa['fecha_pago']): ?><p><strong>Fecha pago:</strong> <?= $multa['fecha_pago'] ?></p><?php endif; ?>
                     <?php if ($multa['id_sesion']): ?><p><strong>Sesion:</strong> <?= $multa['id_sesion'] ?></p><?php endif; ?>
                 </div>
             </div>
@@ -58,10 +57,9 @@
             <?php endif; ?>
             <?php endif; ?>
 
-            <?php if (!$multa['pagada'] && !$multa['impugnada']): ?>
+            <?php if (!$pagada && !$multa['impugnada']): ?>
             <hr>
-            <button type="button" class="btn btn-sm btn-warning" onclick="impugnarMulta('<?= $multa['id_multa'] ?>')"><i class="bi bi-shield-exclamation"></i> Impugnar</button>
-            <span class="text-muted ms-2 small">El pago debe realizarse a traves de una sesion abierta.</span>
+            <span class="text-muted small">El pago debe realizarse a traves de una sesion abierta.</span>
             <?php if ($esPresidente): ?>
             <a href="#" onclick="eliminarMulta('<?= $multa['id_multa'] ?>')" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Eliminar (Presidente)</a>
             <?php endif; ?>
@@ -77,19 +75,6 @@ function eliminarMulta(id) {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'csrf_token=<?= CSRFMiddleware::generarToken() ?>'
-    }).then(function(r) { return r.json(); }).then(function(d) {
-        if (d.error) { alert(d.error); } else { alert(d.mensaje); location.reload(); }
-    });
-}
-function impugnarMulta(id) {
-    var texto = prompt('Describa el motivo de la impugnacion:');
-    if (!texto || texto.trim().length < 10) { alert('Escriba al menos 10 caracteres'); return; }
-    var formData = new FormData();
-    formData.append('csrf_token', '<?= CSRFMiddleware::generarToken() ?>');
-    formData.append('justificacion', texto.trim());
-    fetch('<?= BASE_URL ?>/multa/impugnar/' + id, {
-        method: 'POST',
-        body: formData
     }).then(function(r) { return r.json(); }).then(function(d) {
         if (d.error) { alert(d.error); } else { alert(d.mensaje); location.reload(); }
     });
