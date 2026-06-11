@@ -532,12 +532,15 @@ class SesionController extends BaseController {
             // Notificar a cada socio con multa y actualizar su portal
             foreach ($multasGeneradas as $m) {
                 $tipoMulta = str_replace('_', ' ', ucfirst($m['tipo']));
+                $cedula = $this->db->prepare("SELECT cedula FROM socios WHERE id_socio = ?");
+                $cedula->execute([$m['id_socio']]);
+                $cedulaVal = $cedula->fetchColumn() ?: '';
                 try {
                     NotificacionHelper::crear([
                         'id_socio' => $m['id_socio'],
                         'tipo' => 'multa',
                         'titulo' => 'Multa generada',
-                        'mensaje' => "Se ha generado una multa por {$tipoMulta} de \${$m['monto']} en la sesion #{$numSesion}",
+                        'mensaje' => "Se ha generado una multa por {$tipoMulta} de \${$m['monto']} en la sesion #{$numSesion} para el socio {$cedulaVal}",
                         'enviar_pusher' => true,
                     ]);
                     require_once ROOT_PATH . '/app/helpers/PusherHelper.php';
