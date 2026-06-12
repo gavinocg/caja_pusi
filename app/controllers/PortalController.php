@@ -118,7 +118,13 @@ class PortalController extends BaseController {
                 $id = UUIDGenerator::generar();
                 $this->db->prepare("INSERT INTO solicitudes_retiro (id_solicitud, id_socio, monto, motivo) VALUES (?, ?, ?, ?)")
                     ->execute([$id, $socio['id_socio'], $monto, $motivo]);
-                NotificacionHelper::crearCobro($socio['id_socio'], $cedula, $monto, 'Solicitud de retiro');
+                NotificacionHelper::crear([
+                    'id_socio' => $socio['id_socio'],
+                    'tipo' => 'retiro',
+                    'titulo' => 'Solicitud de retiro',
+                    'mensaje' => "Has solicitado un retiro de \${$monto}. Espera la aprobacion.",
+                    'enviar_pusher' => true,
+                ]);
                 $this->redirect('/portal');
             }
         }
