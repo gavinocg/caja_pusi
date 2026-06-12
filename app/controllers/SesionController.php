@@ -345,20 +345,19 @@ class SesionController extends BaseController {
 
             if ($accion === 'pagar_obligacion') {
                 $idObligacion = $_POST['id_obligacion'] ?? '';
-                $this->procesarPagoObligacion($idObligacion, $id);
+                $medioPago = $_POST['medio_pago'] ?? 'efectivo';
+                $this->procesarPagoObligacion($idObligacion, $id, $medioPago);
                 $this->redirect('/sesion/checkin/' . $id);
             }
 
             if ($accion === 'pagar_seleccion') {
                 $ids = $_POST['obligaciones'] ?? [];
-                error_log("pagar_seleccion: ids count=" . count($ids) . " sesion=$id");
+                $medioPago = $_POST['medio_pago'] ?? 'efectivo';
                 if (!empty($ids)) {
                     foreach ($ids as $oid) {
-                        error_log("pagar_seleccion: procesando oid=$oid");
-                        $this->procesarPagoObligacion($oid, $id);
+                        $this->procesarPagoObligacion($oid, $id, $medioPago);
                     }
                 } else {
-                    error_log("pagar_seleccion: no hay ids seleccionados");
                     $_SESSION['error'] = 'No se seleccionaron obligaciones';
                 }
                 $this->redirect('/sesion/checkin/' . $id);
@@ -366,10 +365,11 @@ class SesionController extends BaseController {
 
             if ($accion === 'pagar_todo_socio') {
                 $idSocio = $_POST['id_socio'] ?? '';
+                $medioPago = $_POST['medio_pago'] ?? 'efectivo';
                 $stmt = $this->db->prepare("SELECT id_obligacion FROM obligaciones_sesion WHERE id_sesion = ? AND id_socio = ? AND pagada = FALSE");
                 $stmt->execute([$id, $idSocio]);
                 foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $oid) {
-                    $this->procesarPagoObligacion($oid, $id);
+                    $this->procesarPagoObligacion($oid, $id, $medioPago);
                 }
                 $this->redirect('/sesion/checkin/' . $id);
             }
@@ -399,7 +399,7 @@ class SesionController extends BaseController {
         $this->json($stmt->fetchAll());
     }
 
-    private function procesarPagoObligacion($idObligacion, $idSesion) {
+    private function procesarPagoObligacion($idObligacion, $idSesion, $medioPago = 'efectivo') {
         $stmt = $this->db->prepare("SELECT o.*, s.cedula FROM obligaciones_sesion o JOIN socios s ON o.id_socio = s.id_socio WHERE o.id_obligacion = ? AND o.pagada = FALSE");
         $stmt->execute([$idObligacion]);
         $o = $stmt->fetch();
@@ -416,8 +416,8 @@ class SesionController extends BaseController {
 
         $this->db->beginTransaction();
         try {
-            $this->db->prepare("INSERT INTO cobros (id_cobro, id_socio, id_sesion, tipo, id_referencia, monto, medio_pago, hash_integridad, usuario_registra) VALUES (?, ?, ?, ?, ?, ?, 'efectivo', ?, ?)")
-                ->execute([$idCobro, $o['id_socio'], $idSesion, $tipoCobro, $o['id_referencia'], $o['monto'], $hash, $_SESSION['usuario_id']]);
+            $this->db->prepare("INSERT INTO cobros (id_cobro, id_socio, id_sesion, tipo, id_referencia, monto, medio_pago, hash_integridad, usuario_registra) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                ->execute([$idCobro, $o['id_socio'], $idSesion, $tipoCobro, $o['id_referencia'], $o['monto'], $medioPago, $hash, $_SESSION['usuario_id']]);
 
             // Actualizar cuenta de ahorro
             if ($tipoCobro === 'aporte_obligatorio') {

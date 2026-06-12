@@ -133,8 +133,18 @@
                             </div>
                         </div>
                         <div id="obligacionesLista" class="list-group"></div>
-                        <div class="mt-3 text-end" id="cobroTotal" style="display:none">
-                            <strong>Total seleccionado: $<span id="totalSeleccionado">0.00</span></strong>
+                        <div class="mt-3 row g-2" id="cobroTotal" style="display:none">
+                            <div class="col-md-6">
+                                <select name="medio_pago" class="form-select form-select-sm">
+                                    <option value="efectivo">Efectivo</option>
+                                    <option value="transferencia">Transferencia</option>
+                                    <option value="compensacion">Compensación</option>
+                                    <option value="digital">Digital</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <strong>Total seleccionado: $<span id="totalSeleccionado">0.00</span></strong>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">

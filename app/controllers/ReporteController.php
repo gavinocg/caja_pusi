@@ -8,12 +8,19 @@ class ReporteController extends BaseController {
 
     public function socios() {
         $this->requirePermission('reporte.socios');
-        $stmt = $this->db->query("SELECT s.cedula, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS nombre,
-                                   s.correo_electronico, s.telefono, s.estado, s.fecha_ingreso,
-                                   ca.saldo_obligatorio, ca.saldo_excedente, ca.saldo_disponible
-                                   FROM socios s
-                                   LEFT JOIN cuentas_ahorro ca ON s.id_socio = ca.id_socio
-                                    ORDER BY s.apellido1, s.apellido2, s.nombre1, s.nombre2");
+        $page = max(1, intval($_GET['p'] ?? 1));
+        $porPagina = 50;
+        $offset = ($page - 1) * $porPagina;
+        $total = $this->db->query("SELECT COUNT(*) FROM socios")->fetchColumn();
+        $totalPaginas = ceil($total / $porPagina);
+        $stmt = $this->db->prepare("SELECT s.cedula, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS nombre,
+                                    s.correo_electronico, s.telefono, s.estado, s.fecha_ingreso,
+                                    ca.saldo_obligatorio, ca.saldo_excedente, ca.saldo_disponible
+                                    FROM socios s
+                                    LEFT JOIN cuentas_ahorro ca ON s.id_socio = ca.id_socio
+                                    ORDER BY s.apellido1, s.apellido2, s.nombre1, s.nombre2
+                                    LIMIT $porPagina OFFSET $offset");
+        $stmt->execute();
         $data = $stmt->fetchAll();
 
         if (isset($_GET['formato'])) {
@@ -26,6 +33,8 @@ class ReporteController extends BaseController {
             'filas' => $data,
             'campos' => ['cedula', 'nombre', 'correo_electronico', 'telefono', 'estado', 'fecha_ingreso', 'saldo_obligatorio', 'saldo_excedente', 'saldo_disponible'],
             'ruta_csv' => BASE_URL . '/reporte/socios?formato=csv',
+            'page' => $page,
+            'totalPaginas' => $totalPaginas,
         ]);
     }
 
@@ -102,17 +111,34 @@ class ReporteController extends BaseController {
 
     public function cobros() {
         $this->requirePermission('reporte.cobros');
-        $stmt = $this->db->query("SELECT c.fecha_registro, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio,
+        $desde = $_GET['desde'] ?? '';
+        $hasta = $_GET['hasta'] ?? '';
+        $where = [];
+        $params = [];
+        if ($desde) { $where[] = 'c.fecha_registro >= ?'; $params[] = $desde . ' 00:00:00'; }
+        if ($hasta) { $where[] = 'c.fecha_registro <= ?'; $params[] = $hasta . ' 23:59:59'; }
+        $whereClause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        $page = max(1, intval($_GET['p'] ?? 1));
+        $porPagina = 50;
+        $offset = ($page - 1) * $porPagina;
+        $total = $this->db->query("SELECT COUNT(*) FROM cobros c $whereClause")->fetchColumn();
+        $totalPaginas = ceil($total / $porPagina);
+
+        $stmt = $this->db->prepare("SELECT c.fecha_registro, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio,
                                    c.tipo, c.monto, c.medio_pago, ses.numero_sesion,
                                    c.anulado, c.motivo_anulacion
                                    FROM cobros c
                                    JOIN socios s ON c.id_socio = s.id_socio
-                                   JOIN sesiones_mensuales ses ON c.id_sesion = ses.id_sesion
-                                   ORDER BY c.fecha_registro DESC");
+                                   LEFT JOIN sesiones_mensuales ses ON c.id_sesion = ses.id_sesion
+                                   $whereClause
+                                   ORDER BY c.fecha_registro DESC LIMIT $porPagina OFFSET $offset");
+        $stmt->execute($params);
         $data = $stmt->fetchAll();
 
         if (isset($_GET['formato'])) {
-            return $this->exportarCSV($data, ['Fecha', 'Socio', 'Tipo', 'Monto', 'Medio', 'Sesión', 'Anulado', 'Motivo'], 'cobros');
+            $all = $this->db->query("SELECT c.fecha_registro, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS socio, c.tipo, c.monto, c.medio_pago, ses.numero_sesion, c.anulado, c.motivo_anulacion FROM cobros c JOIN socios s ON c.id_socio = s.id_socio LEFT JOIN sesiones_mensuales ses ON c.id_sesion = ses.id_sesion $whereClause ORDER BY c.fecha_registro DESC")->fetchAll();
+            return $this->exportarCSV($all, ['Fecha', 'Socio', 'Tipo', 'Monto', 'Medio', 'Sesión', 'Anulado', 'Motivo'], 'cobros');
         }
 
         $this->render('reportes/tabla', [
@@ -121,6 +147,10 @@ class ReporteController extends BaseController {
             'filas' => $data,
             'campos' => ['fecha_registro', 'socio', 'tipo', 'monto', 'medio_pago', 'numero_sesion', 'anulado', 'motivo_anulacion'],
             'ruta_csv' => BASE_URL . '/reporte/cobros?formato=csv',
+            'page' => $page,
+            'totalPaginas' => $totalPaginas,
+            'desde' => $desde,
+            'hasta' => $hasta,
         ]);
     }
 

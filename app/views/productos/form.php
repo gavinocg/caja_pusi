@@ -79,6 +79,13 @@
                                value="<?= htmlspecialchars($data['monto_max'] ?? '1000') ?>">
                         <div class="invalid-feedback"><?= $errors['monto_max'] ?? '' ?></div>
                     </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Días gracia</label>
+                        <input type="number" min="0" name="dias_gracia"
+                               class="form-control"
+                               value="<?= htmlspecialchars($data['dias_gracia'] ?? '0') ?>">
+                        <small class="text-muted">Días hasta 1ra cuota</small>
+                    </div>
                 </div>
             </div>
         </div>

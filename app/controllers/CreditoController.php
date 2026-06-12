@@ -160,7 +160,7 @@ class CreditoController extends BaseController {
         $this->requirePermission('credito.aprobar');
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->validateCSRF();
-            $stmt = $this->db->prepare("SELECT cr.*, p.requiere_documento_firmado FROM `creditos` cr
+            $stmt = $this->db->prepare("SELECT cr.*, p.requiere_documento_firmado, p.dias_gracia FROM creditos cr
                                         JOIN productos_financieros p ON cr.id_producto = p.id_producto
                                         WHERE cr.id_credito = ? AND cr.estado IN ('ingresado','pendiente')");
             $stmt->execute([$id]);
@@ -181,7 +181,11 @@ class CreditoController extends BaseController {
                 $cuotas = CalculadoraInteres::simular($montoAprobado, $credito['tasa_interes'], $credito['plazo_meses'], $credito['metodo_interes']);
 
                 $ins = $this->db->prepare("INSERT INTO amortizaciones (id_amortizacion, id_credito, numero_cuota, fecha_vencimiento, capital, interes, total, saldo_restante) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $diasGracia = intval($credito['dias_gracia'] ?? 0);
                 $fechaInicio = new DateTime();
+                if ($diasGracia > 0) {
+                    $fechaInicio->modify("+{$diasGracia} days");
+                }
                 foreach ($cuotas as $i => $c) {
                     $fv = clone $fechaInicio;
                     $fv->modify('+' . ($i + 1) . ' months');

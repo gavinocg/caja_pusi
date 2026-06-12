@@ -42,17 +42,17 @@ class ProductoController extends BaseController {
                 $id = UUIDGenerator::generar();
                 $stmt = $this->db->prepare("INSERT INTO productos_financieros
                     (id_producto, nombre, tipo, activo, tasa_interes_anual, metodo_interes,
-                     plazo_min_meses, plazo_max_meses, monto_min, monto_max,
+                     plazo_min_meses, plazo_max_meses, monto_min, monto_max, dias_gracia,
                      requiere_garante, penalidad_retiro_anticipado,
                      condiciones_html, min_permanencia_meses, min_ahorro, min_ahorro_unidad,
                      es_emergente, monto_max_emergente, requiere_documento_firmado,
                      min_destino_caracteres, min_permanencia_valor, min_permanencia_unidad)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->execute([
                     $id, $data['nombre'], $data['tipo'], $data['activo'],
                     $data['tasa_interes_anual'], $data['metodo_interes'],
                     $data['plazo_min_meses'], $data['plazo_max_meses'],
-                    $data['monto_min'], $data['monto_max'],
+                    $data['monto_min'], $data['monto_max'], $data['dias_gracia'],
                     $data['requiere_garante'], $data['penalidad_retiro_anticipado'],
                     $data['condiciones_html'], $data['min_permanencia_meses'],
                     $data['min_ahorro'], $data['min_ahorro_unidad'],
@@ -91,6 +91,7 @@ class ProductoController extends BaseController {
                 $stmt = $this->db->prepare("UPDATE productos_financieros SET
                     nombre = ?, tipo = ?, activo = ?, tasa_interes_anual = ?, metodo_interes = ?,
                     plazo_min_meses = ?, plazo_max_meses = ?, monto_min = ?, monto_max = ?,
+                    dias_gracia = ?,
                     requiere_garante = ?, penalidad_retiro_anticipado = ?,
                     condiciones_html = ?, min_permanencia_meses = ?, min_ahorro = ?, min_ahorro_unidad = ?,
                     es_emergente = ?, monto_max_emergente = ?, requiere_documento_firmado = ?,
@@ -100,7 +101,7 @@ class ProductoController extends BaseController {
                     $data['nombre'], $data['tipo'], $data['activo'],
                     $data['tasa_interes_anual'], $data['metodo_interes'],
                     $data['plazo_min_meses'], $data['plazo_max_meses'],
-                    $data['monto_min'], $data['monto_max'],
+                    $data['monto_min'], $data['monto_max'], $data['dias_gracia'],
                     $data['requiere_garante'], $data['penalidad_retiro_anticipado'],
                     $data['condiciones_html'], $data['min_permanencia_meses'],
                     $data['min_ahorro'], $data['min_ahorro_unidad'],
@@ -176,6 +177,7 @@ class ProductoController extends BaseController {
             'plazo_max_meses' => intval($post['plazo_max_meses'] ?? 12),
             'monto_min' => str_replace(',', '.', $post['monto_min'] ?? '0'),
             'monto_max' => str_replace(',', '.', $post['monto_max'] ?? '0'),
+            'dias_gracia' => $esCredito ? intval($post['dias_gracia'] ?? 0) : 0,
             'requiere_garante' => $esCredito ? (!empty($post['requiere_garante']) ? 1 : 0) : 0,
             'penalidad_retiro_anticipado' => $esCredito ? 0 : str_replace(',', '.', $post['penalidad_retiro_anticipado'] ?? '0'),
             'condiciones_html' => $post['condiciones_html'] ?? '',
