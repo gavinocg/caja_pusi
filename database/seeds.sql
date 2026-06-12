@@ -6,7 +6,8 @@ INSERT INTO roles (nombre, descripcion, endosable) VALUES
 ('Analista Financiero', 'Configura productos financieros, parametros, cálculos y distribución de excedentes', TRUE),
 ('Tesorero', 'Ejecución financiera diaria: cobros, desembolsos, cierre de sesión', FALSE),
 ('Asistente de Tesorería', 'Apoyo en cobros de aportes, cuotas y multas', FALSE),
-('Socio', 'Acceso al portal personal: consultas, solicitudes, comprobantes', FALSE);
+('Socio', 'Acceso al portal personal: consultas, solicitudes, comprobantes', FALSE),
+('Secretario/a', 'Gestion administrativa: actas, comunicaciones, soporte a tesoreria', FALSE);
 
 INSERT INTO permisos (codigo, nombre, descripcion) VALUES
 ('auth.login', 'Ingresar al sistema', 'Permite iniciar sesión en el sistema'),
@@ -53,6 +54,20 @@ INSERT INTO roles_permisos (id_rol, id_permiso, permitir) VALUES
 INSERT INTO roles_permisos (id_rol, id_permiso, permitir) VALUES
 (2, (SELECT id_permiso FROM permisos WHERE codigo = 'credito.aprobar'), TRUE),
 (4, (SELECT id_permiso FROM permisos WHERE codigo = 'credito.aprobar'), TRUE);
+
+-- Permisos para Secretario/a (rol 7)
+INSERT INTO roles_permisos (id_rol, id_permiso, permitir) VALUES
+((SELECT id_rol FROM roles WHERE nombre = 'Secretario/a'), (SELECT id_permiso FROM permisos WHERE codigo = 'auth.login'), TRUE),
+((SELECT id_rol FROM roles WHERE nombre = 'Secretario/a'), (SELECT id_permiso FROM permisos WHERE codigo = 'auth.ver_2fa'), TRUE),
+((SELECT id_rol FROM roles WHERE nombre = 'Secretario/a'), (SELECT id_permiso FROM permisos WHERE codigo = 'socio.registrar'), TRUE),
+((SELECT id_rol FROM roles WHERE nombre = 'Secretario/a'), (SELECT id_permiso FROM permisos WHERE codigo = 'socio.editar'), TRUE),
+((SELECT id_rol FROM roles WHERE nombre = 'Secretario/a'), (SELECT id_permiso FROM permisos WHERE codigo = 'socio.cambiar_estado'), TRUE),
+((SELECT id_rol FROM roles WHERE nombre = 'Secretario/a'), (SELECT id_permiso FROM permisos WHERE codigo = 'socio.consultar'), TRUE),
+((SELECT id_rol FROM roles WHERE nombre = 'Secretario/a'), (SELECT id_permiso FROM permisos WHERE codigo = 'socio.ver_financiero'), TRUE),
+((SELECT id_rol FROM roles WHERE nombre = 'Secretario/a'), (SELECT id_permiso FROM permisos WHERE codigo = 'cobro.aporte'), TRUE),
+((SELECT id_rol FROM roles WHERE nombre = 'Secretario/a'), (SELECT id_permiso FROM permisos WHERE codigo = 'reporte.socios'), TRUE),
+((SELECT id_rol FROM roles WHERE nombre = 'Secretario/a'), (SELECT id_permiso FROM permisos WHERE codigo = 'multa.impugnar'), TRUE),
+((SELECT id_rol FROM roles WHERE nombre = 'Secretario/a'), (SELECT id_permiso FROM permisos WHERE codigo = 'multa.autorizar_impugnacion'), TRUE);
 
 INSERT INTO parametros (codigo, nombre, valor, tipo, modulo) VALUES
 ('tasa_interes_crédito', 'Tasa de interes para creditos', '6.00', 'decimal', 'financiero'),
