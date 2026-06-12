@@ -81,8 +81,8 @@ if ($loggedIn) {
                     </div>
                     <?php else: ?>
                     <div class="logo">
-                        <a href="<?= $baseUrl ?>/dashboard" class="text-decoration-none text-dark">
-                            <div class="fw-bold fs-6"><?= htmlspecialchars($ndb->query("SELECT valor FROM parametros WHERE codigo = 'abrev_caja'")->fetchColumn() ?: 'Caja') ?></div>
+                        <a href="<?= $baseUrl ?>/dashboard" class="text-decoration-none">
+                            <div class="fw-bold" style="font-size:1.8rem; letter-spacing:3px; color:var(--bs-primary); font-family:serif"><?= htmlspecialchars($ndb->query("SELECT valor FROM parametros WHERE codigo = 'abrev_caja'")->fetchColumn() ?: 'Caja') ?></div>
                         </a>
                     </div>
                     <div class="theme-toggle d-flex gap-2 align-items-center mt-2">
