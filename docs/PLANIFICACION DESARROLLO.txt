@@ -1,6 +1,11 @@
 Flujos:
 -----------
 
+0. RECAUDACIÓN
+0.1 Recaudación cuota mensual
+0.2 Recaudación de cuotas crédito
+0.3 Recaudación de multas
+
 1. CRÉDITOS
 1.1 Definir productos de crédito
 1.2 Solicitar
@@ -48,3 +53,24 @@ Flujos:
 4.3 Sistema de comunicaciones
 4.3.1 Correos electrónicos individuales/masivos
 4.3.2 Notificaciones PUSH (Dashboard)
+
+5. MULTAS
+5.1 Imposición
+	**Multas atrasos/falta Sesión Asamblea
+	**Multas cuota impaga
+
+6. NOTIFICACIONES
+6.1 Notificaciones Push
+6.3 Notificaciones Toast
+6.2 Notificaciones Correo
+
+
+---------------
+
+Actividades:
+
+- Reorganizar opciones según perfil
+
+
+
+

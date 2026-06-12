@@ -154,6 +154,32 @@ if ($loggedIn) {
                             <span>Inversión</span>
                         </a>
                     </li>
+                    <li class="sidebar-item has-sub <?= mazerActiveP('portal/multas') || mazerActiveP('portal/asistencias') ? 'active' : '' ?>">
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-people-fill"></i>
+                            <span>Sesiones Asamblea</span>
+                        </a>
+                        <ul class="submenu <?= mazerActiveP('portal/multas') || mazerActiveP('portal/asistencias') ? 'active' : '' ?>">
+                            <li class="submenu-item <?= mazerActiveP('portal/multas') ?>">
+                                <a href="<?= $baseUrl ?>/portal/multas" class="submenu-link">Multas</a>
+                            </li>
+                            <li class="submenu-item <?= mazerActiveP('portal/asistencias') ?>">
+                                <a href="<?= $baseUrl ?>/portal/asistencias" class="submenu-link">Asistencias</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="sidebar-item <?= mazerActiveP('portal/historial') ?>">
+                        <a href="<?= $baseUrl ?>/portal/historial" class="sidebar-link">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Historial</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item <?= mazerActiveP('portal/password') ?>">
+                        <a href="<?= $baseUrl ?>/portal/password" class="sidebar-link">
+                            <i class="bi bi-key-fill"></i>
+                            <span>Contraseña</span>
+                        </a>
+                    </li>
                 </ul>
                 <?php else: ?>
                 <ul class="menu">
@@ -365,9 +391,6 @@ if ($loggedIn) {
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="<?= $baseUrl ?>/portal"><i class="bi bi-house-fill me-2"></i>Inicio</a></li>
                         <?php if ($esSoloSocio): ?>
-                        <li><a class="dropdown-item" href="<?= $baseUrl ?>/portal/historial"><i class="bi bi-clock-history me-2"></i>Historial</a></li>
-                        <li><a class="dropdown-item" href="<?= $baseUrl ?>/portal/multas"><i class="bi bi-exclamation-triangle me-2"></i>Multas</a></li>
-                        <li><a class="dropdown-item" href="<?= $baseUrl ?>/portal/asistencias"><i class="bi bi-calendar-check me-2"></i>Asistencias</a></li>
                         <li><a class="dropdown-item" href="<?= $baseUrl ?>/portal/password"><i class="bi bi-key me-2"></i>Contrasena</a></li>
                         <?php else: ?>
                         <li><a class="dropdown-item" href="<?= $baseUrl ?>/password"><i class="bi bi-key me-2"></i>Contrasena</a></li>
