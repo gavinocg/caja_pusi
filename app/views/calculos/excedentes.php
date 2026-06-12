@@ -48,7 +48,7 @@
                         <td><?= htmlspecialchars($s['cedula']) ?></td>
                         <td><?= htmlspecialchars($s['nombre']) ?></td>
                         <td class="text-end">$<?= number_format($s['saldo_obligatorio'], 2) ?></td>
-                        <td class="text-end"><strong>$<?= number_format($s['participación'], 2) ?></strong></td>
+                        <td class="text-end"><strong>$<?= number_format($s['participacion'], 2) ?></strong></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>

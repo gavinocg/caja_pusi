@@ -44,7 +44,7 @@ class NotificacionHelper {
 
     public static function crearSesion($numero, $accion) {
         return self::crear([
-            'tipo' => 'sesión',
+            'tipo' => 'sesion',
             'titulo' => "Sesión $accion",
             'mensaje' => "Sesión #$numero ha sido $accion",
             'enviar_pusher' => true,

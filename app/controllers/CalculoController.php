@@ -14,7 +14,7 @@ class CalculoController extends BaseController {
             $monto = str_replace(',', '.', $_POST['monto'] ?? '0');
             $tasa = str_replace(',', '.', $_POST['tasa'] ?? '0');
             $plazo = intval($_POST['plazo'] ?? 1);
-            $metodo = $_POST['método'] ?? 'simple';
+            $metodo = $_POST['metodo'] ?? 'simple';
 
             if (is_numeric($monto) && $monto > 0 && is_numeric($tasa) && $plazo > 0) {
                 try {
@@ -101,8 +101,8 @@ class CalculoController extends BaseController {
                     $ratio = $totalExcedente / $totalAportes;
                     $distribuido = 0;
                     foreach ($socios as &$s) {
-                        $s['participación'] = round($s['saldo_obligatorio'] * $ratio, 2);
-                        $distribuido += $s['participación'];
+            $s['participacion'] = round($s['saldo_obligatorio'] * $ratio, 2);
+            $distribuido += $s['participacion'];
                     }
                     $resultado = [
                         'total_excedente' => $totalExcedente,

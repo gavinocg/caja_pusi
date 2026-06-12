@@ -34,10 +34,10 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Método</label>
-                    <select name="método" class="form-select">
-                        <option value="simple" <?= ($_POST['método'] ?? '') === 'simple' ? 'selected' : '' ?>>Simple</option>
-                        <option value="francés" <?= ($_POST['método'] ?? '') === 'frances' ? 'selected' : '' ?>>Francés</option>
-                        <option value="alemán" <?= ($_POST['método'] ?? '') === 'aleman' ? 'selected' : '' ?>>Alemán</option>
+                        <select name="metodo" class="form-select">
+                            <option value="simple" <?= ($_POST['metodo'] ?? '') === 'simple' ? 'selected' : '' ?>>Simple</option>
+                            <option value="frances" <?= ($_POST['metodo'] ?? '') === 'frances' ? 'selected' : '' ?>>Francés</option>
+                            <option value="aleman" <?= ($_POST['metodo'] ?? '') === 'aleman' ? 'selected' : '' ?>>Alemán</option>
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
@@ -94,7 +94,7 @@ function cargarProducto() {
     var opt = sel.options[sel.selectedIndex];
     if (opt.value) {
         document.querySelector('[name="tasa"]').value = opt.dataset.tasa;
-        document.querySelector('[name="método"]').value = opt.dataset.metodo;
+        document.querySelector('[name="metodo"]').value = opt.dataset.metodo;
         document.querySelector('[name="plazo"]').value = opt.dataset.min;
         document.querySelector('[name="monto"]').focus();
     }

@@ -60,7 +60,7 @@
                             <option value="casado">Casado/a</option>
                             <option value="divorciado">Divorciado/a</option>
                             <option value="viudo">Viudo/a</option>
-                            <option value="unión_libre">Unión libre</option>
+                            <option value="union_libre">Unión libre</option>
                         </select>
                     </div>
                 </div>
