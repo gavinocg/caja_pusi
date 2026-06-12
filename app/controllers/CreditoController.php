@@ -181,14 +181,11 @@ class CreditoController extends BaseController {
                 $cuotas = CalculadoraInteres::simular($montoAprobado, $credito['tasa_interes'], $credito['plazo_meses'], $credito['metodo_interes']);
 
                 $ins = $this->db->prepare("INSERT INTO amortizaciones (id_amortizacion, id_credito, numero_cuota, fecha_vencimiento, capital, interes, total, saldo_restante) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                $diasGracia = intval($credito['dias_gracia'] ?? 0);
-                $fechaInicio = new DateTime();
-                if ($diasGracia > 0) {
-                    $fechaInicio->modify("+{$diasGracia} days");
-                }
+                $mesesGracia = intval($credito['dias_gracia'] ?? 0);
                 foreach ($cuotas as $i => $c) {
-                    $fv = clone $fechaInicio;
-                    $fv->modify('+' . ($i + 1) . ' months');
+                    $fv = new DateTime();
+                    $offset = 1 + $mesesGracia + $i;
+                    $fv->modify("first day of +{$offset} months");
                     $ins->execute([UUIDGenerator::generar(), $id, $c['numero'], $fv->format('Y-m-d'), $c['capital'], $c['interes'], $c['total'], $c['saldo']]);
                 }
                 $this->db->commit();

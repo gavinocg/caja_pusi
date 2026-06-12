@@ -151,7 +151,7 @@ CREATE TABLE productos_financieros (
     plazo_max_meses INT NOT NULL COMMENT 'Plazo máximo en meses',
     monto_min DECIMAL(10,2) NOT NULL COMMENT 'Monto mínimo del producto',
     monto_max DECIMAL(10,2) NOT NULL COMMENT 'Monto maximo del producto',
-    dias_gracia INT DEFAULT 0 COMMENT 'Dias de gracia para primera cuota despues de aprobacion',
+    dias_gracia INT DEFAULT 0 COMMENT 'Meses de gracia antes de la primera cuota de credito',
     requiere_garante BOOLEAN DEFAULT FALSE COMMENT 'Indica si el producto requiere garante',
     penalidad_retiro_anticipado DECIMAL(5,2) DEFAULT 0 COMMENT 'Penalidad por retiro anticipado (%)',
     activo BOOLEAN DEFAULT TRUE COMMENT 'Indica si el producto está activo para nuevas solicitudes',
