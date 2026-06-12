@@ -191,6 +191,7 @@ if ($loggedIn) {
                         </a>
                     </li>
                     <?php if ($uid && RBAC::tienePermiso($uid, 'socio.consultar')): ?>
+                    <li class="sidebar-title">Socios</li>
                     <li class="sidebar-item <?= mazerActive('socio') ?>">
                         <a href="<?= $baseUrl ?>/socio/listar" class="sidebar-link">
                             <i class="bi bi-people-fill"></i>
@@ -199,6 +200,7 @@ if ($loggedIn) {
                     </li>
                     <?php endif; ?>
                     <?php if ($uid && RBAC::tienePermiso($uid, 'cobro.aporte')): ?>
+                    <li class="sidebar-title">Operaciones de Sesión</li>
                     <li class="sidebar-item <?= mazerActive('sesion') ?>">
                         <a href="<?= $baseUrl ?>/sesion/listar" class="sidebar-link">
                             <i class="bi bi-calendar-check-fill"></i>
@@ -224,11 +226,19 @@ if ($loggedIn) {
                         </a>
                     </li>
                     <?php endif; ?>
+                    <li class="sidebar-item <?= mazerActive('multa') ?>">
+                        <a href="<?= $baseUrl ?>/multa/listar" class="sidebar-link">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>Multas</span>
+                        </a>
+                    </li>
+                    <?php if ($uid && (RBAC::tienePermiso($uid, 'cobro.desembolso') || RBAC::tienePermiso($uid, 'credito.aprobar'))): ?>
+                    <li class="sidebar-title">Créditos</li>
                     <?php if ($uid && RBAC::tienePermiso($uid, 'cobro.desembolso')): ?>
-                    <li class="sidebar-item <?= mazerActive('credito') ?>">
+                    <li class="sidebar-item <?= mazerActive('credito') && !mazerActive('credito/bandejaAprobados') ? 'active' : '' ?>">
                         <a href="<?= $baseUrl ?>/credito/listar" class="sidebar-link">
                             <i class="bi bi-bank"></i>
-                            <span>Créditos</span>
+                            <span>Listar</span>
                         </a>
                     </li>
                     <?php endif; ?>
@@ -236,17 +246,22 @@ if ($loggedIn) {
                     <li class="sidebar-item <?= mazerActive('credito/bandejaAprobados') ?>">
                         <a href="<?= $baseUrl ?>/credito/bandejaAprobados" class="sidebar-link">
                             <i class="bi bi-inbox"></i>
-                            <span>Bandeja creditos</span>
+                            <span>Bandeja aprobación</span>
                         </a>
                     </li>
                     <?php endif; ?>
+                    <?php endif; ?>
                     <?php if ($uid && RBAC::tienePermiso($uid, 'cobro.inversion')): ?>
+                    <li class="sidebar-title">Inversiones</li>
                     <li class="sidebar-item <?= mazerActive('inversion') ?>">
                         <a href="<?= $baseUrl ?>/inversion/listar" class="sidebar-link">
                             <i class="bi bi-piggy-bank-fill"></i>
                             <span>Inversiones</span>
                         </a>
                     </li>
+                    <?php endif; ?>
+                    <?php if ($uid && (RBAC::tienePermiso($uid, 'param.financiero') || RBAC::tienePermiso($uid, 'calculo.intereses') || RBAC::tienePermiso($uid, 'reporte.socios') || RBAC::tienePermiso($uid, 'reporte.financiero') || RBAC::tienePermiso($uid, 'reporte.cobros'))): ?>
+                    <li class="sidebar-title">Financiero</li>
                     <?php endif; ?>
                     <?php if ($uid && RBAC::tienePermiso($uid, 'param.financiero')): ?>
                     <li class="sidebar-item has-sub <?= mazerHasSub('producto') ?>">
@@ -328,17 +343,17 @@ if ($loggedIn) {
                         </a>
                     </li>
                     <?php endif; ?>
-                    <li class="sidebar-title">General</li>
-                    <li class="sidebar-item <?= mazerActive('multa') ?>">
-                        <a href="<?= $baseUrl ?>/multa/listar" class="sidebar-link">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                            <span>Multas</span>
+                    <li class="sidebar-title">Perfil</li>
+                    <li class="sidebar-item <?= mazerActive('notificacion') ?>">
+                        <a href="<?= $baseUrl ?>/notificacion/listar" class="sidebar-link">
+                            <i class="bi bi-bell-fill"></i>
+                            <span>Notificaciones</span>
                         </a>
                     </li>
                     <li class="sidebar-item <?= mazerActive('portal') ?>">
                         <a href="<?= $baseUrl ?>/portal" class="sidebar-link">
                             <i class="bi bi-person-circle"></i>
-                            <span>Inicio</span>
+                            <span>Mi portal</span>
                         </a>
                     </li>
                     <li class="sidebar-item <?= mazerActive('password') ?>">
