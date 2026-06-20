@@ -530,7 +530,6 @@ class PortalController extends BaseController {
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')")
                         ->execute([$id, $idSocio, $idProducto, $monto, $plazo, $tasa, $fechaInicio, $fechaVenc->format('Y-m-d'), round($rendimiento, 2), $destino]);
 
-                    $this->historialInsert($idSocio, 'inversion_apertura', $monto, $id);
                     $this->db->commit();
 
                     $st = $this->db->prepare("SELECT CONCAT_WS(' ', apellido1, apellido2, nombre1, nombre2) AS nombre FROM socios WHERE id_socio = ?");

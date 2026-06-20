@@ -252,12 +252,12 @@ if ($loggedIn) {
                         <ul class="submenu <?= $bandejaSubActive ?>">
                             <?php if ($uid && RBAC::tienePermiso($uid, 'credito.aprobar')): ?>
                             <li class="submenu-item <?= mazerActive('credito/bandejaAprobados') ?>">
-                                <a href="<?= $baseUrl ?>/credito/bandejaAprobados" class="submenu-link">Solicitudes Crédito</a>
+                                <a href="<?= $baseUrl ?>/credito/bandejaAprobados" class="submenu-link">Créditos</a>
                             </li>
                             <?php endif; ?>
                             <?php if ($uid && RBAC::tienePermiso($uid, 'inversion.aprobar')): ?>
                             <li class="submenu-item <?= mazerActive('inversion/pendientes') ?>">
-                                <a href="<?= $baseUrl ?>/inversion/pendientes" class="submenu-link">Solicitudes Inversión</a>
+                                <a href="<?= $baseUrl ?>/inversion/pendientes" class="submenu-link">Inversiones</a>
                             </li>
                             <?php endif; ?>
                         </ul>

@@ -60,8 +60,11 @@ class NotificacionController extends BaseController {
 
     public function leerTodas() {
         $this->requireAuth();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Metodo no permitido'], 405);
+        $this->validateCSRF();
         $buzon = $_POST['buzon'] ?? 'entrada';
-        $this->db->prepare("UPDATE notificaciones SET leida = TRUE, fecha_lectura = NOW() WHERE (id_usuario = ? OR (id_usuario IS NULL AND id_socio IS NULL)) AND buzon = ? AND leida = FALSE")->execute([$_SESSION['usuario_id'], $buzon]);
+        $owner = $this->getOwnerFilter();
+        $this->db->prepare("UPDATE notificaciones SET leida = TRUE, fecha_lectura = NOW() WHERE {$owner['sql']} AND buzon = ? AND leida = FALSE")->execute(array_merge($owner['params'], [$buzon]));
         $this->json(['mensaje' => 'Todas marcadas como leidas']);
     }
 
