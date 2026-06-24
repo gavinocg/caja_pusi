@@ -264,8 +264,8 @@ class SesionController extends BaseController {
         $obligaciones = [];
         if (!empty($socioIds)) {
             $placeholders = implode(',', array_fill(0, count($socioIds), '?'));
-            $stmt = $this->db->prepare("SELECT o.* FROM obligaciones_sesion o WHERE o.id_sesion = ? AND o.id_socio IN ($placeholders) ORDER BY o.id_socio, o.tipo");
-            $stmt->execute(array_merge([$id], $socioIds));
+            $stmt = $this->db->prepare("SELECT o.* FROM obligaciones_sesion o WHERE o.id_socio IN ($placeholders) AND o.pagada = FALSE ORDER BY o.id_socio, o.tipo");
+            $stmt->execute($socioIds);
             foreach ($stmt->fetchAll() as $o) {
                 $obligaciones[$o['id_socio']][] = $o;
             }
@@ -407,7 +407,7 @@ class SesionController extends BaseController {
             if ($accion === 'pagar_todo_socio') {
                 $idSocio = $_POST['id_socio'] ?? '';
                 $medioPago = $_POST['medio_pago'] ?? 'efectivo';
-                $stmt = $this->db->prepare("SELECT id_obligacion FROM obligaciones_sesion WHERE id_sesion = ? AND id_socio = ? AND pagada = FALSE");
+                $stmt = $this->db->prepare("SELECT id_obligacion FROM obligaciones_sesion WHERE id_socio = ? AND pagada = FALSE");
                 $stmt->execute([$id, $idSocio]);
                 foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $oid) {
                     $this->procesarPagoObligacion($oid, $id, $medioPago);
@@ -435,8 +435,8 @@ class SesionController extends BaseController {
 
     public function obligacionesJSON($idSesion, $idSocio) {
         $this->requireAuth();
-        $stmt = $this->db->prepare("SELECT o.* FROM obligaciones_sesion o WHERE o.id_sesion = ? AND o.id_socio = ? AND o.pagada = FALSE ORDER BY o.tipo");
-        $stmt->execute([$idSesion, $idSocio]);
+        $stmt = $this->db->prepare("SELECT o.* FROM obligaciones_sesion o WHERE o.id_socio = ? AND o.pagada = FALSE ORDER BY o.tipo");
+        $stmt->execute([$idSocio]);
         $this->json($stmt->fetchAll());
     }
 
