@@ -8,7 +8,7 @@
         <div class="card-body p-0">
             <div class="table-responsive"><table class="table table-hover mb-0 table-responsive-stack">
                 <thead class="table-light">
-                    <tr><th>Fecha</th><th>Tipo</th><th>Monto</th><th>Justificación</th><th>Pagada</th><th></th></tr>
+                    <tr><th>Fecha</th><th>Tipo</th><th>Monto</th><th>Pagada</th><th></th></tr>
                 </thead>
                 <tbody>
                 <?php foreach ($multas as $m): ?>
@@ -16,16 +16,6 @@
                     <td data-label="Fecha"><?= $m['fecha_generacion'] ?></td>
                     <td data-label="Tipo"><span class="badge bg-<?= $m['tipo'] === 'inasistencia' ? 'danger' : ($m['tipo'] === 'cuota_impaga' ? 'dark' : ($m['tipo'] === 'mora_credito' ? 'warning' : 'info')) ?>"><?= str_replace('_', ' ', $m['tipo']) ?></span></td>
                     <td data-label="Monto"><strong>$<?= number_format($m['monto'], 2) ?></strong></td>
-                    <td data-label="Justif.">
-                        <?php if ($m['justificacion']): ?>
-                        <span class="badge bg-success">Enviada</span>
-                        <?php if ($m['justificacion_aprobada'] === '1'): ?><span class="badge bg-primary">Aprobada</span>
-                        <?php elseif ($m['justificacion_aprobada'] === '0'): ?><span class="badge bg-danger">Rechazada</span>
-                        <?php endif; ?>
-                        <?php else: ?>
-                        <span class="badge bg-secondary">Pendiente</span>
-                        <?php endif; ?>
-                    </td>
                     <td data-label="Estado">
                         <?php if ($m['pagada'] > 0): ?><span class="badge bg-success">Pagada</span>
                         <?php elseif ($m['estado'] === 'en_impugnacion'): ?><span class="badge bg-warning text-dark">En impugnación</span>
@@ -37,8 +27,6 @@
                         <button class="btn btn-sm btn-outline-info" onclick="verDetalle('<?= addslashes($m['id_multa']) ?>', '<?= addslashes(str_replace('_', ' ', $m['tipo'])) ?>', <?= $m['monto'] ?>, '<?= addslashes($m['fecha_generacion']) ?>', '<?= addslashes($m['justificacion'] ?? '') ?>', '<?= addslashes($m['justificacion_pdf'] ?? '') ?>', '<?= $m['justificacion_aprobada'] ?? '' ?>', <?= $m['pagada'] > 0 ? 'true' : 'false' ?>, '<?= $m['estado'] ?>')" title="Ver detalle"><i class="bi bi-eye"></i></button>
                         <?php if (!$m['justificacion'] && $m['estado'] === 'activa' && !$m['pagada']): ?>
                         <button class="btn btn-sm btn-outline-warning" onclick="mostrarFormImpugnar('<?= $m['id_multa'] ?>')" title="Impugnar"><i class="bi bi-shield-exclamation"></i></button>
-                        <?php elseif ($m['estado'] === 'en_impugnacion'): ?>
-                        <span class="badge bg-warning text-dark">En revisión</span>
                         <?php endif; ?>
                     </td>
                 </tr>
