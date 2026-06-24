@@ -29,7 +29,7 @@
             <?php
             $pendientes = 0;
             foreach ($multas as $m) {
-                if (!empty($m['justificacion']) && ($m['justificacion_aprobada'] === '' || $m['justificacion_aprobada'] === null || $m['justificacion_aprobada'] === '0') && $m['estado'] === 'activa') {
+                if (!empty($m['justificacion']) && $m['estado'] === 'en_impugnacion') {
                     $pendientes++;
                 }
             }
@@ -44,7 +44,7 @@
         <div class="card-body p-0">
             <div class="table-responsive"><table class="table table-hover mb-0">
                 <thead class="table-light">
-                    <tr><th>Fecha</th><?php if (!$esSocio): ?><th>Socio</th><?php endif; ?><th>Tipo</th><th>Monto</th><th>Justificación</th><th>Estado</th><th></th></tr>
+                    <tr><th>Fecha</th><?php if (!$esSocio): ?><th>Socio</th><?php endif; ?><th>Tipo</th><th>Monto</th><th>Estado</th><th></th></tr>
                 </thead>
                 <tbody>
                     <?php foreach ($multas as $m): ?>
@@ -55,16 +55,6 @@
                         <?php endif; ?>
                         <td><span class="badge bg-<?= $m['tipo'] === 'inasistencia' ? 'danger' : ($m['tipo'] === 'mora_credito' ? 'warning' : ($m['tipo'] === 'cuota_impaga' ? 'dark' : 'info')) ?>"><?= str_replace('_', ' ', $m['tipo']) ?></span></td>
                         <td><strong>$<?= number_format($m['monto'], 2) ?></strong></td>
-                        <td>
-                            <?php if ($m['justificacion']): ?>
-                            <span class="badge bg-success">Sí</span>
-                            <?php if ($m['justificacion_aprobada'] === '1'): ?><span class="badge bg-primary">Aprobada</span>
-                            <?php elseif ($m['justificacion_aprobada'] === '0'): ?><span class="badge bg-danger">Rechazada</span>
-                            <?php else: ?><span class="badge bg-warning">Pendiente</span><?php endif; ?>
-                            <?php else: ?>
-                            <span class="badge bg-secondary">No</span>
-                            <?php endif; ?>
-                        </td>
                         <td>
                             <?php if ($m['pagada'] > 0): ?><span class="badge bg-success">Pagada</span>
                             <?php elseif ($m['estado'] === 'impugnada'): ?><span class="badge bg-success">Impugnada (sin efecto)</span>
