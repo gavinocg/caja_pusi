@@ -120,6 +120,10 @@ class AuthController extends BaseController {
         $exito = '';
         $cedula = '';
 
+        if (!empty($_GET['bloqueado'])) {
+            $error = 'Demasiados intentos fallidos. Solicita un nuevo PIN.';
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->validateCSRF();
             $cedula = trim($_POST['cedula'] ?? '');
@@ -138,19 +142,26 @@ class AuthController extends BaseController {
                 } elseif (empty($user['correo_electronico'])) {
                     $error = 'No tienes un correo registrado. Contacta al administrador.';
                 } else {
-                    $pin = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-                    $pinHash = password_hash($pin, PASSWORD_BCRYPT);
-                    $stmt = $this->db->prepare("UPDATE usuarios SET reset_token_hash = ?, reset_token_expira = DATE_ADD(NOW(), INTERVAL ? MINUTE), reset_token_usos = 0 WHERE id_usuario = ?");
-                    $stmt->execute([$pinHash, RESET_TOKEN_EXPIRATION_MIN, $user['id_usuario']]);
-
-                    $nombre = $user['nombres'] . ' ' . $user['apellidos'];
-                    $enviado = EmailHelper::enviarPIN($user['correo_electronico'], $nombre, $pin);
-
-                    if ($enviado) {
-                        $_SESSION['reset_cedula'] = $cedula;
-                        $this->redirect('/login/restablecer');
+                    // Rate limiting: check if user already has a pending non-expired PIN
+                    $stmtChk = $this->db->prepare("SELECT reset_token_expira FROM usuarios WHERE id_usuario = ? AND reset_token_hash IS NOT NULL AND reset_token_expira > NOW()");
+                    $stmtChk->execute([$user['id_usuario']]);
+                    if ($stmtChk->fetch()) {
+                        $error = 'Ya enviamos un PIN a tu correo. Revisa tu bandeja de entrada o espera a que expire para solicitar uno nuevo.';
                     } else {
-                        $error = 'Error al enviar el correo. Intenta de nuevo.';
+                        $pin = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                        $pinHash = password_hash($pin, PASSWORD_BCRYPT);
+                        $stmt = $this->db->prepare("UPDATE usuarios SET reset_token_hash = ?, reset_token_expira = DATE_ADD(NOW(), INTERVAL ? MINUTE), reset_token_usos = 0 WHERE id_usuario = ?");
+                        $stmt->execute([$pinHash, RESET_TOKEN_EXPIRATION_MIN, $user['id_usuario']]);
+
+                        $nombre = $user['nombres'] . ' ' . $user['apellidos'];
+                        $enviado = EmailHelper::enviarPIN($user['correo_electronico'], $nombre, $pin);
+
+                        if ($enviado) {
+                            $_SESSION['reset_cedula'] = $cedula;
+                            $this->redirect('/login/restablecer');
+                        } else {
+                            $error = 'Error al enviar el correo. Intenta de nuevo.';
+                        }
                     }
                 }
             }
@@ -178,20 +189,38 @@ class AuthController extends BaseController {
 
             if ($step === 'pin') {
                 $pin = trim($_POST['pin'] ?? '');
+
+                // Check session-based brute-force block
+                $intentos =& $_SESSION['reset_intentos'];
+                if (!isset($intentos)) $intentos = 0;
+                if ($intentos >= 3) {
+                    $this->db->prepare("UPDATE usuarios SET reset_token_hash = NULL, reset_token_expira = NULL WHERE cedula = ?")->execute([$cedula]);
+                    unset($_SESSION['reset_cedula'], $_SESSION['reset_intentos']);
+                    $this->redirect('/login/olvide?bloqueado=1');
+                }
+
                 if (empty($pin)) $error = 'Ingresa el PIN recibido';
                 else {
-                    $stmt = $this->db->prepare("SELECT id_usuario, reset_token_hash, reset_token_expira FROM usuarios WHERE cedula = ? AND activo = TRUE AND reset_token_hash IS NOT NULL");
+                    $stmt = $this->db->prepare("SELECT id_usuario, reset_token_hash, reset_token_expira, reset_token_usos FROM usuarios WHERE cedula = ? AND activo = TRUE AND reset_token_hash IS NOT NULL");
                     $stmt->execute([$cedula]);
                     $user = $stmt->fetch();
 
                     if (!$user || strtotime($user['reset_token_expira']) < time()) {
                         $error = 'El PIN ha expirado. Solicita uno nuevo.';
+                        unset($_SESSION['reset_cedula'], $_SESSION['reset_intentos']);
+                    } elseif ((int)$user['reset_token_usos'] >= 5) {
+                        $error = 'Demasiados intentos. Solicita un nuevo PIN.';
+                        $this->db->prepare("UPDATE usuarios SET reset_token_hash = NULL, reset_token_expira = NULL WHERE id_usuario = ?")->execute([$user['id_usuario']]);
+                        unset($_SESSION['reset_cedula'], $_SESSION['reset_intentos']);
                     } elseif (password_verify($pin, $user['reset_token_hash'])) {
+                        unset($_SESSION['reset_intentos']);
                         $_SESSION['reset_verificado'] = true;
                         $_SESSION['reset_id_usuario'] = $user['id_usuario'];
                         $step = 'nueva';
                     } else {
-                        $error = 'PIN incorrecto';
+                        $intentos++;
+                        $this->db->prepare("UPDATE usuarios SET reset_token_usos = reset_token_usos + 1 WHERE id_usuario = ?")->execute([$user['id_usuario']]);
+                        $error = 'PIN incorrecto. Intento ' . $intentos . ' de 3.';
                     }
                 }
             } elseif ($step === 'nueva') {
