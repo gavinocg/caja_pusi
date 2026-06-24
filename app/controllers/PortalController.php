@@ -557,9 +557,10 @@ class PortalController extends BaseController {
         // Calcular rendimiento devengado proporcional desde fecha_inicio hasta hoy
         $fechaInicio = new DateTime($inv['fecha_inicio']);
         $fechaHoy = new DateTime();
-        $mesesTranscurridos = $fechaInicio->diff($fechaHoy)->days / 30.0;
-        $tasaMensual = $inv['tasa_interes'] / 100 / 12;
-        $rendimientoDevengado = $inv['monto'] * $tasaMensual * $mesesTranscurridos;
+        $diasTranscurridos = $fechaInicio->diff($fechaHoy)->days;
+        $plazoTotalDias = max(1, $inv['plazo_meses'] * 30);
+        $rendimientoDiario = ($inv['rendimiento_proyectado'] ?? 0) / $plazoTotalDias;
+        $rendimientoDevengado = $rendimientoDiario * $diasTranscurridos;
 
         $penalidad = $inv['penalidad_retiro_anticipado'] / 100 * $rendimientoDevengado;
         $devolucion = $inv['monto'] + $rendimientoDevengado - $penalidad;
