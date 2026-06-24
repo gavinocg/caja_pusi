@@ -323,6 +323,7 @@
                             <th>Vencimiento</th>
                             <th>Rendimiento</th>
                             <th>Estado</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -347,6 +348,11 @@
                                 <span class="badge bg-danger">Rechazada</span>
                                 <?php else: ?>
                                 <span class="badge bg-secondary"><?= htmlspecialchars($i['estado']) ?></span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php if ($i['estado'] === 'activa'): ?>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="solicitarRetiroAnticipado('<?= $i['id_inversion'] ?>', '<?= $i['producto'] ?>', <?= $i['monto'] ?>, <?= $i['rendimiento_proyectado'] ?? 0 ?>, <?= $i['plazo_meses'] ?>, '<?= $i['destino_final'] ?? 'capital_inversion' ?>')" title="Solicitar retiro anticipado"><i class="bi bi-box-arrow-left"></i></button>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -542,4 +548,58 @@ document.addEventListener('DOMContentLoaded', function() {
         onProductChange();
     }
 });
+</script>
+
+<!-- Modal Retiro Anticipado -->
+<div id="retiroOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100000;background:rgba(0,0,0,0.5);justify-content:center;align-items:center">
+    <div style="background:#fff;border-radius:12px;padding:2rem 1.5rem;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:notifFadeIn 0.2s ease-out">
+        <h5 class="mb-3">Retiro anticipado de inversión</h5>
+        <p class="text-muted small mb-3">Según el Reglamento Interno, el socio debe notificar con al menos un (1) mes de anticipación. Se aplicará una penalidad sobre el monto invertido.</p>
+        <table class="table table-sm table-borderless mb-3">
+            <tr><td class="text-muted">Producto:</td><td class="fw-bold" id="retiroProducto"></td></tr>
+            <tr><td class="text-muted">Monto invertido:</td><td class="fw-bold" id="retiroMonto"></td></tr>
+            <tr><td class="text-muted">Rendimiento:</td><td id="retiroRend"></td></tr>
+            <tr><td class="text-muted">Penalidad:</td><td class="text-danger" id="retiroPenalidad"></td></tr>
+            <tr><td class="text-muted">Devolución:</td><td class="fw-bold text-success" id="retiroDevolucion"></td></tr>
+        </table>
+        <form id="formRetiro" method="POST" action="<?= BASE_URL ?>/portal/retirarInversion">
+            <input type="hidden" name="csrf_token" value="<?= CSRFMiddleware::generarToken() ?>">
+            <input type="hidden" name="id_inversion" id="retiroIdInversion" value="">
+            <div class="d-flex gap-2 justify-content-center">
+                <button type="button" class="btn btn-outline-secondary px-4" onclick="document.getElementById('retiroOverlay').style.display='none'">Cancelar</button>
+                <button type="submit" class="btn btn-warning px-4">Solicitar retiro anticipado</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function solicitarRetiroAnticipado(id, producto, monto, rendimiento, plazo, destino) {
+    document.getElementById('retiroIdInversion').value = id;
+    document.getElementById('retiroProducto').textContent = producto;
+    document.getElementById('retiroMonto').textContent = '$' + monto.toFixed(2);
+
+    // Estimar penalidad (se usará la del producto vía backend)
+    var penalidadPorc = 0;
+    document.getElementById('retiroRend').textContent = '$' + rendimiento.toFixed(2) + ' (se pierde al retirar anticipadamente)';
+    document.getElementById('retiroPenalidad').textContent = '$' + (monto * penalidadPorc / 100).toFixed(2) + ' (' + penalidadPorc + '%)';
+    document.getElementById('retiroDevolucion').textContent = '$' + (monto - (monto * penalidadPorc / 100)).toFixed(2);
+    document.getElementById('retiroOverlay').style.display = 'flex';
+}
+
+document.getElementById('formRetiro').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var formData = new FormData(this);
+    fetch(this.action, { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(d => {
+        if (d.error) { mostrarNotificacion('error','Error',d.error,false); }
+        else {
+            mostrarNotificacion('success','Retiro procesado','Devolución: $' + d.devolucion.toFixed(2) + ' | Penalidad: $' + d.penalidad.toFixed(2),true);
+            location.reload();
+        }
+    })
+    .catch(function() { mostrarNotificacion('error','Error','Error al procesar',false); });
+});
+document.getElementById('retiroOverlay').addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
 </script>

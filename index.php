@@ -140,6 +140,7 @@ $routeMap = [
     'portal/simularInversion' => ['controller' => 'PortalController', 'method' => 'simularInversion'],
 
     'portal/inversion' => ['controller' => 'PortalController', 'method' => 'inversion'],
+    'portal/retirarInversion' => ['controller' => 'PortalController', 'method' => 'retirarInversion'],
     'portal/detalleCapitalInversion' => ['controller' => 'PortalController', 'method' => 'detalleCapitalInversion'],
     'portal/detalleAhorro' => ['controller' => 'PortalController', 'method' => 'detalleAhorro'],
     'portal/activarCuenta' => ['controller' => 'PortalController', 'method' => 'activarCuenta'],

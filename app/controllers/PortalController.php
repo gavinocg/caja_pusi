@@ -535,6 +535,65 @@ class PortalController extends BaseController {
         ]);
     }
 
+    public function retirarInversion() {
+        $this->requireAuth();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['error' => 'Método no permitido'], 405);
+        }
+        $this->validateCSRF();
+
+        $id = $_POST['id_inversion'] ?? '';
+        $cedula = $_SESSION['usuario_cedula'] ?? '';
+        $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
+        $stmt->execute([$cedula]);
+        $idSocio = $stmt->fetchColumn();
+        if (!$idSocio) $this->json(['error' => 'Socio no encontrado'], 404);
+
+        $stmt = $this->db->prepare("SELECT i.*, p.penalidad_retiro_anticipado FROM inversiones i JOIN productos_financieros p ON i.id_producto = p.id_producto WHERE i.id_inversion = ? AND i.id_socio = ? AND i.estado = 'activa'");
+        $stmt->execute([$id, $idSocio]);
+        $inv = $stmt->fetch();
+        if (!$inv) $this->json(['error' => 'Inversion no encontrada o no activa'], 400);
+
+        $penalidad = $inv['penalidad_retiro_anticipado'] / 100 * $inv['monto'];
+        $devolucion = $inv['monto'] - $penalidad;
+
+        $this->db->beginTransaction();
+        try {
+            $this->db->prepare("UPDATE inversiones SET estado = 'retiro_anticipado' WHERE id_inversion = ?")->execute([$id]);
+
+            if ($inv['destino_final'] === 'capital_inversion') {
+                $this->db->prepare("UPDATE capital_inversion SET saldo = saldo + ?, fecha_ultimo_movimiento = NOW() WHERE id_socio = ?")->execute([$devolucion, $idSocio]);
+            }
+
+            require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php';
+            require_once ROOT_PATH . '/app/helpers/PusherHelper.php';
+
+            $idCobro = UUIDGenerator::generar();
+            $hash = hash('sha256', $idSocio . $id . 'retiro_inversion' . $devolucion . date('Y-m-d H:i:s'));
+            $idSesion = $this->db->query("SELECT id_sesion FROM sesiones_mensuales WHERE estado = 'abierta' LIMIT 1")->fetchColumn();
+            $this->db->prepare("INSERT INTO cobros (id_cobro, id_socio, id_sesion, tipo, id_referencia, monto, medio_pago, hash_integridad, usuario_registra) VALUES (?, ?, ?, 'retiro_inversion', ?, ?, 'efectivo', ?, ?)")
+                ->execute([$idCobro, $idSocio, $idSesion ?: null, $id, $devolucion, $hash, $_SESSION['usuario_id']]);
+
+            $this->historialInsert($idSocio, 'inversion_retiro', $devolucion, $id);
+            $this->db->commit();
+
+            $st = $this->db->prepare("SELECT CONCAT_WS(' ', apellido1, apellido2, nombre1, nombre2) AS nombre FROM socios WHERE id_socio = ?");
+            $st->execute([$idSocio]);
+            $nom = $st->fetchColumn();
+            NotificacionHelper::crearInversion($idSocio, $nom, $devolucion, 'retiro anticipado');
+            PusherHelper::actualizarPortal($idSocio);
+
+            if ($inv['destino_final'] !== 'capital_inversion') {
+                try { require_once ROOT_PATH . '/app/helpers/CajaHelper.php'; CajaHelper::registrar(['tipo'=>'egreso','concepto'=>"Retiro anticipado inversion portal",'categoria'=>'inversion_retiro','monto'=>$devolucion,'id_socio'=>$idSocio,'id_referencia'=>$id]); } catch (Exception $e) {}
+            }
+
+            $this->json(['mensaje' => 'Retiro anticipado procesado', 'devolucion' => round($devolucion, 2), 'penalidad' => round($penalidad, 2)]);
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            $this->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     public function simularInversion() {
         $this->requireAuth();
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
