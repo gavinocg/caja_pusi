@@ -111,6 +111,7 @@ CREATE TABLE sesiones_mensuales (
     numero_sesion INT NOT NULL COMMENT 'Número correlativo de la sesión mensual',
     fecha_sesion DATETIME NOT NULL COMMENT 'Fecha y hora de la sesion mensual',
     titulo VARCHAR(100) COMMENT 'Título o nombre de la sesión',
+    tipo ENUM('ordinaria','extraordinaria','informativa') DEFAULT 'ordinaria' NOT NULL COMMENT 'Tipo de sesion: ordinaria (max 1/mes), extraordinaria, informativa',
     estado ENUM('abierta','cerrada') DEFAULT 'abierta' COMMENT 'Estado de la sesión: abierta (en curso) o cerrada (finalizada)',
     fecha_apertura DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora de apertura de la sesión',
     fecha_cierre DATETIME NULL COMMENT 'Fecha y hora de cierre de la sesión',

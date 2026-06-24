@@ -12,6 +12,7 @@
                         <th>#</th>
                         <th>Fecha</th>
                         <th>Título</th>
+                        <th>Tipo</th>
                         <th>Estado</th>
                         <th>Recaudado</th>
                         <th>Desembolsado</th>
@@ -25,6 +26,7 @@
                         <td><?= $s['numero_sesion'] ?></td>
                         <td><?= date('d/m/Y H:i', strtotime($s['fecha_sesion'])) ?></td>
                         <td><?= htmlspecialchars($s['titulo'] ?? 'Sesion #' . $s['numero_sesion']) ?></td>
+                        <td><span class="badge bg-<?= ($s['tipo'] ?? 'ordinaria') === 'ordinaria' ? 'primary' : (($s['tipo'] ?? '') === 'extraordinaria' ? 'warning' : 'info') ?>"><?= ucfirst($s['tipo'] ?? 'Ordinaria') ?></span></td>
                         <td>
                             <span class="badge <?= $s['estado'] === 'abierta' ? 'bg-success' : 'bg-secondary' ?>">
                                 <?= $s['estado'] === 'abierta' ? 'Abierta' : 'Cerrada' ?>

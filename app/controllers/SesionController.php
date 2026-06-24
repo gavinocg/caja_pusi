@@ -57,9 +57,23 @@ class SesionController extends BaseController {
                 $hora = $_POST['hora_sesion'] ?? '19:00';
                 $fechaSesion = $fecha . ' ' . $hora . ':00';
                 $titulo = trim($_POST['titulo'] ?? '');
+                $tipo = $_POST['tipo'] ?? 'ordinaria';
+                if (!in_array($tipo, ['ordinaria', 'extraordinaria', 'informativa'])) $tipo = 'ordinaria';
 
-                $stmt = $this->db->prepare("INSERT INTO sesiones_mensuales (id_sesion, numero_sesion, fecha_sesion, titulo) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$id, $num, $fechaSesion, $titulo]);
+                if ($tipo === 'ordinaria') {
+                    $mes = date('Y-m', strtotime($fechaSesion));
+                    $stmtM = $this->db->prepare("SELECT COUNT(*) FROM sesiones_mensuales WHERE tipo = 'ordinaria' AND DATE_FORMAT(fecha_sesion, '%Y-%m') = ?");
+                    $stmtM->execute([$mes]);
+                    if ($stmtM->fetchColumn() > 0) {
+                        $errors['tipo'] = 'Ya existe una sesión ordinaria en este mes. Solo se permite una por mes.';
+                    }
+                }
+            }
+
+            if (empty($errors)) {
+
+                $stmt = $this->db->prepare("INSERT INTO sesiones_mensuales (id_sesion, numero_sesion, fecha_sesion, titulo, tipo) VALUES (?, ?, ?, ?, ?)");
+                $stmt->execute([$id, $num, $fechaSesion, $titulo, $tipo]);
 
                 // Generar obligaciones para todos los socios activos
                 $this->generarObligaciones($id, $fechaSesion);
@@ -68,7 +82,7 @@ class SesionController extends BaseController {
                 $tituloNotif = "INVITACION";
                 $fechaFormateada = date('d/m/Y', strtotime($fechaSesion));
                 $horaFormateada = date('H:i', strtotime($fechaSesion));
-                $mensajeNotif = "{$titulo}, a realizarse el {$fechaFormateada} a las {$horaFormateada}.";
+                $mensajeNotif = "{$titulo} ({$tipo}), a realizarse el {$fechaFormateada} a las {$horaFormateada}.";
 
                 // Socios activos — notificar a TODOS
                 $socios = $this->db->query("SELECT id_socio, correo_electronico FROM socios WHERE estado = 'activo'")->fetchAll();
@@ -133,13 +147,24 @@ class SesionController extends BaseController {
             $hora = $_POST['hora_sesion'] ?? '19:00';
             $fechaSesion = $fecha . ' ' . $hora . ':00';
             $titulo = trim($_POST['titulo'] ?? '');
+            $tipo = $_POST['tipo'] ?? 'ordinaria';
+            if (!in_array($tipo, ['ordinaria', 'extraordinaria', 'informativa'])) $tipo = 'ordinaria';
 
             if (empty($fechaSesion)) $errors['fecha_sesion'] = 'La fecha es obligatoria';
             if (empty($titulo)) $errors['titulo'] = 'El titulo es obligatorio';
 
+            if ($tipo === 'ordinaria' && $sesion['tipo'] !== 'ordinaria') {
+                $mes = date('Y-m', strtotime($fechaSesion));
+                $stmtM = $this->db->prepare("SELECT COUNT(*) FROM sesiones_mensuales WHERE id_sesion != ? AND tipo = 'ordinaria' AND DATE_FORMAT(fecha_sesion, '%Y-%m') = ?");
+                $stmtM->execute([$id, $mes]);
+                if ($stmtM->fetchColumn() > 0) {
+                    $errors['tipo'] = 'Ya existe una sesión ordinaria en este mes. Solo se permite una por mes.';
+                }
+            }
+
             if (empty($errors)) {
-                $this->db->prepare("UPDATE sesiones_mensuales SET fecha_sesion = ?, titulo = ? WHERE id_sesion = ?")
-                    ->execute([$fechaSesion, $titulo, $id]);
+                $this->db->prepare("UPDATE sesiones_mensuales SET fecha_sesion = ?, titulo = ?, tipo = ? WHERE id_sesion = ?")
+                    ->execute([$fechaSesion, $titulo, $tipo, $id]);
                 $this->redirect('/sesion/listar');
             }
         }
@@ -428,7 +453,7 @@ class SesionController extends BaseController {
         }
 
         $this->render('sesiones/checkin', [
-            'titulo' => 'Sesion #' . $sesion['numero_sesion'] . ' — ' . $sesion['fecha_sesion'],
+            'titulo' => 'Sesion #' . $sesion['numero_sesion'] . ' — ' . $sesion['fecha_sesion'] . ' (' . ucfirst($sesion['tipo'] ?? 'Ordinaria') . ')',
             'sesion' => $sesion,
             'socios' => $socios,
             'asistencias' => $asistencias,
