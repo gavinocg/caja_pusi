@@ -270,7 +270,7 @@ class SesionController extends BaseController {
         $obligaciones = [];
         if (!empty($socioIds)) {
             $placeholders = implode(',', array_fill(0, count($socioIds), '?'));
-            $stmt = $this->db->prepare("SELECT o.* FROM obligaciones_sesion o WHERE o.id_socio IN ($placeholders) AND o.pagada = FALSE ORDER BY o.id_socio, o.tipo");
+            $stmt = $this->db->prepare("SELECT o.* FROM obligaciones_sesion o WHERE o.id_socio IN ($placeholders) AND o.pagada = FALSE ORDER BY FIELD(o.tipo, 'cuota_credito', 'cuota_mensual', 'multa'), o.fecha_registro ASC");
             $stmt->execute($socioIds);
             foreach ($stmt->fetchAll() as $o) {
                 $obligaciones[$o['id_socio']][] = $o;
@@ -441,7 +441,7 @@ class SesionController extends BaseController {
 
     public function obligacionesJSON($idSesion, $idSocio) {
         $this->requireAuth();
-        $stmt = $this->db->prepare("SELECT o.* FROM obligaciones_sesion o WHERE o.id_socio = ? AND o.pagada = FALSE ORDER BY o.tipo");
+        $stmt = $this->db->prepare("SELECT o.* FROM obligaciones_sesion o WHERE o.id_socio = ? AND o.pagada = FALSE ORDER BY FIELD(o.tipo, 'cuota_credito', 'cuota_mensual', 'multa'), o.fecha_registro ASC");
         $stmt->execute([$idSocio]);
         $this->json($stmt->fetchAll());
     }

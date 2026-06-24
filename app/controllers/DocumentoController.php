@@ -200,7 +200,7 @@ class DocumentoController extends BaseController {
         if (!$soc) { http_response_code(404); exit; }
 
         // Get all obligations for this socio in this session
-        $obligaciones = $this->db->prepare("SELECT * FROM obligaciones_sesion WHERE id_sesion = ? AND id_socio = ? ORDER BY tipo");
+        $obligaciones = $this->db->prepare("SELECT * FROM obligaciones_sesion WHERE id_sesion = ? AND id_socio = ? ORDER BY FIELD(tipo, 'cuota_credito', 'cuota_mensual', 'multa'), fecha_registro ASC");
         $obligaciones->execute([$idSesion, $idSocio]);
         $items = $obligaciones->fetchAll();
 

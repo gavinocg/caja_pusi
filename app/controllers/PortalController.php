@@ -230,7 +230,7 @@ class PortalController extends BaseController {
                                          FROM obligaciones_sesion o
                                          JOIN sesiones_mensuales ses ON o.id_sesion = ses.id_sesion
                                          WHERE o.id_socio = ? AND o.pagada = FALSE
-                                         ORDER BY ses.fecha_sesion DESC, o.tipo");
+                                          ORDER BY FIELD(o.tipo, 'cuota_credito', 'cuota_mensual', 'multa'), o.fecha_registro ASC");
             $stmt->execute([$idSocio]);
             $obligaciones = $stmt->fetchAll();
             $totalPendiente = array_sum(array_map(function($o) { return floatval($o['monto']); }, $obligaciones));
