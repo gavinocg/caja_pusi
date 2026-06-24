@@ -53,7 +53,7 @@ class DashboardController extends BaseController {
 
     public function contarPendientes() {
         $this->requireAuth();
-        $creditos = $this->db->query("SELECT COUNT(*) FROM creditos WHERE estado IN ('ingresado','pendiente')")->fetchColumn();
+        $creditos = $this->db->query("SELECT COUNT(*) FROM creditos WHERE estado = 'ingresado'")->fetchColumn();
         $inversiones = $this->db->query("SELECT COUNT(*) FROM inversiones WHERE estado = 'pendiente'")->fetchColumn();
         $this->json(['creditos' => (int)$creditos, 'inversiones' => (int)$inversiones]);
     }
