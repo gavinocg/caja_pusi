@@ -62,6 +62,7 @@ class MultaController extends BaseController {
             'filtroSocio' => $filtroSocio ?? '',
             'esSocio' => $esSocio,
             'esPresidente' => $this->esPresidente(),
+            'puedeAutorizar' => $this->tienePermiso('multa.autorizar_impugnacion'),
         ]);
     }
 
@@ -208,17 +209,21 @@ class MultaController extends BaseController {
         if ($accion === 'aprobar') {
             $this->db->beginTransaction();
             try {
-                $this->db->prepare("UPDATE multas SET estado = 'impugnada', justificacion_aprobada = 1 WHERE id_multa = ?")
-                    ->execute([$id]);
+                $observacion = trim($_POST['observacion'] ?? '');
+                $this->db->prepare("UPDATE multas SET estado = 'impugnada', justificacion_aprobada = 1, observacion = ? WHERE id_multa = ?")
+                    ->execute([$observacion, $id]);
                 $this->db->prepare("UPDATE obligaciones_sesion SET pagada = TRUE WHERE id_referencia = ? AND tipo = 'multa' AND pagada = FALSE")
                     ->execute([$id]);
                 $this->db->commit();
 
+                require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php';
+                require_once ROOT_PATH . '/app/helpers/PusherHelper.php';
+                $msgNotif = $observacion ? "Su impugnacion ha sido aprobada. La multa queda sin efecto. Observacion: {$observacion}" : 'Su impugnacion ha sido aprobada. La multa queda sin efecto.';
                 NotificacionHelper::crear([
                     'id_socio' => $multa['id_socio'],
                     'tipo' => 'multa',
                     'titulo' => 'Impugnacion aprobada',
-                    'mensaje' => 'Su impugnacion ha sido aprobada. La multa queda sin efecto.',
+                    'mensaje' => $msgNotif,
                     'enviar_pusher' => true,
                 ]);
                 PusherHelper::actualizarPortal($multa['id_socio']);
@@ -228,14 +233,18 @@ class MultaController extends BaseController {
                 $this->json(['error' => $e->getMessage()], 500);
             }
         } else {
-            $this->db->prepare("UPDATE multas SET estado = 'activa', justificacion_aprobada = 0 WHERE id_multa = ?")
-                ->execute([$id]);
+            $observacion = trim($_POST['observacion'] ?? '');
+            $this->db->prepare("UPDATE multas SET estado = 'activa', justificacion_aprobada = 0, observacion = ? WHERE id_multa = ?")
+                ->execute([$observacion, $id]);
 
+            require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php';
+            require_once ROOT_PATH . '/app/helpers/PusherHelper.php';
+            $msgNotif = $observacion ? "Su impugnacion ha sido rechazada. La multa sigue vigente. Observacion: {$observacion}" : 'Su impugnacion ha sido rechazada. La multa sigue vigente.';
             NotificacionHelper::crear([
                 'id_socio' => $multa['id_socio'],
                 'tipo' => 'multa',
                 'titulo' => 'Impugnacion rechazada',
-                'mensaje' => 'Su impugnacion ha sido rechazada. La multa sigue vigente.',
+                'mensaje' => $msgNotif,
                 'enviar_pusher' => true,
             ]);
             PusherHelper::actualizarPortal($multa['id_socio']);
