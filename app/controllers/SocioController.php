@@ -239,7 +239,7 @@ class SocioController extends BaseController {
             $this->db->prepare("DELETE FROM multas WHERE id_socio = ?")->execute([$id]);
             $this->db->prepare("DELETE FROM asistencias WHERE id_socio = ?")->execute([$id]);
             $this->db->prepare("DELETE FROM solicitudes_retiro WHERE id_socio = ?")->execute([$id]);
-            $this->db->prepare("DELETE FROM archivos WHERE id_socio = ?")->execute([$id]);
+            $this->db->prepare("DELETE FROM archivos WHERE entidad_tipo = 'socio' AND entidad_id = ?")->execute([$id]);
 
             if (!$socioModel->delete($id)) {
                 throw new Exception('Error al eliminar el socio');
