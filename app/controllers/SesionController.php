@@ -140,9 +140,13 @@ class SesionController extends BaseController {
                                                )");
             $cuotasPend->execute([$idSocio, $idSesion]);
             foreach ($cuotasPend as $cp) {
+                // Eliminar arrastre anterior impago del mismo origen
                 $this->db->prepare("DELETE FROM obligaciones_sesion
                     WHERE id_referencia = ? AND tipo = 'cuota_mensual' AND pagada = FALSE
                     AND id_sesion = ?")->execute([$cp['id_obligacion'], $idSesion]);
+                // Eliminar la obligacion original impaga de la sesion anterior (evita duplicados en portal)
+                $this->db->prepare("DELETE FROM obligaciones_sesion
+                    WHERE id_obligacion = ? AND pagada = FALSE")->execute([$cp['id_obligacion']]);
                 $concepto = "Cuota mensual pendiente - Sesion #{$cp['numero_sesion']} del " . date('d/m/Y', strtotime($cp['fecha_sesion']));
                 $insertOblig->execute([
                     UUIDGenerator::generar(), $idSesion, $idSocio, 'cuota_mensual',
