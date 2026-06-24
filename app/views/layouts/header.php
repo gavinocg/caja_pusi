@@ -136,19 +136,11 @@ if ($loggedIn) {
                             <span>Inversión</span>
                         </a>
                     </li>
-                    <li class="sidebar-item has-sub <?= mazerActiveP('portal/multas') || mazerActiveP('portal/asistencias') ? 'active' : '' ?>">
-                        <a href="#" class="sidebar-link">
-                            <i class="bi bi-people-fill"></i>
-                            <span>Sesiones Asamblea</span>
+                    <li class="sidebar-item <?= mazerActiveP('portal/multas') ?>">
+                        <a href="<?= $baseUrl ?>/portal/multas" class="sidebar-link">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>Multas</span>
                         </a>
-                        <ul class="submenu <?= mazerActiveP('portal/multas') || mazerActiveP('portal/asistencias') ? 'active' : '' ?>">
-                            <li class="submenu-item <?= mazerActiveP('portal/multas') ?>">
-                                <a href="<?= $baseUrl ?>/portal/multas" class="submenu-link">Multas</a>
-                            </li>
-                            <li class="submenu-item <?= mazerActiveP('portal/asistencias') ?>">
-                                <a href="<?= $baseUrl ?>/portal/asistencias" class="submenu-link">Asistencias</a>
-                            </li>
-                        </ul>
                     </li>
                     <li class="sidebar-item <?= mazerActiveP('portal/historial') ?>">
                         <a href="<?= $baseUrl ?>/portal/historial" class="sidebar-link">

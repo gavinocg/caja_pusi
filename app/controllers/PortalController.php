@@ -168,28 +168,6 @@ class PortalController extends BaseController {
         ]);
     }
 
-    public function asistencias() {
-        $this->requireAuth();
-        $cedula = $_SESSION['usuario_cedula'] ?? '';
-        $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
-        $stmt->execute([$cedula]);
-        $socio = $stmt->fetch();
-        if (!$socio) { $this->redirect('/portal'); return; }
-
-        $stmt = $this->db->prepare("SELECT a.*, ses.numero_sesion, ses.fecha_sesion
-                                    FROM asistencias a
-                                    JOIN sesiones_mensuales ses ON a.id_sesion = ses.id_sesion
-                                    WHERE a.id_socio = ?
-                                    ORDER BY a.fecha_registro DESC");
-        $stmt->execute([$socio['id_socio']]);
-        $asistencias = $stmt->fetchAll();
-
-        $this->render('portal/asistencias', [
-            'titulo' => 'Mis asistencias',
-            'asistencias' => $asistencias,
-        ]);
-    }
-
     public function notificaciones() {
         $this->requireAuth();
         $cedula = $_SESSION['usuario_cedula'] ?? '';

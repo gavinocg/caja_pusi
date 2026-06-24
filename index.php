@@ -131,7 +131,6 @@ $routeMap = [
     'portal' => ['controller' => 'PortalController', 'method' => 'index'],
     'portal/historial' => ['controller' => 'PortalController', 'method' => 'historial'],
     'portal/multas' => ['controller' => 'PortalController', 'method' => 'multas'],
-    'portal/asistencias' => ['controller' => 'PortalController', 'method' => 'asistencias'],
     'portal/notificaciones' => ['controller' => 'PortalController', 'method' => 'notificaciones'],
     'portal/password' => ['controller' => 'PortalController', 'method' => 'password'],
     'portal/solicitarRetiro' => ['controller' => 'PortalController', 'method' => 'solicitarRetiro'],

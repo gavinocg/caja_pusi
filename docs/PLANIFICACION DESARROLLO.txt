@@ -58,6 +58,7 @@ Flujos:
 5.1 Imposición
 	**Multas atrasos/falta Sesión Asamblea
 	**Multas cuota impaga
+	**Impugnación de multas -> Crear Flujo
 
 6. NOTIFICACIONES
 6.1 Notificaciones Push
