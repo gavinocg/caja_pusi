@@ -169,7 +169,7 @@ class SesionController extends BaseController {
                 ]);
 
             // 2. Cuotas de credito vencidas (fecha_vencimiento <= fechaCorte)
-            $cuotas = $this->db->prepare("SELECT a.id_amortizacion, a.numero_cuota, a.total, cr.id_credito, p.nombre AS producto
+            $cuotas = $this->db->prepare("SELECT a.id_amortizacion, a.numero_cuota, a.total, a.fecha_vencimiento, cr.id_credito, p.nombre AS producto
                                            FROM amortizaciones a
                                            JOIN creditos cr ON a.id_credito = cr.id_credito
                                            JOIN productos_financieros p ON cr.id_producto = p.id_producto
