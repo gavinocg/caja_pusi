@@ -128,7 +128,7 @@ function retirar(id) {
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'csrf_token=<?= CSRFMiddleware::generarToken() ?>'
     }).then(function(r) { return r.json(); }).then(function(d) {
-        if (d.error) { alert(d.error); } else { alert('Retiro procesado. Devolución: $' + d.devolución + ' | Penalidad: $' + d.penalidad); location.reload(); }
+        if (d.error) { mostrarNotificacion('error','Error',d.error,false); } else { location.reload(); }
     });
 }
 function cerrarVencidas() {
@@ -138,7 +138,7 @@ function cerrarVencidas() {
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'csrf_token=<?= CSRFMiddleware::generarToken() ?>'
     }).then(function(r) { return r.json(); }).then(function(d) {
-        if (d.error) { alert(d.error); } else { alert(d.mensaje); location.reload(); }
+        if (d.error) { mostrarNotificacion('error','Error',d.error,false); } else { mostrarNotificacion('success','Exito',d.mensaje,true); location.reload(); }
     });
 }
 </script>

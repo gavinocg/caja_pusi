@@ -33,7 +33,7 @@ function reenviarPIN() {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': '<?= $csrfToken ?? '' ?>' }
     }).then(function(r) { return r.json(); }).then(function(d) {
-        alert(d.mensaje || d.error || 'Error');
+        mostrarNotificacion('warning','Aviso',d.mensaje || d.error || 'Error',true);
     });
 }
 </script>

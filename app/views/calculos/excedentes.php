@@ -74,7 +74,7 @@ function interesesAhorro() {
     fetch('<?= BASE_URL ?>/calculo/interesesAhorro', {
         method: 'POST', body: formData
     }).then(function(r) { return r.json(); }).then(function(d) {
-        if (d.error) { alert(d.error); } else { alert(d.mensaje); location.reload(); }
+        if (d.error) { mostrarNotificacion('error','Error',d.error,false); } else { mostrarNotificacion('success','Exito',d.mensaje,true); location.reload(); }
     });
 }
 </script>

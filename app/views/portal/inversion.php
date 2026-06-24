@@ -406,14 +406,14 @@ function setStep(step) {
 function validateCurrentStep() {
     if (currentStep === 1) {
         if (!simData) {
-            alert('Ejecute la simulación primero');
+            mostrarNotificacion('warning','Aviso','Ejecute la simulación primero',true);
             return false;
         }
         return true;
     }
     if (currentStep === 2) {
         if (!document.getElementById('aceptaCheck').checked) {
-            alert('Debe aceptar los términos y condiciones');
+            mostrarNotificacion('warning','Aviso','Debe aceptar los términos y condiciones',true);
             return false;
         }
         return true;
@@ -478,18 +478,18 @@ function simular() {
     var monto = parseFloat(document.getElementById('inpMonto').value);
     var plazo = parseInt(document.getElementById('inpPlazo').value);
 
-    if (!opt || !opt.value) { alert('Seleccione un producto'); return; }
-    if (!monto || monto <= 0) { alert('Ingrese un monto válido'); return; }
+    if (!opt || !opt.value) { mostrarNotificacion('warning','Aviso','Seleccione un producto',true); return; }
+    if (!monto || monto <= 0) { mostrarNotificacion('warning','Aviso','Ingrese un monto válido',true); return; }
     if (!plazo || plazo < parseInt(opt.dataset.plazo_min) || plazo > parseInt(opt.dataset.plazo_max)) {
-        alert('Plazo debe ser entre ' + opt.dataset.plazo_min + ' y ' + opt.dataset.plazo_max + ' meses');
+        mostrarNotificacion('warning','Aviso','Plazo debe ser entre ' + opt.dataset.plazo_min + ' y ' + opt.dataset.plazo_max + ' meses',true);
         return;
     }
     if (monto < parseFloat(opt.dataset.monto_min) || monto > parseFloat(opt.dataset.monto_max)) {
-        alert('Monto debe ser entre $' + parseFloat(opt.dataset.monto_min).toFixed(2) + ' y $' + parseFloat(opt.dataset.monto_max).toFixed(2));
+        mostrarNotificacion('warning','Aviso','Monto debe ser entre $' + parseFloat(opt.dataset.monto_min).toFixed(2) + ' y $' + parseFloat(opt.dataset.monto_max).toFixed(2),true);
         return;
     }
     if (monto > <?= floatval($saldoCapital) ?>) {
-        alert('Saldo insuficiente en capital de inversión. Disponible: $<?= number_format($saldoCapital, 2) ?>');
+        mostrarNotificacion('warning','Aviso','Saldo insuficiente en capital de inversión. Disponible: $<?= number_format($saldoCapital, 2) ?>',true);
         return;
     }
 
@@ -502,7 +502,7 @@ function simular() {
     })
     .then(r => r.json())
     .then(d => {
-        if (d.error) { alert(d.error); return; }
+        if (d.error) { mostrarNotificacion('error','Error',d.error,false); return; }
         simData = d;
         document.getElementById('resMonto').textContent = d.monto.toFixed(2);
         document.getElementById('resRendimiento').textContent = d.rendimiento.toFixed(2);
