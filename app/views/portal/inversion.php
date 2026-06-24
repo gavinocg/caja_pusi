@@ -352,7 +352,7 @@
                             </td>
                             <td>
                                 <?php if ($i['estado'] === 'activa'): ?>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="solicitarRetiroAnticipado('<?= $i['id_inversion'] ?>', '<?= $i['producto'] ?>', <?= $i['monto'] ?>, <?= $i['rendimiento_proyectado'] ?? 0 ?>, <?= $i['plazo_meses'] ?>, '<?= $i['destino_final'] ?? 'capital_inversion' ?>', '<?= $i['fecha_inicio'] ?>', <?= (float)($i['penalidad'] ?? 0) ?>)' title="Solicitar retiro anticipado"><i class="bi bi-box-arrow-left"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="solicitarRetiroAnticipado('<?= addslashes($i['id_inversion']) ?>', '<?= addslashes($i['producto']) ?>', <?= (float)($i['monto']) ?>, <?= (float)($i['rendimiento_proyectado'] ?? 0) ?>, <?= (int)($i['plazo_meses']) ?>, '<?= addslashes($i['destino_final'] ?? 'capital_inversion') ?>', '<?= addslashes($i['fecha_inicio'] ?? date('Y-m-d')) ?>', <?= (float)($i['penalidad'] ?? 0) ?>)' title="Solicitar retiro anticipado"><i class="bi bi-box-arrow-left"></i></button>
                                 <?php endif; ?>
                             </td>
                         </tr>
