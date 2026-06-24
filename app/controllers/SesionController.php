@@ -168,13 +168,19 @@ class SesionController extends BaseController {
                     $concepto, $aporteMensual, null
                 ]);
 
-            // 2. Cuotas de credito vencidas (fecha_vencimiento <= fechaCorte)
+            // 2. Cuotas de credito pendientes (primera cuota impaga de cada credito)
             $cuotas = $this->db->prepare("SELECT a.id_amortizacion, a.numero_cuota, a.total, a.fecha_vencimiento, cr.id_credito, p.nombre AS producto
                                            FROM amortizaciones a
                                            JOIN creditos cr ON a.id_credito = cr.id_credito
                                            JOIN productos_financieros p ON cr.id_producto = p.id_producto
-                                           WHERE cr.id_socio = ? AND a.estado IN ('pendiente','vencida') AND a.fecha_vencimiento <= ?");
-            $cuotas->execute([$idSocio, $fechaCorte]);
+                                           WHERE cr.id_socio = ? AND a.estado IN ('pendiente','vencida')
+                                           AND NOT EXISTS (
+                                               SELECT 1 FROM amortizaciones a2
+                                               WHERE a2.id_credito = a.id_credito
+                                               AND a2.estado IN ('pendiente','vencida')
+                                               AND a2.numero_cuota < a.numero_cuota
+                                           )");
+            $cuotas->execute([$idSocio]);
             foreach ($cuotas as $c) {
                 $insertOblig->execute([
                     UUIDGenerator::generar(), $idSesion, $idSocio, 'cuota_credito',
