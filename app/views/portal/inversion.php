@@ -579,19 +579,18 @@ function solicitarRetiroAnticipado(id, producto, monto, rendimientoTotal, plazo,
     document.getElementById('retiroProducto').textContent = producto;
     document.getElementById('retiroMonto').textContent = '$' + monto.toFixed(2);
 
-    // Calcular rendimiento devengado proporcional
     var inicio = new Date(fechaInicio);
     var hoy = new Date();
-    var diasTranscurridos = Math.floor((hoy - inicio) / (1000 * 60 * 60 * 24));
+    var diasTranscurridos = Math.max(0, Math.floor((hoy - inicio) / (1000 * 60 * 60 * 24)));
     var plazoTotalDias = Math.max(1, plazo * 30);
     var rendimientoDiario = rendimientoTotal / plazoTotalDias;
     var rendimientoDevengado = rendimientoDiario * diasTranscurridos;
     var penalidad = penalidadPorc / 100 * rendimientoDevengado;
     var devolucion = monto + rendimientoDevengado - penalidad;
 
-    document.getElementById('retiroRend').textContent = '$' + rendimientoDevengado.toFixed(2) + ' (' + diasTranscurridos + ' dias)';
-    document.getElementById('retiroPenalidad').textContent = '$' + penalidad.toFixed(2) + ' (' + penalidadPorc + '%)';
-    document.getElementById('retiroDevolucion').textContent = '$' + devolucion.toFixed(2);
+    document.getElementById('retiroRend').textContent = isNaN(rendimientoDevengado) ? '$0.00' : '$' + rendimientoDevengado.toFixed(2) + ' (' + diasTranscurridos + ' dias)';
+    document.getElementById('retiroPenalidad').textContent = isNaN(penalidad) ? '$0.00' : '$' + penalidad.toFixed(2) + ' (' + penalidadPorc + '%)';
+    document.getElementById('retiroDevolucion').textContent = isNaN(devolucion) ? '$0.00' : '$' + devolucion.toFixed(2);
     document.getElementById('retiroOverlay').style.display = 'flex';
 }
 
