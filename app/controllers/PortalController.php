@@ -460,7 +460,7 @@ class PortalController extends BaseController {
         }
         $saldoCapital = floatval($capitalRow['saldo'] ?? 0);
 
-        $stmt = $this->db->prepare("SELECT i.*, p.nombre AS producto FROM inversiones i JOIN productos_financieros p ON i.id_producto = p.id_producto WHERE i.id_socio = ? ORDER BY i.fecha_registro DESC");
+        $stmt = $this->db->prepare("SELECT i.*, p.nombre AS producto, p.penalidad_retiro_anticipado AS penalidad FROM inversiones i JOIN productos_financieros p ON i.id_producto = p.id_producto WHERE i.id_socio = ? ORDER BY i.fecha_registro DESC");
         $stmt->execute([$idSocio]);
         $inversiones = $stmt->fetchAll();
 

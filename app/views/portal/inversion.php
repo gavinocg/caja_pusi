@@ -352,7 +352,7 @@
                             </td>
                             <td>
                                 <?php if ($i['estado'] === 'activa'): ?>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="solicitarRetiroAnticipado('<?= $i['id_inversion'] ?>', '<?= $i['producto'] ?>', <?= $i['monto'] ?>, <?= $i['rendimiento_proyectado'] ?? 0 ?>, <?= $i['plazo_meses'] ?>, '<?= $i['destino_final'] ?? 'capital_inversion' ?>')" title="Solicitar retiro anticipado"><i class="bi bi-box-arrow-left"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="solicitarRetiroAnticipado('<?= $i['id_inversion'] ?>', '<?= $i['producto'] ?>', <?= $i['monto'] ?>, <?= $i['rendimiento_proyectado'] ?? 0 ?>, <?= $i['plazo_meses'] ?>, '<?= $i['destino_final'] ?? 'capital_inversion' ?>', '<?= $i['fecha_inicio'] ?>', <?= (float)($i['penalidad'] ?? 0) ?>)' title="Solicitar retiro anticipado"><i class="bi bi-box-arrow-left"></i></button>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -574,13 +574,24 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <script>
-function solicitarRetiroAnticipado(id, producto, monto, rendimiento, plazo, destino) {
+function solicitarRetiroAnticipado(id, producto, monto, rendimientoTotal, plazo, destino, fechaInicio, penalidadPorc) {
     document.getElementById('retiroIdInversion').value = id;
     document.getElementById('retiroProducto').textContent = producto;
     document.getElementById('retiroMonto').textContent = '$' + monto.toFixed(2);
-    document.getElementById('retiroRend').textContent = 'Se calcula proporcional desde la fecha de inicio';
-    document.getElementById('retiroPenalidad').textContent = 'Se aplica sobre rendimiento devengado';
-    document.getElementById('retiroDevolucion').textContent = 'Calculada al procesar';
+
+    // Calcular rendimiento devengado proporcional
+    var inicio = new Date(fechaInicio);
+    var hoy = new Date();
+    var diasTranscurridos = Math.floor((hoy - inicio) / (1000 * 60 * 60 * 24));
+    var plazoTotalDias = Math.max(1, plazo * 30);
+    var rendimientoDiario = rendimientoTotal / plazoTotalDias;
+    var rendimientoDevengado = rendimientoDiario * diasTranscurridos;
+    var penalidad = penalidadPorc / 100 * rendimientoDevengado;
+    var devolucion = monto + rendimientoDevengado - penalidad;
+
+    document.getElementById('retiroRend').textContent = '$' + rendimientoDevengado.toFixed(2) + ' (' + diasTranscurridos + ' dias)';
+    document.getElementById('retiroPenalidad').textContent = '$' + penalidad.toFixed(2) + ' (' + penalidadPorc + '%)';
+    document.getElementById('retiroDevolucion').textContent = '$' + devolucion.toFixed(2);
     document.getElementById('retiroOverlay').style.display = 'flex';
 }
 
