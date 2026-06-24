@@ -41,6 +41,12 @@ if [ -f composer.json ]; then
     composer install --no-dev --optimize-autoloader 2>&1 || true
 fi
 
+# Run database migrations
+if [ -f database/migrate.php ]; then
+    cd "$PROJECT_DIR"
+    php database/migrate.php 2>&1 || true
+fi
+
 # Set permissions
 chown -R www-data:www-data "$PROJECT_DIR" 2>/dev/null
 find "$PROJECT_DIR" -type d -exec chmod 755 {} \; 2>/dev/null
