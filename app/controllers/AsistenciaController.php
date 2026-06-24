@@ -8,6 +8,9 @@ class AsistenciaController extends BaseController {
         $asis = $stmt->fetch();
         if (!$asis) $this->json(['error' => 'No encontrada'], 404);
         if ($asis['cedula'] !== ($_SESSION['usuario_cedula'] ?? '')) $this->json(['error' => 'No autorizado'], 403);
+        if (!in_array($asis['tipo'], ['retraso_10min', 'retraso_30min', 'falta'])) {
+            $this->json(['error' => 'Solo se puede justificar una asistencia con retraso o falta'], 400);
+        }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->json(['error' => 'Método no permitido'], 405);
         $this->validateCSRF();

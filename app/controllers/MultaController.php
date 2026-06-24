@@ -149,6 +149,12 @@ class MultaController extends BaseController {
         if ($multa['cedula'] !== ($_SESSION['usuario_cedula'] ?? '')) {
             $this->json(['error' => 'No autorizado'], 403);
         }
+        if ($multa['estado'] !== 'activa') {
+            $this->json(['error' => 'Solo se puede justificar una multa en estado activo'], 400);
+        }
+        $stmtPag = $this->db->prepare("SELECT COUNT(*) FROM obligaciones_sesion WHERE id_referencia = ? AND tipo = 'multa' AND pagada = TRUE");
+        $stmtPag->execute([$id]);
+        if ($stmtPag->fetchColumn() > 0) $this->json(['error' => 'No se puede justificar una multa ya pagada'], 400);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->validateCSRF();
@@ -189,6 +195,7 @@ class MultaController extends BaseController {
         $stmt->execute([$id]);
         $multa = $stmt->fetch();
         if (!$multa) $this->json(['error' => 'No encontrada'], 404);
+        if ($multa['estado'] !== 'activa') $this->json(['error' => 'La multa ya fue procesada (impugnada o anulada)'], 400);
         if (empty($multa['justificacion'])) $this->json(['error' => 'Esta multa no tiene justificacion pendiente'], 400);
 
         $accion = $_POST['accion'] ?? '';
@@ -246,6 +253,7 @@ class MultaController extends BaseController {
         $stmtPag = $this->db->prepare("SELECT COUNT(*) FROM obligaciones_sesion WHERE id_referencia = ? AND tipo = 'multa' AND pagada = TRUE");
         $stmtPag->execute([$id]);
         if ($stmtPag->fetchColumn() > 0) $this->json(['error' => 'No se puede impugnar una multa ya pagada'], 400);
+        if ($multa['estado'] !== 'activa') $this->json(['error' => 'Solo se puede impugnar una multa en estado activo'], 400);
         if ($multa['estado'] === 'impugnada') $this->json(['error' => 'Ya fue impugnada'], 400);
         if ($multa['estado'] === 'anulada') $this->json(['error' => 'La multa fue anulada por un directivo'], 400);
 
