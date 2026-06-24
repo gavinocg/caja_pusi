@@ -70,44 +70,43 @@ class SesionController extends BaseController {
                 $horaFormateada = date('H:i', strtotime($fechaSesion));
                 $mensajeNotif = "{$titulo}, a realizarse el {$fechaFormateada} a las {$horaFormateada}.";
 
-                // Socios activos
-                try {
-                    $socios = $this->db->query("SELECT s.id_socio, s.correo_electronico, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS nombre FROM socios WHERE estado = 'activo'")->fetchAll();
-                    foreach ($socios as $soc) {
-                        try {
-                            NotificacionHelper::crear([
-                                'id_socio' => $soc['id_socio'],
-                                'tipo' => 'sesion',
-                                'titulo' => $tituloNotif,
-                                'mensaje' => $mensajeNotif,
-                                'enviar_pusher' => true,
-                            ]);
-                        } catch (Exception $e) { error_log("Notif socio: " . $e->getMessage()); }
-                        if ($soc['correo_electronico']) {
-                            try { EmailHelper::enviarNotificacion($soc['correo_electronico'], $soc['nombre'], $tituloNotif, $mensajeNotif); } catch (Exception $e) { error_log("Email socio: " . $e->getMessage()); }
-                        }
-                        try { PusherHelper::actualizarPortal($soc['id_socio']); } catch (Exception $e) { error_log("Pusher socio: " . $e->getMessage()); }
+                // Socios activos — notificar a TODOS
+                $socios = $this->db->query("SELECT id_socio, correo_electronico FROM socios WHERE estado = 'activo'")->fetchAll();
+                foreach ($socios as $soc) {
+                    // Insertar notificación en BD
+                    $nid = UUIDGenerator::generar();
+                    $this->db->prepare("INSERT INTO notificaciones (id_notificacion, id_socio, tipo, titulo, mensaje, enviada_pusher) VALUES (?, ?, 'sesion', ?, ?, 1)")
+                        ->execute([$nid, $soc['id_socio'], $tituloNotif, $mensajeNotif]);
+                    // Enviar Pusher en tiempo real
+                    PusherHelper::enviar('notificacion', [
+                        'id_socio' => $soc['id_socio'],
+                        'tipo' => 'sesion',
+                        'titulo' => $tituloNotif,
+                        'mensaje' => $mensajeNotif,
+                    ]);
+                    PusherHelper::actualizarPortal($soc['id_socio']);
+                    // Email si tiene correo
+                    if ($soc['correo_electronico']) {
+                        try { EmailHelper::enviarNotificacion($soc['correo_electronico'], 'Socio', $tituloNotif, $mensajeNotif); } catch (Exception $e) { error_log("Email socio: " . $e->getMessage()); }
                     }
-                } catch (Exception $e) { error_log("General socios: " . $e->getMessage()); }
+                }
 
                 // Directivos (usuarios con rol distinto a Socio)
-                try {
-                    $directivos = $this->db->query("SELECT DISTINCT u.id_usuario, u.correo_electronico, CONCAT_WS(' ', u.nombres, u.apellidos) AS nombre FROM usuarios u JOIN roles_usuarios ru ON u.id_usuario = ru.id_usuario WHERE ru.id_rol != 6")->fetchAll();
-                    foreach ($directivos as $dir) {
-                        try {
-                            NotificacionHelper::crear([
-                                'id_usuario' => $dir['id_usuario'],
-                                'tipo' => 'sesion',
-                                'titulo' => $tituloNotif,
-                                'mensaje' => $mensajeNotif,
-                                'enviar_pusher' => true,
-                            ]);
-                        } catch (Exception $e) { error_log("Notif directivo: " . $e->getMessage()); }
-                        if ($dir['correo_electronico']) {
-                            try { EmailHelper::enviarNotificacion($dir['correo_electronico'], $dir['nombre'], $tituloNotif, $mensajeNotif); } catch (Exception $e) { error_log("Email directivo: " . $e->getMessage()); }
-                        }
+                $directivos = $this->db->query("SELECT DISTINCT u.id_usuario, u.correo_electronico, CONCAT_WS(' ', u.nombres, u.apellidos) AS nombre FROM usuarios u JOIN roles_usuarios ru ON u.id_usuario = ru.id_usuario WHERE ru.id_rol != 6")->fetchAll();
+                foreach ($directivos as $dir) {
+                    $nid = UUIDGenerator::generar();
+                    $this->db->prepare("INSERT INTO notificaciones (id_notificacion, id_usuario, tipo, titulo, mensaje, enviada_pusher) VALUES (?, ?, 'sesion', ?, ?, 1)")
+                        ->execute([$nid, $dir['id_usuario'], $tituloNotif, $mensajeNotif]);
+                    PusherHelper::enviar('notificacion', [
+                        'id_usuario' => $dir['id_usuario'],
+                        'tipo' => 'sesion',
+                        'titulo' => $tituloNotif,
+                        'mensaje' => $mensajeNotif,
+                    ]);
+                    if ($dir['correo_electronico']) {
+                        try { EmailHelper::enviarNotificacion($dir['correo_electronico'], $dir['nombre'], $tituloNotif, $mensajeNotif); } catch (Exception $e) { error_log("Email directivo: " . $e->getMessage()); }
                     }
-                } catch (Exception $e) { error_log("General directivos: " . $e->getMessage()); }
+                }
 
                 $this->redirect('/sesion/checkin/' . $id);
             }
