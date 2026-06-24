@@ -74,6 +74,7 @@ function actualizarNotifBadge() {
                 }
             }
         }).catch(function() {});
+    actualizarBuzonesBadge && actualizarBuzonesBadge();
 }
 
 function actualizarBandejaBadge() {

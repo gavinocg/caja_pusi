@@ -47,6 +47,7 @@ $routeMap = [
     'caja/exportarPDF' => ['controller' => 'CajaController', 'method' => 'exportarPDF'],
     'notificacion' => ['controller' => 'NotificacionController', 'method' => 'listar'],
     'notificacion/contar' => ['controller' => 'NotificacionController', 'method' => 'contar'],
+    'notificacion/contarBuzones' => ['controller' => 'NotificacionController', 'method' => 'contarBuzones'],
     'notificacion/archivar' => ['controller' => 'NotificacionController', 'method' => 'archivar'],
     'notificacion/eliminar' => ['controller' => 'NotificacionController', 'method' => 'eliminar'],
     'notificacion/restaurar' => ['controller' => 'NotificacionController', 'method' => 'restaurar'],

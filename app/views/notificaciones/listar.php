@@ -7,15 +7,15 @@
                 <div class="list-group list-group-flush">
                     <a href="?buzon=entrada" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center <?= $buzonActual === 'entrada' ? 'active' : '' ?>">
                         <span><i class="bi bi-inbox-fill"></i> Entrada</span>
-                        <span class="badge bg-danger rounded-pill"><?= $conteos['entrada'] ?? 0 ?></span>
+                        <span class="badge bg-danger rounded-pill" id="badgeEntrada"><?= $conteos['entrada'] ?? 0 ?></span>
                     </a>
                     <a href="?buzon=archivadas" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center <?= $buzonActual === 'archivadas' ? 'active' : '' ?>">
                         <span><i class="bi bi-archive-fill"></i> Archivadas</span>
-                        <span class="badge bg-secondary rounded-pill"><?= $conteos['archivadas'] ?? 0 ?></span>
+                        <span class="badge bg-secondary rounded-pill" id="badgeArchivadas"><?= $conteos['archivadas'] ?? 0 ?></span>
                     </a>
                     <a href="?buzon=papelera" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center <?= $buzonActual === 'papelera' ? 'active' : '' ?>">
                         <span><i class="bi bi-trash-fill"></i> Papelera</span>
-                        <span class="badge bg-secondary rounded-pill"><?= $conteos['papelera'] ?? 0 ?></span>
+                        <span class="badge bg-secondary rounded-pill" id="badgePapelera"><?= $conteos['papelera'] ?? 0 ?></span>
                     </a>
                 </div>
             </div>
@@ -125,12 +125,25 @@
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', actualizarBuzonesBadge);
+
+function actualizarBuzonesBadge() {
+    fetch('<?= BASE_URL ?>/notificacion/contarBuzones')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            ['entrada', 'archivadas', 'papelera'].forEach(function(b) {
+                var el = document.getElementById('badge' + b.charAt(0).toUpperCase() + b.slice(1));
+                if (el) el.textContent = d[b] || 0;
+            });
+        }).catch(function() {});
+}
+
 function verNotificacion(id, titulo, mensaje) {
     fetch('<?= BASE_URL ?>/notificacion/leer/' + id, {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'csrf_token=<?= CSRFMiddleware::generarToken() ?>'
-    }).then(function(r) { return r.json(); }).then(function() { actualizarNotifBadge(); }).catch(function() {});
+    }).then(function(r) { return r.json(); }).then(function() { actualizarNotifBadge(); actualizarBuzonesBadge(); }).catch(function() {});
     mostrarNotificacion('info', titulo, mensaje, false);
     var item = event && event.currentTarget ? event.currentTarget.closest('.list-group-item') : null;
     if (item) item.classList.remove('fw-bold');

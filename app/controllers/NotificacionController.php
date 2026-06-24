@@ -86,6 +86,25 @@ class NotificacionController extends BaseController {
         $this->json(['pendientes' => $entrada]);
     }
 
+    public function contarBuzones() {
+        $this->requireAuth();
+        $cedula = $_SESSION['usuario_cedula'] ?? '';
+        $idSocio = null;
+        if ($cedula) {
+            $stmt = $this->db->prepare("SELECT id_socio FROM socios WHERE cedula = ?");
+            $stmt->execute([$cedula]);
+            $idSocio = $stmt->fetchColumn();
+        }
+        $conteos = [];
+        $owner = $this->getOwnerFilter();
+        foreach (['entrada', 'archivadas', 'papelera'] as $b) {
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM notificaciones WHERE {$owner['sql']} AND buzon = ? AND leida = FALSE");
+            $stmt->execute(array_merge($owner['params'], [$b]));
+            $conteos[$b] = (int)$stmt->fetchColumn();
+        }
+        $this->json($conteos);
+    }
+
     private function getOwnerFilter() {
         $cedula = $_SESSION['usuario_cedula'] ?? '';
         $idSocio = null;
