@@ -8,7 +8,7 @@
         <div class="card-body p-0">
             <div class="table-responsive"><table class="table table-hover mb-0 table-responsive-stack">
                 <thead class="table-light">
-                    <tr><th>Fecha</th><th>Tipo</th><th>Monto</th><th>Pagada</th><th></th></tr>
+                    <tr><th>Fecha</th><th>Tipo</th><th>Monto</th><th>Estado</th><th></th></tr>
                 </thead>
                 <tbody>
                 <?php foreach ($multas as $m): ?>
@@ -17,10 +17,10 @@
                     <td data-label="Tipo"><span class="badge bg-<?= $m['tipo'] === 'inasistencia' ? 'danger' : ($m['tipo'] === 'cuota_impaga' ? 'dark' : ($m['tipo'] === 'mora_credito' ? 'warning' : 'info')) ?>"><?= str_replace('_', ' ', $m['tipo']) ?></span></td>
                     <td data-label="Monto"><strong>$<?= number_format($m['monto'], 2) ?></strong></td>
                     <td data-label="Estado">
-                        <?php if ($m['pagada'] > 0): ?><span class="badge bg-success">Pagada</span>
-                        <?php elseif ($m['estado'] === 'en_impugnacion'): ?><span class="badge bg-warning text-dark">En impugnación</span>
-                        <?php elseif ($m['estado'] === 'impugnada'): ?><span class="badge bg-success">Impugnada (sin efecto)</span>
+                        <?php if ($m['estado'] === 'impugnada'): ?><span class="badge bg-secondary">Impugnada</span>
                         <?php elseif ($m['estado'] === 'anulada'): ?><span class="badge bg-dark">Anulada</span>
+                        <?php elseif ($m['estado'] === 'en_impugnacion'): ?><span class="badge bg-warning text-dark">En impugnación</span>
+                        <?php elseif ($m['pagada'] > 0): ?><span class="badge bg-success">Pagada</span>
                         <?php else: ?><span class="badge bg-danger">Pendiente</span><?php endif; ?>
                     </td>
                     <td data-label="Acción">
@@ -93,10 +93,10 @@ function verDetalle(id, tipo, monto, fecha, justificacion, justPdf, justAprobada
     document.getElementById('detMonto').textContent = '$' + parseFloat(monto).toFixed(2);
     document.getElementById('detFecha').textContent = fecha;
     var estHtml = '';
-    if (pagada) estHtml = '<span class="badge bg-success">Pagada</span>';
-    else if (estado === 'impugnada') estHtml = '<span class="badge bg-success">Impugnada (sin efecto)</span>';
+    if (estado === 'impugnada') estHtml = '<span class="badge bg-secondary">Impugnada</span>';
     else if (estado === 'en_impugnacion') estHtml = '<span class="badge bg-warning text-dark">En impugnación</span>';
     else if (estado === 'anulada') estHtml = '<span class="badge bg-dark">Anulada</span>';
+    else if (pagada) estHtml = '<span class="badge bg-success">Pagada</span>';
     else estHtml = '<span class="badge bg-danger">Pendiente</span>';
     document.getElementById('detEstado').innerHTML = estHtml;
 

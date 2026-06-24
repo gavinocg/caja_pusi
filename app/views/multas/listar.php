@@ -56,10 +56,10 @@
                         <td><span class="badge bg-<?= $m['tipo'] === 'inasistencia' ? 'danger' : ($m['tipo'] === 'mora_credito' ? 'warning' : ($m['tipo'] === 'cuota_impaga' ? 'dark' : 'info')) ?>"><?= str_replace('_', ' ', $m['tipo']) ?></span></td>
                         <td><strong>$<?= number_format($m['monto'], 2) ?></strong></td>
                         <td>
-                            <?php if ($m['pagada'] > 0): ?><span class="badge bg-success">Pagada</span>
-                            <?php elseif ($m['estado'] === 'impugnada'): ?><span class="badge bg-success">Impugnada (sin efecto)</span>
+                            <?php if ($m['estado'] === 'impugnada'): ?><span class="badge bg-secondary">Impugnada</span>
                             <?php elseif ($m['estado'] === 'en_impugnacion'): ?><span class="badge bg-warning text-dark">En impugnación</span>
                             <?php elseif ($m['estado'] === 'anulada'): ?><span class="badge bg-dark">Anulada</span>
+                            <?php elseif ($m['pagada'] > 0): ?><span class="badge bg-success">Pagada</span>
                             <?php elseif (!empty($m['justificacion']) && ($m['justificacion_aprobada'] === '' || $m['justificacion_aprobada'] === null)): ?><span class="badge bg-warning text-dark">En revision</span>
                             <?php elseif ($m['justificacion_aprobada'] === '0'): ?><span class="badge bg-danger">Rechazada</span>
                             <?php else: ?><span class="badge bg-danger">Pendiente</span><?php endif; ?>
