@@ -78,47 +78,26 @@ class SesionController extends BaseController {
                 // Generar obligaciones solo si es necesario (bajo demanda desde el checkin)
                 // $this->generarObligaciones($id, $fechaSesion);  // eliminado - se genera por socio en obligacionesJSON
 
-                // Notificar a todos los socios y directivos
-                $tituloNotif = "INVITACION";
+                // Notificar apertura via Pusher broadcast (sin guardar en BD)
                 $fechaFormateada = date('d/m/Y', strtotime($fechaSesion));
                 $horaFormateada = date('H:i', strtotime($fechaSesion));
-                $mensajeNotif = "{$titulo} ({$tipo}), a realizarse el {$fechaFormateada} a las {$horaFormateada}.";
-
-                // Socios activos — notificar a TODOS
+                PusherHelper::enviar('notificacion', [
+                    'titulo' => 'INVITACION',
+                    'mensaje' => "{$titulo} ({$tipo}), a realizarse el {$fechaFormateada} a las {$horaFormateada}.",
+                ]);
+                // Actualizar portal y enviar email a cada socio
                 $socios = $this->db->query("SELECT id_socio, correo_electronico FROM socios WHERE estado = 'activo'")->fetchAll();
                 foreach ($socios as $soc) {
-                    // Insertar notificación en BD
-                    $nid = UUIDGenerator::generar();
-                    $this->db->prepare("INSERT INTO notificaciones (id_notificacion, id_socio, tipo, titulo, mensaje, enviada_pusher) VALUES (?, ?, 'sesion', ?, ?, 1)")
-                        ->execute([$nid, $soc['id_socio'], $tituloNotif, $mensajeNotif]);
-                    // Enviar Pusher en tiempo real
-                    PusherHelper::enviar('notificacion', [
-                        'id_socio' => $soc['id_socio'],
-                        'tipo' => 'sesion',
-                        'titulo' => $tituloNotif,
-                        'mensaje' => $mensajeNotif,
-                    ]);
                     PusherHelper::actualizarPortal($soc['id_socio']);
-                    // Email si tiene correo
                     if ($soc['correo_electronico']) {
-                        try { EmailHelper::enviarNotificacion($soc['correo_electronico'], 'Socio', $tituloNotif, $mensajeNotif); } catch (Exception $e) { error_log("Email socio: " . $e->getMessage()); }
+                        try { EmailHelper::enviarNotificacion($soc['correo_electronico'], 'Socio', "INVITACION", "{$titulo} ({$tipo}), a realizarse el {$fechaFormateada} a las {$horaFormateada}."); } catch (Exception $e) { error_log("Email socio: " . $e->getMessage()); }
                     }
                 }
-
-                // Directivos (usuarios con rol distinto a Socio)
-                $directivos = $this->db->query("SELECT DISTINCT u.id_usuario, u.correo_electronico, CONCAT_WS(' ', u.nombres, u.apellidos) AS nombre FROM usuarios u JOIN roles_usuarios ru ON u.id_usuario = ru.id_usuario WHERE ru.id_rol != 6")->fetchAll();
+                // Email a directivos
+                $directivos = $this->db->query("SELECT DISTINCT u.correo_electronico, CONCAT_WS(' ', u.nombres, u.apellidos) AS nombre FROM usuarios u JOIN roles_usuarios ru ON u.id_usuario = ru.id_usuario WHERE ru.id_rol != 6")->fetchAll();
                 foreach ($directivos as $dir) {
-                    $nid = UUIDGenerator::generar();
-                    $this->db->prepare("INSERT INTO notificaciones (id_notificacion, id_usuario, tipo, titulo, mensaje, enviada_pusher) VALUES (?, ?, 'sesion', ?, ?, 1)")
-                        ->execute([$nid, $dir['id_usuario'], $tituloNotif, $mensajeNotif]);
-                    PusherHelper::enviar('notificacion', [
-                        'id_usuario' => $dir['id_usuario'],
-                        'tipo' => 'sesion',
-                        'titulo' => $tituloNotif,
-                        'mensaje' => $mensajeNotif,
-                    ]);
                     if ($dir['correo_electronico']) {
-                        try { EmailHelper::enviarNotificacion($dir['correo_electronico'], $dir['nombre'], $tituloNotif, $mensajeNotif); } catch (Exception $e) { error_log("Email directivo: " . $e->getMessage()); }
+                        try { EmailHelper::enviarNotificacion($dir['correo_electronico'], $dir['nombre'], "INVITACION", "{$titulo} ({$tipo}), a realizarse el {$fechaFormateada} a las {$horaFormateada}."); } catch (Exception $e) { error_log("Email directivo: " . $e->getMessage()); }
                     }
                 }
 
