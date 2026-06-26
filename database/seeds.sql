@@ -95,7 +95,8 @@ INSERT INTO parametros (codigo, nombre, valor, tipo, modulo) VALUES
 ('máx_reenvío_pin_hora', 'Máximo reenvíos PIN por hora', '3', 'numero', 'seguridad'),
 ('logo_sidebar', 'Logo del sidebar', '', 'texto', 'imagen'),
 ('logo_sd', 'Logo sin fondo', '', 'texto', 'imagen'),
-('abrev_caja', 'Abreviatura Caja', 'P&amp;S', 'texto', 'imagen');
+('abrev_caja', 'Abreviatura Caja', 'P&amp;S', 'texto', 'imagen'),
+('retencion_papelera_dias', 'Días de retención en papelera', '30', 'numero', 'general');
 
 INSERT INTO provincias (nombre) VALUES ('Pichincha');
 INSERT INTO cantones (id_provincia, nombre) VALUES (1, 'Pedro Moncayo');
