@@ -323,6 +323,7 @@
                             <th>Vencimiento</th>
                             <th>Rendimiento</th>
                             <th>Estado</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -347,6 +348,11 @@
                                 <span class="badge bg-danger">Rechazada</span>
                                 <?php else: ?>
                                 <span class="badge bg-secondary"><?= htmlspecialchars($i['estado']) ?></span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php if ($i['estado'] === 'activa'): ?>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="solicitarRetiroAnticipado(<?= htmlspecialchars(json_encode($i['id_inversion']), ENT_COMPAT, 'UTF-8') ?>, <?= htmlspecialchars(json_encode($i['producto']), ENT_COMPAT, 'UTF-8') ?>, <?= (float)($i['monto']) ?>, <?= (float)($i['rendimiento_proyectado'] ?? 0) ?>, <?= (int)($i['plazo_meses']) ?>, <?= htmlspecialchars(json_encode($i['destino_final'] ?? 'capital_inversion'), ENT_COMPAT, 'UTF-8') ?>, <?= htmlspecialchars(json_encode($i['fecha_inicio'] ?? date('Y-m-d')), ENT_COMPAT, 'UTF-8') ?>, <?= (float)($i['penalidad'] ?? 0) ?>)" title="Solicitar retiro anticipado"><i class="bi bi-box-arrow-left"></i></button>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -406,14 +412,14 @@ function setStep(step) {
 function validateCurrentStep() {
     if (currentStep === 1) {
         if (!simData) {
-            alert('Ejecute la simulación primero');
+            mostrarNotificacion('warning','Aviso','Ejecute la simulación primero',true);
             return false;
         }
         return true;
     }
     if (currentStep === 2) {
         if (!document.getElementById('aceptaCheck').checked) {
-            alert('Debe aceptar los términos y condiciones');
+            mostrarNotificacion('warning','Aviso','Debe aceptar los términos y condiciones',true);
             return false;
         }
         return true;
@@ -478,18 +484,18 @@ function simular() {
     var monto = parseFloat(document.getElementById('inpMonto').value);
     var plazo = parseInt(document.getElementById('inpPlazo').value);
 
-    if (!opt || !opt.value) { alert('Seleccione un producto'); return; }
-    if (!monto || monto <= 0) { alert('Ingrese un monto válido'); return; }
+    if (!opt || !opt.value) { mostrarNotificacion('warning','Aviso','Seleccione un producto',true); return; }
+    if (!monto || monto <= 0) { mostrarNotificacion('warning','Aviso','Ingrese un monto válido',true); return; }
     if (!plazo || plazo < parseInt(opt.dataset.plazo_min) || plazo > parseInt(opt.dataset.plazo_max)) {
-        alert('Plazo debe ser entre ' + opt.dataset.plazo_min + ' y ' + opt.dataset.plazo_max + ' meses');
+        mostrarNotificacion('warning','Aviso','Plazo debe ser entre ' + opt.dataset.plazo_min + ' y ' + opt.dataset.plazo_max + ' meses',true);
         return;
     }
     if (monto < parseFloat(opt.dataset.monto_min) || monto > parseFloat(opt.dataset.monto_max)) {
-        alert('Monto debe ser entre $' + parseFloat(opt.dataset.monto_min).toFixed(2) + ' y $' + parseFloat(opt.dataset.monto_max).toFixed(2));
+        mostrarNotificacion('warning','Aviso','Monto debe ser entre $' + parseFloat(opt.dataset.monto_min).toFixed(2) + ' y $' + parseFloat(opt.dataset.monto_max).toFixed(2),true);
         return;
     }
     if (monto > <?= floatval($saldoCapital) ?>) {
-        alert('Saldo insuficiente en capital de inversión. Disponible: $<?= number_format($saldoCapital, 2) ?>');
+        mostrarNotificacion('warning','Aviso','Saldo insuficiente en capital de inversión. Disponible: $<?= number_format($saldoCapital, 2) ?>',true);
         return;
     }
 
@@ -502,7 +508,7 @@ function simular() {
     })
     .then(r => r.json())
     .then(d => {
-        if (d.error) { alert(d.error); return; }
+        if (d.error) { mostrarNotificacion('error','Error',d.error,false); return; }
         simData = d;
         document.getElementById('resMonto').textContent = d.monto.toFixed(2);
         document.getElementById('resRendimiento').textContent = d.rendimiento.toFixed(2);
@@ -542,4 +548,65 @@ document.addEventListener('DOMContentLoaded', function() {
         onProductChange();
     }
 });
+</script>
+
+<!-- Modal Retiro Anticipado -->
+<div id="retiroOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100000;background:rgba(0,0,0,0.5);justify-content:center;align-items:center">
+    <div style="background:#fff;border-radius:12px;padding:2rem 1.5rem;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:notifFadeIn 0.2s ease-out">
+        <h5 class="mb-3">Retiro anticipado de inversión</h5>
+        <p class="text-muted small mb-3" style="text-align:justify">Según el Reglamento Interno, el socio debe notificar con al menos un (1) mes de anticipación. Se aplicará una penalidad sobre el rendimiento (utilidad) del monto invertido.</p>
+        <table class="table table-sm table-borderless mb-3">
+            <tr><td class="text-muted">Producto:</td><td class="fw-bold" id="retiroProducto"></td></tr>
+            <tr><td class="text-muted">Monto invertido:</td><td class="fw-bold" id="retiroMonto"></td></tr>
+            <tr><td class="text-muted">Rendimiento:</td><td id="retiroRend"></td></tr>
+            <tr><td class="text-muted">Penalidad:</td><td class="text-danger" id="retiroPenalidad"></td></tr>
+            <tr><td class="text-muted">Devolución:</td><td class="fw-bold text-success" id="retiroDevolucion"></td></tr>
+        </table>
+        <form id="formRetiro" method="POST" action="<?= BASE_URL ?>/portal/retirarInversion">
+            <input type="hidden" name="csrf_token" value="<?= CSRFMiddleware::generarToken() ?>">
+            <input type="hidden" name="id_inversion" id="retiroIdInversion" value="">
+            <div class="d-flex gap-2 justify-content-center">
+                <button type="button" class="btn btn-outline-secondary px-4" onclick="document.getElementById('retiroOverlay').style.display='none'">Cancelar</button>
+                <button type="submit" class="btn btn-warning px-4">Solicitar retiro anticipado</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function solicitarRetiroAnticipado(id, producto, monto, rendimientoTotal, plazo, destino, fechaInicio, penalidadPorc) {
+    document.getElementById('retiroIdInversion').value = id;
+    document.getElementById('retiroProducto').textContent = producto;
+    document.getElementById('retiroMonto').textContent = '$' + monto.toFixed(2);
+
+    var inicio = new Date(fechaInicio || Date.now());
+    var hoy = new Date();
+    var diasTranscurridos = Math.max(0, Math.floor((hoy - inicio) / (1000 * 60 * 60 * 24)));
+    var plazoTotalDias = Math.max(1, plazo * 30);
+    var rendimientoDiario = rendimientoTotal / plazoTotalDias;
+    var rendimientoDevengado = rendimientoDiario * diasTranscurridos;
+    var penalidad = penalidadPorc / 100 * rendimientoDevengado;
+    var devolucion = monto + rendimientoDevengado - penalidad;
+
+    document.getElementById('retiroRend').textContent = isNaN(rendimientoDevengado) ? '$0.00' : '$' + rendimientoDevengado.toFixed(2) + ' (' + diasTranscurridos + ' dias)';
+    document.getElementById('retiroPenalidad').textContent = isNaN(penalidad) ? '$0.00' : '$' + penalidad.toFixed(2) + ' (' + penalidadPorc + '%)';
+    document.getElementById('retiroDevolucion').textContent = isNaN(devolucion) ? '$0.00' : '$' + devolucion.toFixed(2);
+    document.getElementById('retiroOverlay').style.display = 'flex';
+}
+
+document.getElementById('formRetiro').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var formData = new FormData(this);
+    fetch(this.action, { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(d => {
+        if (d.error) { mostrarNotificacion('error','Error',d.error,false); }
+        else {
+            mostrarNotificacion('success','Retiro procesado','Devolución: $' + d.devolucion.toFixed(2) + ' | Penalidad: $' + d.penalidad.toFixed(2),true);
+            location.reload();
+        }
+    })
+    .catch(function() { mostrarNotificacion('error','Error','Error al procesar',false); });
+});
+document.getElementById('retiroOverlay').addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
 </script>

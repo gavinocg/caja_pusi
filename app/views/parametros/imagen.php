@@ -87,7 +87,7 @@ document.querySelectorAll('.fmUploadForm').forEach(function(form) {
         fetch('<?= BASE_URL ?>/imagen/subirImagenParam', { method: 'POST', body: f })
         .then(function(r) { return r.json(); })
         .then(function(d) {
-            if (d.error) { alert(d.error); } else { location.reload(); }
+            if (d.error) { mostrarNotificacion('error','Error',d.error,false); } else { location.reload(); }
         });
     });
 });

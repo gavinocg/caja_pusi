@@ -98,9 +98,9 @@ function eliminarSocio(id, nombre) {
     })
     .then(r => r.json())
     .then(d => {
-        if (d.error) { alert('Error: ' + d.error); }
+        if (d.error) { mostrarNotificacion('error','Error',d.error,false); }
         else { location.reload(); }
     })
-    .catch(e => alert('Error de red'));
+    .catch(e => mostrarNotificacion('error','Error de red','Error de red',false));
 }
 </script>

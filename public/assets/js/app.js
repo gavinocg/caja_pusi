@@ -22,21 +22,55 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+function mostrarNotificacion(tipo, titulo, mensaje, autoClose) {
+    var overlay = document.getElementById('notificacionOverlay');
+    if (!overlay) return;
+    var iconMap = {
+        'success': ['bi-check-circle-fill', 'text-success'],
+        'error':   ['bi-x-circle-fill', 'text-danger'],
+        'warning': ['bi-exclamation-circle-fill', 'text-warning'],
+        'info':    ['bi-info-circle-fill', 'text-primary'],
+    };
+    var cls = iconMap[tipo] || iconMap['info'];
+    var icon = overlay.querySelector('#notifModalIcon i');
+    icon.className = 'bi ' + cls[0] + ' ' + cls[1];
+    document.getElementById('notifModalTitle').textContent = titulo;
+    document.getElementById('notifModalMessage').textContent = mensaje;
+    overlay.classList.add('show');
+    if (autoClose !== false) {
+        setTimeout(cerrarModalNotificacion, 4000);
+    }
+}
+function cerrarModalNotificacion() {
+    var overlay = document.getElementById('notificacionOverlay');
+    if (overlay) overlay.classList.remove('show');
+}
+
 function showToast(message, type) {
     type = type || 'success';
     var container = document.querySelector('.toast-container');
     if (!container) {
         container = document.createElement('div');
         container.className = 'toast-container position-fixed top-0 end-0 p-3';
+        container.style.zIndex = '9999';
         document.body.appendChild(container);
     }
     var toast = document.createElement('div');
-    toast.className = 'toast align-items-center text-bg-' + type + ' border-0 show';
+    toast.className = 'toast align-items-center text-bg-' + type + ' border-0';
     toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
     toast.innerHTML = '<div class="d-flex"><div class="toast-body">' + message + '</div>' +
         '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>';
     container.appendChild(toast);
-    setTimeout(function() { toast.remove(); }, 5000);
+    if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+        var bsToast = new bootstrap.Toast(toast, { autohide: true, delay: 5000 });
+        bsToast.show();
+        toast.addEventListener('hidden.bs.toast', function() { toast.remove(); });
+    } else {
+        toast.classList.add('show');
+        setTimeout(function() { toast.remove(); }, 5000);
+    }
 }
 
 function actualizarNotifBadge() {
@@ -53,7 +87,31 @@ function actualizarNotifBadge() {
                 }
             }
         }).catch(function() {});
+    actualizarBuzonesBadge && actualizarBuzonesBadge();
 }
+
+function actualizarBandejaBadge() {
+    fetch(BASE_URL + '/dashboard/contarPendientes')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            var total = (d.creditos || 0) + (d.inversiones || 0);
+            var badges = { 'Total': total, 'Creditos': d.creditos || 0, 'Inversiones': d.inversiones || 0 };
+            Object.keys(badges).forEach(function(t) {
+                var el = document.getElementById('bandejaBadge' + t);
+                if (el) {
+                    var count = badges[t];
+                    if (count > 0) {
+                        el.textContent = Math.min(count, 99);
+                        el.classList.remove('d-none');
+                    } else {
+                        el.classList.add('d-none');
+                    }
+                }
+            });
+        }).catch(function() {});
+}
+
+document.addEventListener('DOMContentLoaded', actualizarBandejaBadge);
 
 if (typeof Pusher !== 'undefined' && typeof PUSHER_KEY !== 'undefined' && PUSHER_KEY) {
     var pusher = new Pusher(PUSHER_KEY, { cluster: PUSHER_CLUSTER || 'us2' });
@@ -61,6 +119,7 @@ if (typeof Pusher !== 'undefined' && typeof PUSHER_KEY !== 'undefined' && PUSHER
     channel.bind('notificacion', function(data) {
         if (typeof data === 'string') { try { data = JSON.parse(data); } catch(e) { return; } }
         actualizarNotifBadge();
+        actualizarBandejaBadge();
         // Check if the notification is for this user
         var paraMi = false;
         if (!data.id_socio && !data.id_usuario) {
@@ -83,7 +142,7 @@ if (typeof Pusher !== 'undefined' && typeof PUSHER_KEY !== 'undefined' && PUSHER
         // Update ahorro card
         var ahorroCard = document.querySelector('[data-portal="ahorro"]');
         if (ahorroCard) {
-            ahorroCard.textContent = '$' + (data.ahorro_total || 0).toFixed(2);
+            ahorroCard.textContent = '$ ' + (data.ahorro_total || 0).toFixed(2);
             ahorroCard.style.transition = 'background 0.3s';
             ahorroCard.style.background = '#d4edda';
             setTimeout(function() { ahorroCard.style.background = ''; }, 1500);
@@ -91,7 +150,7 @@ if (typeof Pusher !== 'undefined' && typeof PUSHER_KEY !== 'undefined' && PUSHER
         // Update capital inversion card
         var capInvCard = document.querySelector('[data-portal="capital_inversion"]');
         if (capInvCard) {
-            capInvCard.textContent = '$' + (data.capital_inversion || 0).toFixed(2);
+            capInvCard.textContent = '$ ' + (data.capital_inversion || 0).toFixed(2);
             capInvCard.style.transition = 'background 0.3s';
             capInvCard.style.background = '#d4edda';
             setTimeout(function() { capInvCard.style.background = ''; }, 1500);
@@ -99,7 +158,7 @@ if (typeof Pusher !== 'undefined' && typeof PUSHER_KEY !== 'undefined' && PUSHER
         // Update valores a pagar card
         var pagarCard = document.querySelector('[data-portal="valores_pagar"]');
         if (pagarCard) {
-            pagarCard.textContent = '$' + (data.valores_pagar || 0).toFixed(2);
+            pagarCard.textContent = '$ ' + (data.valores_pagar || 0).toFixed(2);
             pagarCard.style.transition = 'background 0.3s';
             pagarCard.style.background = '#f8d7da';
             setTimeout(function() { pagarCard.style.background = ''; }, 1500);
@@ -107,4 +166,5 @@ if (typeof Pusher !== 'undefined' && typeof PUSHER_KEY !== 'undefined' && PUSHER
     });
 } else {
     setInterval(actualizarNotifBadge, 30000);
+    setInterval(actualizarBandejaBadge, 30000);
 }

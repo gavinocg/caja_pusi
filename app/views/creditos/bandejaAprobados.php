@@ -214,7 +214,7 @@ function desembolsar(id) {
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'csrf_token=<?= CSRFMiddleware::generarToken() ?>'
     }).then(function(r) { return r.json(); }).then(function(d) {
-        if (d.error) { alert(d.error); } else { location.reload(); }
+        if (d.error) { mostrarNotificacion('error','Error',d.error,false); } else { location.reload(); }
     });
 }
 
@@ -227,7 +227,7 @@ document.querySelectorAll('.modal form').forEach(function(f) {
             fetch(form.action, { method: 'POST', body: formData })
             .then(function(r) { return r.json(); })
             .then(function(d) {
-                if (d.error) { alert(d.error); }
+                if (d.error) { mostrarNotificacion('error','Error',d.error,false); }
                 else { location.reload(); }
             });
         } else {
@@ -235,7 +235,7 @@ document.querySelectorAll('.modal form').forEach(function(f) {
             fetch(form.action, { method: 'POST', body: params, headers: {'Content-Type': 'application/x-www-form-urlencoded'} })
             .then(function(r) { return r.json(); })
             .then(function(d) {
-                if (d.error) { alert(d.error); }
+                if (d.error) { mostrarNotificacion('error','Error',d.error,false); }
                 else { location.reload(); }
             });
         }

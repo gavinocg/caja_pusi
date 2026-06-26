@@ -16,7 +16,8 @@
                     <p><strong>Estado:</strong>
                         <?php if ($pagada): ?><span class="badge bg-success">Pagada</span>
                         <?php elseif ($multa['estado'] === 'anulada'): ?><span class="badge bg-dark">Anulada por directivo</span>
-                        <?php elseif ($multa['estado'] === 'impugnada'): ?><span class="badge bg-success">Impugnada (sin efecto)</span>
+                        <?php elseif ($multa['estado'] === 'impugnada'): ?><span class="badge bg-secondary">Impugnada</span>
+                        <?php elseif ($multa['estado'] === 'en_impugnacion'): ?><span class="badge bg-warning text-dark">En impugnación</span>
                         <?php elseif (!empty($multa['justificacion']) && ($multa['justificacion_aprobada'] === '' || $multa['justificacion_aprobada'] === null)): ?><span class="badge bg-warning text-dark">En revision</span>
                         <?php elseif ($multa['justificacion_aprobada'] === '0'): ?><span class="badge bg-danger">Rechazada</span>
                         <?php else: ?><span class="badge bg-danger">Pendiente</span><?php endif; ?>
@@ -79,7 +80,7 @@ function eliminarMulta(id) {
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'csrf_token=<?= CSRFMiddleware::generarToken() ?>'
     }).then(function(r) { return r.json(); }).then(function(d) {
-        if (d.error) { alert(d.error); } else { alert(d.mensaje); location.reload(); }
+        if (d.error) { mostrarNotificacion('error','Error',d.error,false); } else { mostrarNotificacion('success','Exito',d.mensaje,true); location.reload(); }
     });
 }
 </script>

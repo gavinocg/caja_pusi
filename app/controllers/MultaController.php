@@ -62,6 +62,7 @@ class MultaController extends BaseController {
             'filtroSocio' => $filtroSocio ?? '',
             'esSocio' => $esSocio,
             'esPresidente' => $this->esPresidente(),
+            'puedeAutorizar' => $this->tienePermiso('multa.autorizar_impugnacion'),
         ]);
     }
 
@@ -149,6 +150,12 @@ class MultaController extends BaseController {
         if ($multa['cedula'] !== ($_SESSION['usuario_cedula'] ?? '')) {
             $this->json(['error' => 'No autorizado'], 403);
         }
+        if ($multa['estado'] !== 'activa') {
+            $this->json(['error' => 'Solo se puede justificar una multa en estado activo'], 400);
+        }
+        $stmtPag = $this->db->prepare("SELECT COUNT(*) FROM obligaciones_sesion WHERE id_referencia = ? AND tipo = 'multa' AND pagada = TRUE");
+        $stmtPag->execute([$id]);
+        if ($stmtPag->fetchColumn() > 0) $this->json(['error' => 'No se puede justificar una multa ya pagada'], 400);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->validateCSRF();
@@ -169,14 +176,14 @@ class MultaController extends BaseController {
             }
 
             if ($archivo) {
-                $this->db->prepare("UPDATE multas SET justificacion = ?, justificacion_pdf = ? WHERE id_multa = ?")
+                $this->db->prepare("UPDATE multas SET estado = 'en_impugnacion', justificacion = ?, justificacion_pdf = ? WHERE id_multa = ?")
                     ->execute([$texto, $archivo, $id]);
             } else {
-                $this->db->prepare("UPDATE multas SET justificacion = ? WHERE id_multa = ?")
+                $this->db->prepare("UPDATE multas SET estado = 'en_impugnacion', justificacion = ? WHERE id_multa = ?")
                     ->execute([$texto, $id]);
             }
 
-            $this->json(['mensaje' => 'Justificación enviada']);
+            $this->json(['mensaje' => 'Justificación enviada para revision']);
         }
     }
 
@@ -189,6 +196,7 @@ class MultaController extends BaseController {
         $stmt->execute([$id]);
         $multa = $stmt->fetch();
         if (!$multa) $this->json(['error' => 'No encontrada'], 404);
+        if (!in_array($multa['estado'], ['activa', 'en_impugnacion'])) $this->json(['error' => 'La multa ya fue procesada'], 400);
         if (empty($multa['justificacion'])) $this->json(['error' => 'Esta multa no tiene justificacion pendiente'], 400);
 
         $accion = $_POST['accion'] ?? '';
@@ -201,17 +209,21 @@ class MultaController extends BaseController {
         if ($accion === 'aprobar') {
             $this->db->beginTransaction();
             try {
-                $this->db->prepare("UPDATE multas SET estado = 'impugnada', justificacion_aprobada = 1 WHERE id_multa = ?")
-                    ->execute([$id]);
+                $observacion = trim($_POST['observacion'] ?? '');
+                $this->db->prepare("UPDATE multas SET estado = 'impugnada', justificacion_aprobada = 1, observacion = ? WHERE id_multa = ?")
+                    ->execute([$observacion, $id]);
                 $this->db->prepare("UPDATE obligaciones_sesion SET pagada = TRUE WHERE id_referencia = ? AND tipo = 'multa' AND pagada = FALSE")
                     ->execute([$id]);
                 $this->db->commit();
 
+                require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php';
+                require_once ROOT_PATH . '/app/helpers/PusherHelper.php';
+                $msgNotif = $observacion ? "Su impugnacion ha sido aprobada. La multa queda sin efecto. Observacion: {$observacion}" : 'Su impugnacion ha sido aprobada. La multa queda sin efecto.';
                 NotificacionHelper::crear([
                     'id_socio' => $multa['id_socio'],
                     'tipo' => 'multa',
                     'titulo' => 'Impugnacion aprobada',
-                    'mensaje' => 'Su impugnacion ha sido aprobada. La multa queda sin efecto.',
+                    'mensaje' => $msgNotif,
                     'enviar_pusher' => true,
                 ]);
                 PusherHelper::actualizarPortal($multa['id_socio']);
@@ -221,14 +233,18 @@ class MultaController extends BaseController {
                 $this->json(['error' => $e->getMessage()], 500);
             }
         } else {
-            $this->db->prepare("UPDATE multas SET justificacion_aprobada = 0 WHERE id_multa = ?")
-                ->execute([$id]);
+            $observacion = trim($_POST['observacion'] ?? '');
+            $this->db->prepare("UPDATE multas SET estado = 'activa', justificacion_aprobada = 0, observacion = ? WHERE id_multa = ?")
+                ->execute([$observacion, $id]);
 
+            require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php';
+            require_once ROOT_PATH . '/app/helpers/PusherHelper.php';
+            $msgNotif = $observacion ? "Su impugnacion ha sido rechazada. La multa sigue vigente. Observacion: {$observacion}" : 'Su impugnacion ha sido rechazada. La multa sigue vigente.';
             NotificacionHelper::crear([
                 'id_socio' => $multa['id_socio'],
                 'tipo' => 'multa',
                 'titulo' => 'Impugnacion rechazada',
-                'mensaje' => 'Su impugnacion ha sido rechazada. La multa sigue vigente.',
+                'mensaje' => $msgNotif,
                 'enviar_pusher' => true,
             ]);
             PusherHelper::actualizarPortal($multa['id_socio']);
@@ -246,6 +262,7 @@ class MultaController extends BaseController {
         $stmtPag = $this->db->prepare("SELECT COUNT(*) FROM obligaciones_sesion WHERE id_referencia = ? AND tipo = 'multa' AND pagada = TRUE");
         $stmtPag->execute([$id]);
         if ($stmtPag->fetchColumn() > 0) $this->json(['error' => 'No se puede impugnar una multa ya pagada'], 400);
+        if ($multa['estado'] !== 'activa') $this->json(['error' => 'Solo se puede impugnar una multa en estado activo'], 400);
         if ($multa['estado'] === 'impugnada') $this->json(['error' => 'Ya fue impugnada'], 400);
         if ($multa['estado'] === 'anulada') $this->json(['error' => 'La multa fue anulada por un directivo'], 400);
 
@@ -266,10 +283,10 @@ class MultaController extends BaseController {
             }
 
             if ($archivo) {
-                $this->db->prepare("UPDATE multas SET justificacion = ?, justificacion_pdf = ? WHERE id_multa = ?")
+                $this->db->prepare("UPDATE multas SET estado = 'en_impugnacion', justificacion = ?, justificacion_pdf = ? WHERE id_multa = ?")
                     ->execute([$texto, $archivo, $id]);
             } else {
-                $this->db->prepare("UPDATE multas SET justificacion = ? WHERE id_multa = ?")
+                $this->db->prepare("UPDATE multas SET estado = 'en_impugnacion', justificacion = ? WHERE id_multa = ?")
                     ->execute([$texto, $id]);
             }
 

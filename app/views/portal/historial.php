@@ -9,7 +9,7 @@
         <div class="card-body p-0">
             <div class="table-responsive"><table class="table table-hover mb-0 table-responsive-stack">
                 <thead class="table-light">
-                    <tr><th>Fecha</th><th>Tipo</th><th>Monto</th><th>Saldo anterior</th><th>Saldo posterior</th></tr>
+                    <tr><th>Fecha</th><th>Tipo</th><th class="text-end">Monto</th><th class="text-end">Saldo anterior</th><th class="text-end">Saldo posterior</th></tr>
                 </thead>
                 <tbody>
                 <?php foreach ($historial as $h): ?>
@@ -24,9 +24,9 @@
                 <tr>
                     <td data-label="Fecha"><?= htmlspecialchars($h['fecha_registro']) ?></td>
                     <td data-label="Tipo"><span class="badge bg-info"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', $h['tipo_operacion']))) ?></span></td>
-                    <td data-label="Monto"><strong class="<?= $montoClass ?>"><?= $monto < 0 ? '- ' : '' ?>$<?= number_format(abs($monto), 2) ?></strong></td>
-                    <td data-label="Saldo ant.">$<?= number_format((float)($h['saldo_anterior'] ?? 0), 2) ?></td>
-                    <td data-label="Saldo post.">$<?= number_format((float)($h['saldo_posterior'] ?? 0), 2) ?></td>
+                    <td data-label="Monto" class="text-end"><strong class="<?= $montoClass ?>"><?= $monto < 0 ? '- ' : '' ?>$<?= number_format(abs($monto), 2) ?></strong></td>
+                    <td data-label="Saldo ant." class="text-end">$<?= number_format((float)($h['saldo_anterior'] ?? 0), 2) ?></td>
+                    <td data-label="Saldo post." class="text-end">$<?= number_format((float)($h['saldo_posterior'] ?? 0), 2) ?></td>
                 </tr>
                 <?php endforeach; ?>
                 </tbody>

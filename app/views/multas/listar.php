@@ -29,7 +29,7 @@
             <?php
             $pendientes = 0;
             foreach ($multas as $m) {
-                if (!empty($m['justificacion']) && ($m['justificacion_aprobada'] === '' || $m['justificacion_aprobada'] === null || $m['justificacion_aprobada'] === '0') && $m['estado'] === 'activa') {
+                if (!empty($m['justificacion']) && $m['estado'] === 'en_impugnacion') {
                     $pendientes++;
                 }
             }
@@ -44,7 +44,7 @@
         <div class="card-body p-0">
             <div class="table-responsive"><table class="table table-hover mb-0">
                 <thead class="table-light">
-                    <tr><th>Fecha</th><?php if (!$esSocio): ?><th>Socio</th><?php endif; ?><th>Tipo</th><th>Monto</th><th>Justificación</th><th>Estado</th><th></th></tr>
+                    <tr><th>Fecha</th><?php if (!$esSocio): ?><th>Socio</th><?php endif; ?><th>Tipo</th><th>Monto</th><th>Estado</th><th></th></tr>
                 </thead>
                 <tbody>
                     <?php foreach ($multas as $m): ?>
@@ -56,19 +56,10 @@
                         <td><span class="badge bg-<?= $m['tipo'] === 'inasistencia' ? 'danger' : ($m['tipo'] === 'mora_credito' ? 'warning' : ($m['tipo'] === 'cuota_impaga' ? 'dark' : 'info')) ?>"><?= str_replace('_', ' ', $m['tipo']) ?></span></td>
                         <td><strong>$<?= number_format($m['monto'], 2) ?></strong></td>
                         <td>
-                            <?php if ($m['justificacion']): ?>
-                            <span class="badge bg-success">Sí</span>
-                            <?php if ($m['justificacion_aprobada'] === '1'): ?><span class="badge bg-primary">Aprobada</span>
-                            <?php elseif ($m['justificacion_aprobada'] === '0'): ?><span class="badge bg-danger">Rechazada</span>
-                            <?php else: ?><span class="badge bg-warning">Pendiente</span><?php endif; ?>
-                            <?php else: ?>
-                            <span class="badge bg-secondary">No</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php if ($m['pagada'] > 0): ?><span class="badge bg-success">Pagada</span>
-                            <?php elseif ($m['estado'] === 'impugnada'): ?><span class="badge bg-success">Impugnada (sin efecto)</span>
+                            <?php if ($m['estado'] === 'impugnada'): ?><span class="badge bg-secondary">Impugnada</span>
+                            <?php elseif ($m['estado'] === 'en_impugnacion'): ?><span class="badge bg-warning text-dark">En impugnación</span>
                             <?php elseif ($m['estado'] === 'anulada'): ?><span class="badge bg-dark">Anulada</span>
+                            <?php elseif ($m['pagada'] > 0): ?><span class="badge bg-success">Pagada</span>
                             <?php elseif (!empty($m['justificacion']) && ($m['justificacion_aprobada'] === '' || $m['justificacion_aprobada'] === null)): ?><span class="badge bg-warning text-dark">En revision</span>
                             <?php elseif ($m['justificacion_aprobada'] === '0'): ?><span class="badge bg-danger">Rechazada</span>
                             <?php else: ?><span class="badge bg-danger">Pendiente</span><?php endif; ?>
@@ -80,6 +71,9 @@
                             <?php endif; ?>
                             <?php if ($m['pagada'] == 0 && $m['estado'] === 'activa' && $esPresidente): ?>
                             <a href="#" onclick="eliminarMulta('<?= $m['id_multa'] ?>')" class="btn btn-sm btn-outline-danger" title="Eliminar (Presidente)"><i class="bi bi-trash"></i></a>
+                            <?php endif; ?>
+                            <?php if ($m['estado'] === 'en_impugnacion' && $puedeAutorizar): ?>
+                            <button class="btn btn-sm btn-outline-primary" onclick="abrirModalAutorizar('<?= $m['id_multa'] ?>', '<?= addslashes($m['socio'] ?? '') ?>', '<?= addslashes(str_replace('_', ' ', $m['tipo'])) ?>', <?= $m['monto'] ?>, '<?= addslashes($m['justificacion'] ?? '') ?>')" title="Autorizar impugnación"><i class="bi bi-check2-circle"></i></button>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -99,7 +93,58 @@
     </ul></nav>
     <?php endif; ?>
 </div>
+
+<!-- Modal Autorizar Impugnación (overlay CSS puro) -->
+<div id="autorizarOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100000;background:rgba(0,0,0,0.5);justify-content:center;align-items:center">
+    <div style="background:#fff;border-radius:12px;padding:2rem 1.5rem;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:notifFadeIn 0.2s ease-out">
+        <h5 class="mb-3">Revisar impugnación</h5>
+        <table class="table table-sm table-borderless mb-3">
+            <tr><td class="text-muted">Socio:</td><td class="fw-bold" id="autSocio"></td></tr>
+            <tr><td class="text-muted">Tipo:</td><td id="autTipo"></td></tr>
+            <tr><td class="text-muted">Monto:</td><td class="fw-bold text-danger" id="autMonto"></td></tr>
+        </table>
+        <div class="mb-3 p-3 bg-light rounded">
+            <label class="form-label fw-bold">Justificación del socio:</label>
+            <p class="mb-0 small text-muted" id="autJustificacion" style="white-space:pre-wrap"></p>
+        </div>
+        <form id="formAutorizar" method="POST" action="<?= BASE_URL ?>/multa/aprobarJustificacion/">
+            <input type="hidden" name="csrf_token" value="<?= CSRFMiddleware::generarToken() ?>">
+            <input type="hidden" name="accion" id="autAccion" value="">
+            <div class="mb-3">
+                <label class="form-label">Observación</label>
+                <textarea name="observacion" class="form-control" rows="3" placeholder="Opcional: escriba una observación sobre su decisión..."></textarea>
+            </div>
+            <div class="d-flex gap-2 justify-content-center">
+                <button type="button" class="btn btn-outline-secondary px-4" onclick="document.getElementById('autorizarOverlay').style.display='none'">Cancelar</button>
+                <button type="submit" class="btn btn-success px-4" onclick="document.getElementById('autAccion').value='aprobar'"><i class="bi bi-check-lg"></i> Aceptar</button>
+                <button type="submit" class="btn btn-danger px-4" onclick="document.getElementById('autAccion').value='rechazar'"><i class="bi bi-x-lg"></i> Rechazar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+function abrirModalAutorizar(id, socio, tipo, monto, justificacion) {
+    document.getElementById('autSocio').textContent = socio;
+    document.getElementById('autTipo').textContent = tipo;
+    document.getElementById('autMonto').textContent = '$' + parseFloat(monto).toFixed(2);
+    document.getElementById('autJustificacion').textContent = justificacion;
+    document.getElementById('formAutorizar').action = '<?= BASE_URL ?>/multa/aprobarJustificacion/' + id;
+    document.getElementById('autorizarOverlay').style.display = 'flex';
+}
+
+document.getElementById('formAutorizar').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var formData = new FormData(this);
+    fetch(this.action, { method: 'POST', body: formData })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.error) { mostrarNotificacion('error','Error',d.error,false); } else { mostrarNotificacion('success','Exito',d.mensaje,true); location.reload(); }
+    })
+    .catch(function() { mostrarNotificacion('error','Error','Error al procesar',false); });
+});
+document.getElementById('autorizarOverlay').addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
+
 function eliminarMulta(id) {
     if (!confirm('¿Eliminar esta multa definitivamente? Esta acción no se puede deshacer.')) return;
     fetch('<?= BASE_URL ?>/multa/eliminar/' + id, {
@@ -107,7 +152,7 @@ function eliminarMulta(id) {
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'csrf_token=<?= CSRFMiddleware::generarToken() ?>'
     }).then(function(r) { return r.json(); }).then(function(d) {
-        if (d.error) { alert(d.error); } else { location.reload(); }
+        if (d.error) { mostrarNotificacion('error','Error',d.error,false); } else { location.reload(); }
     });
 }
 </script>

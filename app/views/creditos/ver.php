@@ -218,10 +218,10 @@ document.querySelectorAll('.modal form').forEach(function(f) {
         var data = new FormData(form);
         var url = form.action;
         if (form.getAttribute('enctype') === 'multipart/form-data') {
-            fetch(url, { method: 'POST', body: data }).then(r=>r.json()).then(d => { if(d.error)alert(d.error);else location.reload(); });
+            fetch(url, { method: 'POST', body: data }).then(r=>r.json()).then(d => { if(d.error)mostrarNotificacion('error','Error',d.error,false);else location.reload(); });
         } else {
             var p = new URLSearchParams(data);
-            fetch(url, { method: 'POST', body: p, headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).then(r=>r.json()).then(d => { if(d.error)alert(d.error);else location.reload(); });
+            fetch(url, { method: 'POST', body: p, headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).then(r=>r.json()).then(d => { if(d.error)mostrarNotificacion('error','Error',d.error,false);else location.reload(); });
         }
     });
 });
@@ -229,6 +229,6 @@ document.querySelectorAll('.modal form').forEach(function(f) {
 function desembolsar() {
     if (!confirm('¿Confirmar desembolso?')) return;
     fetch('<?= BASE_URL ?>/credito/desembolsar/<?= $credito['id_credito'] ?>', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'csrf_token=<?= CSRFMiddleware::generarToken() ?>' })
-    .then(function(r) { return r.json(); }).then(function(d) { if (d.error) { alert(d.error); } else { location.reload(); } });
+    .then(function(r) { return r.json(); }).then(function(d) { if (d.error) { mostrarNotificacion('error','Error',d.error,false); } else { location.reload(); } });
 }
 </script>

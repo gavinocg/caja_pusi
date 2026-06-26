@@ -1,6 +1,8 @@
 <?php
 require_once ROOT_PATH . '/app/helpers/PDFGenerator.php';
 require_once ROOT_PATH . '/app/helpers/NotificacionHelper.php';
+require_once ROOT_PATH . '/app/helpers/PusherHelper.php';
+require_once ROOT_PATH . '/app/helpers/EmailHelper.php';
 
 class SesionController extends BaseController {
 
@@ -51,23 +53,68 @@ class SesionController extends BaseController {
                 $num = $stmt->fetchColumn();
 
                 $id = UUIDGenerator::generar();
-                $fechaSesion = $_POST['fecha_sesion'] ?? date('Y-m-d');
+                $fecha = $_POST['fecha_sesion'] ?? date('Y-m-d');
+                $hora = $_POST['hora_sesion'] ?? '19:00';
+                $fechaSesion = $fecha . ' ' . $hora . ':00';
                 $titulo = trim($_POST['titulo'] ?? '');
+                $tipo = $_POST['tipo'] ?? 'ordinaria';
+                if (!in_array($tipo, ['ordinaria', 'extraordinaria', 'informativa'])) $tipo = 'ordinaria';
 
-                $stmt = $this->db->prepare("INSERT INTO sesiones_mensuales (id_sesion, numero_sesion, fecha_sesion, titulo) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$id, $num, $fechaSesion, $titulo]);
-
-                // Generar obligaciones para todos los socios activos
-                $this->generarObligaciones($id, $fechaSesion);
-
-                // Notificar a todos los socios via Pusher
-                try {
-                    require_once ROOT_PATH . '/app/helpers/PusherHelper.php';
-                    $socios = $this->db->query("SELECT id_socio FROM socios WHERE estado = 'activo'")->fetchAll(PDO::FETCH_COLUMN);
-                    foreach ($socios as $sid) {
-                        PusherHelper::actualizarPortal($sid);
+                if ($tipo === 'ordinaria') {
+                    $mes = date('Y-m', strtotime($fechaSesion));
+                    $stmtM = $this->db->prepare("SELECT COUNT(*) FROM sesiones_mensuales WHERE tipo = 'ordinaria' AND DATE_FORMAT(fecha_sesion, '%Y-%m') = ?");
+                    $stmtM->execute([$mes]);
+                    if ($stmtM->fetchColumn() > 0) {
+                        $errors['tipo'] = 'Ya existe una sesión ordinaria en este mes. Solo se permite una por mes.';
                     }
-                } catch (Exception $e) {}
+                }
+            }
+
+            if (empty($errors)) {
+
+                $stmt = $this->db->prepare("INSERT INTO sesiones_mensuales (id_sesion, numero_sesion, fecha_sesion, titulo, tipo) VALUES (?, ?, ?, ?, ?)");
+                $stmt->execute([$id, $num, $fechaSesion, $titulo, $tipo]);
+
+                // Preparar datos para notificaciones async
+                $fechaFormateada = date('d/m/Y', strtotime($fechaSesion));
+                $horaFormateada = date('H:i', strtotime($fechaSesion));
+                $dbConn = Database::getInstance()->getConnection();
+                $sociosData = $dbConn->query("SELECT id_socio, correo_electronico FROM socios WHERE estado = 'activo'")->fetchAll(PDO::FETCH_ASSOC);
+                $directivosData = $dbConn->query("SELECT DISTINCT u.id_usuario, u.correo_electronico, CONCAT_WS(' ', u.nombres, u.apellidos) AS nombre FROM usuarios u JOIN roles_usuarios ru ON u.id_usuario = ru.id_usuario WHERE ru.id_rol != 6")->fetchAll(PDO::FETCH_ASSOC);
+
+                register_shutdown_function(function() use ($sociosData, $directivosData, $titulo, $tipo, $fechaFormateada, $horaFormateada) {
+                    $msg = "{$titulo} ({$tipo}), a realizarse el {$fechaFormateada} a las {$horaFormateada}.";
+                    $db = Database::getInstance()->getConnection();
+
+                    // Pusher broadcast
+                    try {
+                        PusherHelper::enviar('notificacion', [
+                            'titulo' => 'INVITACION',
+                            'mensaje' => $msg,
+                        ]);
+                    } catch (Exception $e) { error_log("Pusher broadcast: " . $e->getMessage()); }
+
+                    foreach ($sociosData as $soc) {
+                        try {
+                            $nid = UUIDGenerator::generar();
+                            $stmt = $db->prepare("INSERT INTO notificaciones (id_notificacion, id_socio, tipo, titulo, mensaje, enviada_pusher) VALUES (?, ?, 'sesion', ?, ?, 0)");
+                            $stmt->execute([$nid, $soc['id_socio'], 'INVITACION', $msg]);
+                        } catch (Exception $e) { error_log("Notif socio: " . $e->getMessage()); }
+                        if ($soc['correo_electronico']) {
+                            try { EmailHelper::enviarNotificacion($soc['correo_electronico'], 'Socio', 'INVITACION', $msg); } catch (Exception $e) { error_log("Email socio: " . $e->getMessage()); }
+                        }
+                    }
+                    foreach ($directivosData as $dir) {
+                        try {
+                            $nid = UUIDGenerator::generar();
+                            $stmt = $db->prepare("INSERT INTO notificaciones (id_notificacion, id_usuario, tipo, titulo, mensaje, enviada_pusher) VALUES (?, ?, 'sesion', ?, ?, 0)");
+                            $stmt->execute([$nid, $dir['id_usuario'], 'INVITACION', $msg]);
+                        } catch (Exception $e) { error_log("Notif directivo: " . $e->getMessage()); }
+                        if ($dir['correo_electronico']) {
+                            try { EmailHelper::enviarNotificacion($dir['correo_electronico'], $dir['nombre'], 'INVITACION', $msg); } catch (Exception $e) { error_log("Email directivo: " . $e->getMessage()); }
+                        }
+                    }
+                });
 
                 $this->redirect('/sesion/checkin/' . $id);
             }
@@ -90,15 +137,28 @@ class SesionController extends BaseController {
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->validateCSRF();
-            $fechaSesion = $_POST['fecha_sesion'] ?? '';
+            $fecha = $_POST['fecha_sesion'] ?? '';
+            $hora = $_POST['hora_sesion'] ?? '19:00';
+            $fechaSesion = $fecha . ' ' . $hora . ':00';
             $titulo = trim($_POST['titulo'] ?? '');
+            $tipo = $_POST['tipo'] ?? 'ordinaria';
+            if (!in_array($tipo, ['ordinaria', 'extraordinaria', 'informativa'])) $tipo = 'ordinaria';
 
             if (empty($fechaSesion)) $errors['fecha_sesion'] = 'La fecha es obligatoria';
             if (empty($titulo)) $errors['titulo'] = 'El titulo es obligatorio';
 
+            if ($tipo === 'ordinaria' && $sesion['tipo'] !== 'ordinaria') {
+                $mes = date('Y-m', strtotime($fechaSesion));
+                $stmtM = $this->db->prepare("SELECT COUNT(*) FROM sesiones_mensuales WHERE id_sesion != ? AND tipo = 'ordinaria' AND DATE_FORMAT(fecha_sesion, '%Y-%m') = ?");
+                $stmtM->execute([$id, $mes]);
+                if ($stmtM->fetchColumn() > 0) {
+                    $errors['tipo'] = 'Ya existe una sesión ordinaria en este mes. Solo se permite una por mes.';
+                }
+            }
+
             if (empty($errors)) {
-                $this->db->prepare("UPDATE sesiones_mensuales SET fecha_sesion = ?, titulo = ? WHERE id_sesion = ?")
-                    ->execute([$fechaSesion, $titulo, $id]);
+                $this->db->prepare("UPDATE sesiones_mensuales SET fecha_sesion = ?, titulo = ?, tipo = ? WHERE id_sesion = ?")
+                    ->execute([$fechaSesion, $titulo, $tipo, $id]);
                 $this->redirect('/sesion/listar');
             }
         }
@@ -111,63 +171,95 @@ class SesionController extends BaseController {
     }
 
     private function generarObligaciones($idSesion, $fechaCorte) {
-        $socios = $this->db->query("SELECT id_socio, cedula FROM socios WHERE estado = 'activo'")->fetchAll();
-        $aporteMensual = floatval($this->db->query("SELECT valor FROM parametros WHERE codigo = 'aporte_obligatorio_mensual'")->fetchColumn() ?: 10);
+        $socios = $this->db->query("SELECT id_socio FROM socios WHERE estado = 'activo'")->fetchAll(PDO::FETCH_COLUMN);
         $insertOblig = $this->db->prepare("INSERT INTO obligaciones_sesion (id_obligacion, id_sesion, id_socio, tipo, concepto, monto, id_referencia) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $aporteMensual = floatval($this->db->query("SELECT valor FROM parametros WHERE codigo = 'aporte_obligatorio_mensual'")->fetchColumn() ?: 10);
+        $stmtSes = $this->db->prepare("SELECT numero_sesion FROM sesiones_mensuales WHERE id_sesion = ?");
+        $stmtSes->execute([$idSesion]);
+        $numSesion = $stmtSes->fetchColumn();
 
-        foreach ($socios as $s) {
-            $idSocio = $s['id_socio'];
+        foreach ($socios as $idSocio) {
+            $this->generarObligacionesSocio($idSesion, $idSocio, $fechaCorte, $insertOblig, $aporteMensual, $numSesion);
+        }
+    }
 
-            // 1. Cuota mensual obligatoria
-                $stmtSes = $this->db->prepare("SELECT numero_sesion FROM sesiones_mensuales WHERE id_sesion = ?");
-                $stmtSes->execute([$idSesion]);
-                $concepto = "Cuota mensual - Sesion #" . $stmtSes->fetchColumn() . " del " . date('d/m/Y', strtotime($fechaCorte));
-                $insertOblig->execute([
-                    UUIDGenerator::generar(), $idSesion, $idSocio, 'cuota_mensual',
-                    $concepto, $aporteMensual, null
-                ]);
+    private function generarObligacionesSocio($idSesion, $idSocio, $fechaCorte, $insertOblig = null, $aporteMensual = null, $numSesion = null) {
+        if ($insertOblig === null) {
+            $insertOblig = $this->db->prepare("INSERT INTO obligaciones_sesion (id_obligacion, id_sesion, id_socio, tipo, concepto, monto, id_referencia) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        }
+        if ($aporteMensual === null) {
+            $aporteMensual = floatval($this->db->query("SELECT valor FROM parametros WHERE codigo = 'aporte_obligatorio_mensual'")->fetchColumn() ?: 10);
+        }
+        if ($numSesion === null) {
+            $stmtSes = $this->db->prepare("SELECT numero_sesion FROM sesiones_mensuales WHERE id_sesion = ?");
+            $stmtSes->execute([$idSesion]);
+            $numSesion = $stmtSes->fetchColumn();
+        }
 
-            // 2. Cuotas de credito vencidas (fecha_vencimiento <= fechaCorte)
-            $cuotas = $this->db->prepare("SELECT a.id_amortizacion, a.numero_cuota, a.total, cr.id_credito, p.nombre AS producto
-                                           FROM amortizaciones a
-                                           JOIN creditos cr ON a.id_credito = cr.id_credito
-                                           JOIN productos_financieros p ON cr.id_producto = p.id_producto
-                                           WHERE cr.id_socio = ? AND a.estado IN ('pendiente','vencida') AND a.fecha_vencimiento <= ?");
-            $cuotas->execute([$idSocio, $fechaCorte]);
-            foreach ($cuotas as $c) {
-                $insertOblig->execute([
-                    UUIDGenerator::generar(), $idSesion, $idSocio, 'cuota_credito',
-                    "Cuota #{$c['numero_cuota']} - {$c['producto']} (vence " . date('d/m/Y', strtotime($c['fecha_vencimiento'])) . ")",
-                    $c['total'], $c['id_amortizacion']
-                ]);
+        // 1. Cuota mensual obligatoria
+        // Evitar duplicado si ya existe obligacion cuota_mensual para este socio en esta sesion
+        $existe = $this->db->prepare("SELECT COUNT(*) FROM obligaciones_sesion WHERE id_sesion = ? AND id_socio = ? AND tipo = 'cuota_mensual'");
+        $existe->execute([$idSesion, $idSocio]);
+        if ($existe->fetchColumn() == 0) {
+            $concepto = "Cuota mensual - Sesion #{$numSesion} del " . date('d/m/Y', strtotime($fechaCorte));
+            $insertOblig->execute([
+                UUIDGenerator::generar(), $idSesion, $idSocio, 'cuota_mensual',
+                $concepto, $aporteMensual, null
+            ]);
+        }
+
+        // 2. Cuotas de credito pendientes (primera cuota impaga de cada credito)
+        $cuotas = $this->db->prepare("SELECT a.id_amortizacion, a.numero_cuota, a.total, a.fecha_vencimiento, cr.id_credito, cr.monto_aprobado, p.nombre AS producto
+                                       FROM amortizaciones a
+                                       JOIN creditos cr ON a.id_credito = cr.id_credito
+                                       JOIN productos_financieros p ON cr.id_producto = p.id_producto
+                                       WHERE cr.id_socio = ? AND a.estado IN ('pendiente','vencida')
+                                       AND NOT EXISTS (
+                                           SELECT 1 FROM amortizaciones a2
+                                           WHERE a2.id_credito = a.id_credito
+                                           AND a2.estado IN ('pendiente','vencida')
+                                           AND a2.numero_cuota < a.numero_cuota
+                                       )
+                                       AND NOT EXISTS (
+                                           SELECT 1 FROM obligaciones_sesion o
+                                           WHERE o.id_referencia = a.id_amortizacion AND o.tipo = 'cuota_credito' AND o.pagada = FALSE
+                                       )");
+        $cuotas->execute([$idSocio]);
+        foreach ($cuotas as $c) {
+            $insertOblig->execute([
+                UUIDGenerator::generar(), $idSesion, $idSocio, 'cuota_credito',
+                "Cuota #{$c['numero_cuota']} - {$c['producto']} Nro. " . substr($c['id_credito'], 0, 8),
+                $c['total'], $c['id_amortizacion']
+            ]);
+        }
+
+        // 3. Multas no pagadas de sesiones anteriores
+        $multas = $this->db->prepare("SELECT m.id_multa, m.tipo, m.monto, ses.numero_sesion AS multa_sesion, ses.fecha_sesion AS multa_fecha
+                                       FROM multas m
+                                       LEFT JOIN sesiones_mensuales ses ON m.id_sesion = ses.id_sesion
+                                       WHERE m.id_socio = ?
+                                       AND m.id_multa NOT IN (
+                                           SELECT o.id_referencia FROM obligaciones_sesion o
+                                           WHERE o.tipo = 'multa' AND o.pagada = TRUE AND o.id_referencia IS NOT NULL
+                                       )
+                                       AND m.id_multa NOT IN (
+                                           SELECT o.id_referencia FROM obligaciones_sesion o
+                                           WHERE o.tipo = 'multa' AND o.pagada = FALSE AND o.id_sesion = ?
+                                       )
+                                       AND m.pagada = FALSE");
+        $multas->execute([$idSocio, $idSesion]);
+        foreach ($multas as $m) {
+            $tipoMulta = str_replace('_', ' ', ucfirst($m['tipo']));
+            $concepto = "Multa por {$tipoMulta}";
+            if ($m['multa_sesion']) {
+                $fechaMulta = $m['multa_fecha'] ? date('d/m/Y', strtotime($m['multa_fecha'])) : '';
+                $concepto .= " - Sesion #{$m['multa_sesion']}" . ($fechaMulta ? " del {$fechaMulta}" : "");
             }
-
-            // 3. Multas no pagadas de sesiones anteriores
-            $multas = $this->db->prepare("SELECT m.id_multa, m.tipo, m.monto, ses.numero_sesion AS multa_sesion, ses.fecha_sesion AS multa_fecha
-                                           FROM multas m
-                                           LEFT JOIN sesiones_mensuales ses ON m.id_sesion = ses.id_sesion
-                                           WHERE m.id_socio = ?
-                                           AND m.id_multa NOT IN (
-                                               SELECT o.id_referencia FROM obligaciones_sesion o
-                                               WHERE o.tipo = 'multa' AND o.pagada = TRUE AND o.id_referencia IS NOT NULL
-                                           )
-                                            AND m.pagada = FALSE");
-            $multas->execute([$idSocio]);
-            foreach ($multas as $m) {
-                $tipoMulta = str_replace('_', ' ', ucfirst($m['tipo']));
-                $concepto = "Multa por {$tipoMulta}";
-                if ($m['multa_sesion']) {
-                    $fechaMulta = $m['multa_fecha'] ? date('d/m/Y', strtotime($m['multa_fecha'])) : '';
-                    $concepto .= " - Sesion #{$m['multa_sesion']}" . ($fechaMulta ? " del {$fechaMulta}" : "");
-                }
-                // Eliminar obligacion anterior impaga para esta multa (cada multa solo una vez)
-                $this->db->prepare("DELETE FROM obligaciones_sesion WHERE id_referencia = ? AND tipo = 'multa' AND pagada = FALSE")->execute([$m['id_multa']]);
-                $insertOblig->execute([
-                    UUIDGenerator::generar(), $idSesion, $idSocio, 'multa',
-                    $concepto,
-                    $m['monto'], $m['id_multa']
-                ]);
-            }
+            $insertOblig->execute([
+                UUIDGenerator::generar(), $idSesion, $idSocio, 'multa',
+                $concepto,
+                $m['monto'], $m['id_multa']
+            ]);
         }
     }
 
@@ -212,6 +304,14 @@ class SesionController extends BaseController {
         // Obtener IDs de socios para filtrar obligaciones
         $socioIds = array_column($socios, 'id_socio');
 
+        // Generar obligaciones para los socios visibles en esta pagina (bajo demanda)
+        $fechaCorte = $this->db->prepare("SELECT fecha_sesion FROM sesiones_mensuales WHERE id_sesion = ?");
+        $fechaCorte->execute([$id]);
+        $fc = $fechaCorte->fetchColumn();
+        foreach ($socioIds as $sid) {
+            $this->generarObligacionesSocio($id, $sid, $fc);
+        }
+
         $asistencias = [];
         $stmt = $this->db->prepare("SELECT * FROM asistencias WHERE id_sesion = ?");
         $stmt->execute([$id]);
@@ -223,8 +323,8 @@ class SesionController extends BaseController {
         $obligaciones = [];
         if (!empty($socioIds)) {
             $placeholders = implode(',', array_fill(0, count($socioIds), '?'));
-            $stmt = $this->db->prepare("SELECT o.* FROM obligaciones_sesion o WHERE o.id_sesion = ? AND o.id_socio IN ($placeholders) ORDER BY o.id_socio, o.tipo");
-            $stmt->execute(array_merge([$id], $socioIds));
+            $stmt = $this->db->prepare("SELECT o.* FROM obligaciones_sesion o WHERE o.id_socio IN ($placeholders) AND o.pagada = FALSE ORDER BY FIELD(o.tipo, 'cuota_credito', 'cuota_mensual', 'multa'), o.fecha_registro ASC");
+            $stmt->execute($socioIds);
             foreach ($stmt->fetchAll() as $o) {
                 $obligaciones[$o['id_socio']][] = $o;
             }
@@ -366,7 +466,7 @@ class SesionController extends BaseController {
             if ($accion === 'pagar_todo_socio') {
                 $idSocio = $_POST['id_socio'] ?? '';
                 $medioPago = $_POST['medio_pago'] ?? 'efectivo';
-                $stmt = $this->db->prepare("SELECT id_obligacion FROM obligaciones_sesion WHERE id_sesion = ? AND id_socio = ? AND pagada = FALSE");
+                $stmt = $this->db->prepare("SELECT id_obligacion FROM obligaciones_sesion WHERE id_socio = ? AND pagada = FALSE");
                 $stmt->execute([$id, $idSocio]);
                 foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $oid) {
                     $this->procesarPagoObligacion($oid, $id, $medioPago);
@@ -381,7 +481,7 @@ class SesionController extends BaseController {
         }
 
         $this->render('sesiones/checkin', [
-            'titulo' => 'Sesion #' . $sesion['numero_sesion'] . ' — ' . $sesion['fecha_sesion'],
+            'titulo' => 'Sesion #' . $sesion['numero_sesion'] . ' — ' . $sesion['fecha_sesion'] . ' (' . ucfirst($sesion['tipo'] ?? 'Ordinaria') . ')',
             'sesion' => $sesion,
             'socios' => $socios,
             'asistencias' => $asistencias,
@@ -394,8 +494,18 @@ class SesionController extends BaseController {
 
     public function obligacionesJSON($idSesion, $idSocio) {
         $this->requireAuth();
-        $stmt = $this->db->prepare("SELECT o.* FROM obligaciones_sesion o WHERE o.id_sesion = ? AND o.id_socio = ? AND o.pagada = FALSE ORDER BY o.tipo");
-        $stmt->execute([$idSesion, $idSocio]);
+        // Generar obligaciones para este socio si no existen
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM sesiones_mensuales WHERE id_sesion = ?");
+        $stmt->execute([$idSesion]);
+        $sesion = $stmt->fetch();
+        if ($sesion && $sesion['COUNT(*)'] > 0) {
+            $fechaCorte = $this->db->prepare("SELECT fecha_sesion FROM sesiones_mensuales WHERE id_sesion = ?");
+            $fechaCorte->execute([$idSesion]);
+            $fc = $fechaCorte->fetchColumn();
+            $this->generarObligacionesSocio($idSesion, $idSocio, $fc);
+        }
+        $stmt = $this->db->prepare("SELECT o.* FROM obligaciones_sesion o WHERE o.id_socio = ? AND o.pagada = FALSE ORDER BY FIELD(o.tipo, 'cuota_credito', 'cuota_mensual', 'multa'), o.fecha_registro ASC");
+        $stmt->execute([$idSocio]);
         $this->json($stmt->fetchAll());
     }
 
@@ -526,6 +636,12 @@ class SesionController extends BaseController {
         $resumen = $stmt->fetchAll();
 
         // Generar multas y obligaciones
+        // Asegurar que todos los socios tengan obligaciones generadas para esta sesion
+        $sociosActivos = $this->db->query("SELECT id_socio FROM socios WHERE estado = 'activo'")->fetchAll(PDO::FETCH_COLUMN);
+        $fechaCorte = $sesion['fecha_sesion'];
+        foreach ($sociosActivos as $sid) {
+            $this->generarObligacionesSocio($id, $sid, $fechaCorte);
+        }
         $multasGeneradas = [];
 
         // Multa por cuota impaga (socios que no pagaron su cuota mensual)
