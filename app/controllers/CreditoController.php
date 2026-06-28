@@ -344,6 +344,12 @@ class CreditoController extends BaseController {
             $st->execute([$credito['id_socio']]);
             $socioNombre = $st->fetchColumn() ?: 'Socio';
 
+            require_once ROOT_PATH . '/app/helpers/CajaHelper.php';
+            $saldoCaja = CajaHelper::obtenerSaldo();
+            if ($saldoCaja < $credito['monto_aprobado']) {
+                $this->json(['error' => 'Capital de Caja insuficiente. Disponible: $' . number_format($saldoCaja, 2) . ', Requerido: $' . number_format($credito['monto_aprobado'], 2)], 400);
+            }
+
             $this->db->beginTransaction();
             try {
                 $idCobro = UUIDGenerator::generar();

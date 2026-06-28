@@ -109,8 +109,9 @@ CREATE TABLE socios (
 CREATE TABLE sesiones_mensuales (
     id_sesion CHAR(36) PRIMARY KEY COMMENT 'Identificador único de la sesión mensual (UUID)',
     numero_sesion INT NOT NULL COMMENT 'Número correlativo de la sesión mensual',
-    fecha DATE NOT NULL COMMENT 'Fecha de la sesión mensual',
+    fecha_sesion DATETIME NOT NULL COMMENT 'Fecha y hora de la sesion mensual',
     titulo VARCHAR(100) COMMENT 'Título o nombre de la sesión',
+    tipo ENUM('ordinaria','extraordinaria','informativa') DEFAULT 'ordinaria' NOT NULL COMMENT 'Tipo de sesion: ordinaria (max 1/mes), extraordinaria, informativa',
     estado ENUM('abierta','cerrada') DEFAULT 'abierta' COMMENT 'Estado de la sesión: abierta (en curso) o cerrada (finalizada)',
     fecha_apertura DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora de apertura de la sesión',
     fecha_cierre DATETIME NULL COMMENT 'Fecha y hora de cierre de la sesión',
@@ -269,12 +270,13 @@ CREATE TABLE multas (
     id_multa CHAR(36) PRIMARY KEY COMMENT 'Identificador único de la multa (UUID)',
     id_socio CHAR(36) NOT NULL COMMENT 'FK al socio multado',
     id_sesion CHAR(36) NOT NULL COMMENT 'FK a la sesión donde se generó la multa',
-    tipo ENUM('retraso_10min','retraso_30min','inasistencia','mora_crédito','otro') NOT NULL COMMENT 'Tipo de multa',
+    tipo ENUM('retraso_10min','retraso_30min','inasistencia','mora_credito','cuota_impaga','otro') NOT NULL COMMENT 'Tipo de multa',
     monto DECIMAL(10,2) NOT NULL COMMENT 'Monto de la multa en USD',
     justificacion TEXT COMMENT 'Justificación presentada por el socio',
     justificacion_aprobada BOOLEAN DEFAULT FALSE COMMENT 'Indica si la justificacion fue aprobada',
     justificacion_pdf VARCHAR(255) COMMENT 'Archivo PDF de la justificacion',
-    estado ENUM('activa','impugnada','anulada') DEFAULT 'activa' COMMENT 'Estado de la multa: activa, impugnada (justificacion aceptada) o anulada',
+    observacion TEXT COMMENT 'Observacion del directivo al aprobar/rechazar impugnacion',
+    estado ENUM('activa','en_impugnacion','impugnada','anulada') DEFAULT 'activa' COMMENT 'Estado de la multa: activa (pendiente), en_impugnacion (socio impugno, pendiente de revision), impugnada (aprobada, sin efecto) o anulada',
     pagada BOOLEAN DEFAULT FALSE COMMENT 'Indica si la multa fue pagada',
     fecha_pago DATETIME COMMENT 'Fecha de pago de la multa',
     id_cobro CHAR(36) COMMENT 'FK al cobro cuando la multa es pagada',
@@ -398,3 +400,67 @@ CREATE TABLE solicitudes_retiro (
     id_cobro CHAR(36) COMMENT 'Cobro generado al aprobar',
     FOREIGN KEY (id_socio) REFERENCES socios(id_socio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Solicitudes de retiro de ahorro';
+
+CREATE TABLE caja_movimientos (
+    id_movimiento CHAR(36) PRIMARY KEY COMMENT 'Identificador unico del movimiento (UUID)',
+    id_sesion CHAR(36) DEFAULT NULL COMMENT 'FK a la sesion donde ocurrio',
+    id_socio CHAR(36) DEFAULT NULL COMMENT 'FK al socio relacionado',
+    id_referencia CHAR(36) DEFAULT NULL COMMENT 'FK al cobro, credito, inversion, etc',
+    tipo_movimiento ENUM('ingreso','egreso') NOT NULL COMMENT 'Ingreso o egreso',
+    concepto VARCHAR(255) NOT NULL COMMENT 'Concepto descriptivo de la operacion',
+    categoria VARCHAR(50) NOT NULL COMMENT 'Categoria: aporte_obligatorio, multa, desembolso, etc',
+    monto DECIMAL(12,2) NOT NULL COMMENT 'Monto del movimiento',
+    saldo_anterior DECIMAL(12,2) NOT NULL COMMENT 'Saldo antes del movimiento',
+    saldo_posterior DECIMAL(12,2) NOT NULL COMMENT 'Saldo despues del movimiento',
+    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora del registro',
+    INDEX idx_fecha (fecha_registro),
+    INDEX idx_categoria (categoria),
+    INDEX idx_sesion (id_sesion),
+    INDEX idx_referencia (id_referencia)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Libro mayor de la Caja - estado de cuenta centralizado';
+
+CREATE TABLE capital_inversion (
+    id_capital_inversion CHAR(36) PRIMARY KEY COMMENT 'Identificador unico del registro de capital de inversion (UUID)',
+    id_socio CHAR(36) UNIQUE NOT NULL COMMENT 'FK al socio',
+    saldo DECIMAL(12,2) DEFAULT 0.00 COMMENT 'Saldo disponible para invertir',
+    fecha_ultimo_movimiento DATETIME DEFAULT NULL COMMENT 'Fecha del ultimo movimiento',
+    FOREIGN KEY (id_socio) REFERENCES socios(id_socio)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Capital de inversion del socio - independiente de la cuenta de ahorro';
+
+CREATE TABLE obligaciones_sesion (
+    id_obligacion CHAR(36) PRIMARY KEY COMMENT 'Identificador unico de la obligacion (UUID)',
+    id_sesion CHAR(36) NOT NULL COMMENT 'FK a la sesion donde se genero',
+    id_socio CHAR(36) NOT NULL COMMENT 'FK al socio',
+    tipo ENUM('cuota_mensual','cuota_credito','multa','otro') NOT NULL COMMENT 'Tipo de obligacion',
+    concepto VARCHAR(255) NOT NULL COMMENT 'Descripcion detallada de la obligacion',
+    monto DECIMAL(12,2) NOT NULL COMMENT 'Monto a pagar',
+    id_referencia CHAR(36) DEFAULT NULL COMMENT 'FK a amortizacion, multa, etc',
+    pagada BOOLEAN DEFAULT FALSE COMMENT 'Indica si ya fue pagada',
+    id_cobro CHAR(36) DEFAULT NULL COMMENT 'FK al cobro cuando se paga',
+    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creacion',
+    UNIQUE KEY uk_sesion_socio_tipo_ref (id_sesion, id_socio, tipo, id_referencia),
+    FOREIGN KEY (id_sesion) REFERENCES sesiones_mensuales(id_sesion),
+    FOREIGN KEY (id_socio) REFERENCES socios(id_socio),
+    INDEX idx_oblig_sesion (id_sesion),
+    INDEX idx_oblig_socio (id_socio)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Obligaciones de pago generadas al abrir una sesion - calculadas segun fecha de reunion';
+
+CREATE TABLE reglas_notificacion (
+    id_regla INT AUTO_INCREMENT PRIMARY KEY,
+    codigo VARCHAR(50) UNIQUE NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    tipo_evento VARCHAR(50) NOT NULL,
+    titulo_evento VARCHAR(200) DEFAULT NULL,
+    canal VARCHAR(20) NOT NULL DEFAULT 'push',
+    para_todos BOOLEAN DEFAULT FALSE,
+    activo BOOLEAN DEFAULT TRUE,
+    INDEX idx_reglas_evento (tipo_evento, activo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Reglas de notificacion - configuracion de canales y destinatarios';
+
+CREATE TABLE reglas_notificacion_destinatarios (
+    id_regla INT NOT NULL,
+    id_rol INT NOT NULL,
+    PRIMARY KEY (id_regla, id_rol),
+    FOREIGN KEY (id_regla) REFERENCES reglas_notificacion(id_regla) ON DELETE CASCADE,
+    FOREIGN KEY (id_rol) REFERENCES roles(id_rol)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Destinatarios por regla de notificacion';

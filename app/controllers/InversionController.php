@@ -241,8 +241,16 @@ class InversionController extends BaseController {
             $inv = $stmt->fetch();
             if (!$inv) $this->json(['error' => 'Inversion no encontrada o no activa'], 400);
 
-            $penalidad = $inv['penalidad_retiro_anticipado'] / 100 * $inv['monto'];
-            $devolucion = $inv['monto'] - $penalidad;
+            // Calcular rendimiento devengado proporcional desde fecha_inicio hasta hoy
+            $fechaInicio = new DateTime($inv['fecha_inicio']);
+            $fechaHoy = new DateTime();
+            $diasTranscurridos = $fechaInicio->diff($fechaHoy)->days;
+            $plazoTotalDias = max(1, $inv['plazo_meses'] * 30);
+            $rendimientoDiario = ($inv['rendimiento_proyectado'] ?? 0) / $plazoTotalDias;
+            $rendimientoDevengado = $rendimientoDiario * $diasTranscurridos;
+
+            $penalidad = $inv['penalidad_retiro_anticipado'] / 100 * $rendimientoDevengado;
+            $devolucion = $inv['monto'] + $rendimientoDevengado - $penalidad;
 
             $this->db->beginTransaction();
             try {

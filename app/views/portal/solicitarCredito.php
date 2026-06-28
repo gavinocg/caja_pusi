@@ -381,21 +381,21 @@
     function validateCurrentStep() {
         if (currentStep === 1) {
             if (!simData) {
-                alert('Ejecute la simulación primero');
+                mostrarNotificacion('warning','Aviso','Ejecute la simulación primero',true);
                 return false;
             }
             return true;
         }
             if (currentStep === 2) {
                 if (!document.getElementById('aceptaCheck').checked) {
-                    alert('Debe aceptar las condiciones del credito');
+                    mostrarNotificacion('warning','Aviso','Debe aceptar las condiciones del credito',true);
                     return false;
                 }
                 var selP = document.getElementById('selProducto');
                 var optP = selP.options[selP.selectedIndex];
                 var reqChars = parseInt(optP.dataset.destino_caracteres) || 10;
                 if (document.getElementById('destinoInput').value.trim().length < reqChars) {
-                    alert('El destino debe tener al menos ' + reqChars + ' caracteres');
+                    mostrarNotificacion('warning','Aviso','El destino debe tener al menos ' + reqChars + ' caracteres',true);
                     return false;
                 }
             var selProd = document.getElementById('selProducto');
@@ -403,7 +403,7 @@
             if (optProd && optProd.dataset.requiere_garante == 1) {
                 var garantes = document.querySelector('select[name="garantes[]"]');
                 if (!garantes || garantes.selectedOptions.length === 0) {
-                    alert('Debe seleccionar al menos un garante');
+                    mostrarNotificacion('warning','Aviso','Debe seleccionar al menos un garante',true);
                     return false;
                 }
             }
@@ -468,10 +468,10 @@
         var monto = parseFloat(document.getElementById('inpMonto').value);
         var plazo = parseInt(document.getElementById('inpPlazo').value);
 
-        if (!opt || !opt.value) { alert('Seleccione un producto'); return; }
-        if (!monto || monto <= 0) { alert('Ingrese un monto válido'); return; }
+        if (!opt || !opt.value) { mostrarNotificacion('warning','Aviso','Seleccione un producto',true); return; }
+        if (!monto || monto <= 0) { mostrarNotificacion('warning','Aviso','Ingrese un monto válido',true); return; }
         if (!plazo || plazo < parseInt(opt.dataset.plazo_min) || plazo > parseInt(opt.dataset.plazo_max)) {
-            alert('Plazo debe ser entre ' + opt.dataset.plazo_min + ' y ' + opt.dataset.plazo_max);
+            mostrarNotificacion('warning','Aviso','Plazo debe ser entre ' + opt.dataset.plazo_min + ' y ' + opt.dataset.plazo_max,true);
             return;
         }
 
@@ -485,7 +485,7 @@
         })
         .then(r => r.json())
         .then(d => {
-            if (d.error) { alert(d.error); return; }
+            if (d.error) { mostrarNotificacion('error','Error',d.error,false); return; }
             simData = d;
             renderTable(d);
             document.getElementById('simResult').style.display = 'block';

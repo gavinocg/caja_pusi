@@ -75,9 +75,6 @@ if ($loggedIn) {
                             <input class="form-check-input me-0" type="checkbox" id="toggle-dark" style="cursor: pointer">
                         </div>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-moon-stars-fill" viewBox="0 0 16 16"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/><path d="M10.794 3.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387a1.734 1.734 0 0 0-1.097 1.097l-.387 1.162a.217.217 0 0 1-.412 0l-.387-1.162A1.734 1.734 0 0 0 9.31 6.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387a1.734 1.734 0 0 0 1.097-1.097l.387-1.162zM13.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732l-.774-.258a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L13.863.1z"/></svg>
-                        <div class="sidebar-toggler x">
-                            <a href="#" class="sidebar-hide d-xl-none d-block"><i class="bi bi-x bi-middle"></i></a>
-                        </div>
                     </div>
                     <?php else: ?>
                     <div class="logo">
@@ -139,19 +136,11 @@ if ($loggedIn) {
                             <span>Inversión</span>
                         </a>
                     </li>
-                    <li class="sidebar-item has-sub <?= mazerActiveP('portal/multas') || mazerActiveP('portal/asistencias') ? 'active' : '' ?>">
-                        <a href="#" class="sidebar-link">
-                            <i class="bi bi-people-fill"></i>
-                            <span>Sesiones Asamblea</span>
+                    <li class="sidebar-item <?= mazerActiveP('portal/multas') ?>">
+                        <a href="<?= $baseUrl ?>/portal/multas" class="sidebar-link">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>Multas</span>
                         </a>
-                        <ul class="submenu <?= mazerActiveP('portal/multas') || mazerActiveP('portal/asistencias') ? 'active' : '' ?>">
-                            <li class="submenu-item <?= mazerActiveP('portal/multas') ?>">
-                                <a href="<?= $baseUrl ?>/portal/multas" class="submenu-link">Multas</a>
-                            </li>
-                            <li class="submenu-item <?= mazerActiveP('portal/asistencias') ?>">
-                                <a href="<?= $baseUrl ?>/portal/asistencias" class="submenu-link">Asistencias</a>
-                            </li>
-                        </ul>
                     </li>
                     <li class="sidebar-item <?= mazerActiveP('portal/historial') ?>">
                         <a href="<?= $baseUrl ?>/portal/historial" class="sidebar-link">
@@ -247,17 +236,22 @@ if ($loggedIn) {
                     <li class="sidebar-item has-sub <?= $bandejaSubActive ?>">
                         <a href="#" class="sidebar-link">
                             <i class="bi bi-inboxes-fill"></i>
-                            <span>Bandeja aprobación</span>
+                            <span class="d-flex align-items-center gap-2 flex-grow-1">
+                                <span>Pendientes<span id="bandejaBadgeTotal" class="badge bg-danger rounded-pill d-none">0</span></span>
+                                
+                            </span>
                         </a>
                         <ul class="submenu <?= $bandejaSubActive ?>">
                             <?php if ($uid && RBAC::tienePermiso($uid, 'credito.aprobar')): ?>
-                            <li class="submenu-item <?= mazerActive('credito/bandejaAprobados') ?>">
-                                <a href="<?= $baseUrl ?>/credito/bandejaAprobados" class="submenu-link">Créditos</a>
+                            <li class="submenu-item d-flex justify-content-between align-items-center <?= mazerActive('credito/bandejaAprobados') ?>">
+                                <a href="<?= $baseUrl ?>/credito/bandejaAprobados" class="submenu-link flex-grow-1">Créditos</a>
+                                <span id="bandejaBadgeCreditos" class="badge bg-warning rounded-pill me-2 d-none">0</span>
                             </li>
                             <?php endif; ?>
                             <?php if ($uid && RBAC::tienePermiso($uid, 'inversion.aprobar')): ?>
-                            <li class="submenu-item <?= mazerActive('inversion/pendientes') ?>">
-                                <a href="<?= $baseUrl ?>/inversion/pendientes" class="submenu-link">Inversiones</a>
+                            <li class="submenu-item d-flex justify-content-between align-items-center <?= mazerActive('inversion/pendientes') ?>">
+                                <a href="<?= $baseUrl ?>/inversion/pendientes" class="submenu-link flex-grow-1">Inversiones</a>
+                                <span id="bandejaBadgeInversiones" class="badge bg-warning rounded-pill me-2 d-none">0</span>
                             </li>
                             <?php endif; ?>
                         </ul>
@@ -415,16 +409,26 @@ if ($loggedIn) {
         <div class="page-content">
         <?php
         $flashTypes = ['success' => 'success', 'error' => 'danger', 'warning' => 'warning', 'info' => 'info'];
+        $flashJS = [];
         foreach ($flashTypes as $key => $bsClass):
             if (isset($_SESSION[$key]) && !empty($_SESSION[$key])):
-        ?>
-        <div class="alert alert-<?= $bsClass ?> alert-dismissible fade show" role="alert">
-            <?= htmlspecialchars($_SESSION[$key]) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-        </div>
-        <?php
+                $flashJS[] = [
+                    'tipo' => $key,
+                    'titulo' => ucfirst($key),
+                    'mensaje' => $_SESSION[$key],
+                    'autoClose' => $key !== 'error',
+                ];
                 unset($_SESSION[$key]);
             endif;
         endforeach;
+        if (!empty($flashJS)):
         ?>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            <?php foreach ($flashJS as $f): ?>
+            mostrarNotificacion('<?= $f['tipo'] ?>', '<?= addslashes($f['titulo']) ?>', '<?= addslashes($f['mensaje']) ?>', <?= $f['autoClose'] ? 'true' : 'false' ?>);
+            <?php endforeach; ?>
+        });
+        </script>
+        <?php endif; ?>
     <?php endif; ?>

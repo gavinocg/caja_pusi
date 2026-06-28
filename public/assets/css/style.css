@@ -63,3 +63,11 @@
         padding: 0 16px;
     }
 }
+
+/* Asegurar que modales estén sobre el sidebar en móvil */
+.modal {
+    z-index: 99999 !important;
+}
+.modal-backdrop {
+    z-index: 99998 !important;
+}

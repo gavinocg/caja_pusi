@@ -72,7 +72,7 @@ function anularCobro(id) {
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'csrf_token=<?= CSRFMiddleware::generarToken() ?>&motivo=' + encodeURIComponent(motivo)
     }).then(function(r) { return r.json(); }).then(function(d) {
-        if (d.error) { alert(d.error); } else { location.reload(); }
+        if (d.error) { mostrarNotificacion('error','Error',d.error,false); } else { location.reload(); }
     });
 }
 </script>

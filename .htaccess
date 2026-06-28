@@ -1,3 +1,7 @@
+# Bloquear acceso directo a directorios sensibles (excepto webhook/)
+RewriteRule ^(basedatos|database|config|app|storage|vendor|docs)($|/) - [F,L]
+
+# Si el archivo o directorio no existe, redirigir al front controller
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

@@ -222,7 +222,7 @@ function subirDoc(tipo) {
         fetch('<?= BASE_URL ?>/socio/subirDocumento/<?= $socio['id_socio'] ?>', {
             method: 'POST', body: formData
         }).then(function(r) { return r.json(); }).then(function(d) {
-            if (d.error) { alert(d.error); } else { alert(d.mensaje); location.reload(); }
+            if (d.error) { mostrarNotificacion('error','Error',d.error,false); } else { mostrarNotificacion('success','Éxito',d.mensaje,true); location.reload(); }
         });
     };
     input.click();
@@ -245,7 +245,7 @@ function cambiarEstado(id) {
         method: 'POST',
         body: formData
     }).then(function(r) { return r.json(); }).then(function(d) {
-        if (d.error) { alert(d.error); } else { alert(d.mensaje); location.reload(); }
+        if (d.error) { mostrarNotificacion('error','Error',d.error,false); } else { mostrarNotificacion('success','Éxito',d.mensaje,true); location.reload(); }
     });
     return false;
 }

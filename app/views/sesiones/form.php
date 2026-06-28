@@ -9,16 +9,29 @@
             <form method="POST">
                 <?= CSRFMiddleware::campoHTML() ?>
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Numero de sesion</label>
                         <input type="text" class="form-control" value="#<?= $sesion['numero_sesion'] ?>" disabled>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Fecha de la sesion *</label>
-                        <input type="date" name="fecha_sesion" class="form-control <?= isset($errors['fecha_sesion']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($sesion['fecha_sesion'] ?? date('Y-m-d')) ?>" required>
+                        <input type="date" name="fecha_sesion" class="form-control <?= isset($errors['fecha_sesion']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars(date('Y-m-d', strtotime($sesion['fecha_sesion'] ?? date('Y-m-d')))) ?>" required>
                         <div class="invalid-feedback"><?= $errors['fecha_sesion'] ?? '' ?></div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-2">
+                        <label class="form-label">Hora</label>
+                        <input type="time" name="hora_sesion" class="form-control" value="<?= htmlspecialchars(date('H:i', strtotime($sesion['fecha_sesion'] ?? '19:00'))) ?>">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Tipo *</label>
+                        <select name="tipo" class="form-select <?= isset($errors['tipo']) ? 'is-invalid' : '' ?>" required>
+                            <option value="ordinaria" <?= ($sesion['tipo'] ?? 'ordinaria') === 'ordinaria' ? 'selected' : '' ?>>Ordinaria</option>
+                            <option value="extraordinaria" <?= ($sesion['tipo'] ?? '') === 'extraordinaria' ? 'selected' : '' ?>>Extraordinaria</option>
+                            <option value="informativa" <?= ($sesion['tipo'] ?? '') === 'informativa' ? 'selected' : '' ?>>Informativa</option>
+                        </select>
+                        <?php if (isset($errors['tipo'])): ?><div class="invalid-feedback"><?= $errors['tipo'] ?></div><?php endif; ?>
+                    </div>
+                    <div class="col-md-2">
                         <label class="form-label">Titulo *</label>
                         <input type="text" name="titulo" class="form-control <?= isset($errors['titulo']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($sesion['titulo'] ?? '') ?>" required>
                         <div class="invalid-feedback"><?= $errors['titulo'] ?? '' ?></div>
