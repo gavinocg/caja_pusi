@@ -21,26 +21,24 @@
     <!-- Cards metricas -->
     <div class="row row-cols-2 row-cols-md-4 g-3 mb-4">
         <div class="col">
-            <div class="card card-dashboard text-center h-100 border-warning">
+            <div class="card card-dashboard text-center h-100 border-success">
                 <div class="card-body d-flex flex-column justify-content-between">
                     <div>
-                        <small class="text-muted"><i class="bi bi-cash"></i> Pendiente recaudacion</small>
-                        <h3 class="text-warning mb-0 mt-1">$<?= number_format($pendienteRecaudar['total'], 2) ?></h3>
-                        <small class="text-muted"><?= $pendienteRecaudar['socios'] ?> socio(s) con deuda</small>
+                        <small class="text-muted">En caja (recaudado)</small>
+                        <h3 class="text-success mb-0 mt-1">$<?= number_format($recaudado['total'], 2) ?></h3>
                     </div>
-                    <a href="<?= BASE_URL ?>/sesion/checkin/<?= $sesion['id_sesion'] ?>" class="btn btn-sm btn-outline-warning mt-2"><i class="bi bi-list-ul"></i> Ver detalle</a>
+                    <a href="<?= BASE_URL ?>/caja/estadoCuenta?from_sesion=<?= $sesion['id_sesion'] ?>" class="btn btn-success mt-2">Ver movimientos</a>
                 </div>
             </div>
         </div>
         <div class="col">
-            <div class="card card-dashboard text-center h-100 border-success">
+            <div class="card card-dashboard text-center h-100 border-warning">
                 <div class="card-body d-flex flex-column justify-content-between">
                     <div>
-                        <small class="text-muted"><i class="bi bi-piggy-bank"></i> En caja (recaudado)</small>
-                        <h3 class="text-success mb-0 mt-1">$<?= number_format($recaudado['total'], 2) ?></h3>
-                        <small class="text-muted"><?= $recaudado['count'] ?> cobro(s) registrados</small>
+                        <small class="text-muted">Pendiente recaudacion</small>
+                        <h3 class="text-warning mb-0 mt-1">$<?= number_format($pendienteRecaudar['total'], 2) ?></h3>
                     </div>
-                    <a href="<?= BASE_URL ?>/caja/estadoCuenta?from_sesion=<?= $sesion['id_sesion'] ?>" class="btn btn-sm btn-outline-success mt-2"><i class="bi bi-list-ul"></i> Ver movimientos</a>
+                    <a href="<?= BASE_URL ?>/sesion/checkin/<?= $sesion['id_sesion'] ?>" class="btn btn-warning mt-2">Ver detalle</a>
                 </div>
             </div>
         </div>
@@ -48,30 +46,32 @@
             <div class="card card-dashboard text-center h-100 border-info">
                 <div class="card-body d-flex flex-column justify-content-between">
                     <div>
-                        <small class="text-muted"><i class="bi bi-check-circle"></i> Aprobados x desembolsar</small>
+                        <small class="text-muted">Creditos Aprobados</small>
                         <h3 class="text-info mb-0 mt-1">$<?= number_format($credADesembolsar['total'], 2) ?></h3>
-                        <small class="text-muted"><?= $credADesembolsar['count'] ?> credito(s)</small>
                     </div>
-                    <a href="<?= BASE_URL ?>/credito/bandejaAprobados?from_sesion=<?= $sesion['id_sesion'] ?>" class="btn btn-sm btn-outline-info mt-2"><i class="bi bi-list-ul"></i> Ver solicitudes</a>
+                    <a href="<?= BASE_URL ?>/credito/bandejaAprobados?from_sesion=<?= $sesion['id_sesion'] ?>" class="btn btn-info mt-2">Ver solicitudes</a>
                 </div>
             </div>
         </div>
         <div class="col">
-            <div class="card card-dashboard text-center h-100 border-secondary">
+            <div class="card card-dashboard text-center h-100 border-primary">
                 <div class="card-body d-flex flex-column justify-content-between">
                     <div>
-                        <small class="text-muted"><i class="bi bi-graph-up"></i> Inversiones pendientes</small>
-                        <h3 class="mb-0 mt-1"><?= $invPendientes['count'] ?> / $<?= number_format($invPendientes['total'], 2) ?></h3>
-                        <small class="text-muted">inversiones activas/pendientes</small>
+                        <small class="text-muted">Asistencia</small>
+                        <h3 class="text-primary mb-0 mt-1"><?= $asistRegistrada ?>/<?= $totalSocios ?> socios</h3>
                     </div>
-                    <a href="<?= BASE_URL ?>/inversion/pendientes?from_sesion=<?= $sesion['id_sesion'] ?>" class="btn btn-sm btn-outline-secondary mt-2"><i class="bi bi-list-ul"></i> Ver todas</a>
+                    <?php if ($sesion['estado'] === 'abierta'): ?>
+                    <a href="<?= BASE_URL ?>/sesion/asistencia/<?= $sesion['id_sesion'] ?>" class="btn btn-primary mt-2">Gestionar</a>
+                    <?php else: ?>
+                    <a class="btn btn-primary mt-2 disabled">Gestionar</a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="row g-3">
-        <!-- Asistencia -->
+        <!-- Asistencia detalle -->
         <div class="col-md-6">
             <div class="card card-dashboard h-100">
                 <div class="card-body">
@@ -107,21 +107,28 @@
                         <span><i class="bi bi-credit-card text-info me-1"></i> Creditos ingresados</span>
                         <div class="text-end">
                             <strong><?= $credIngresados['count'] ?></strong> <small class="text-muted">($<?= number_format($credIngresados['total'], 2) ?>)</small>
-                            <a href="<?= BASE_URL ?>/credito/bandejaAprobados" class="btn btn-sm btn-outline-info ms-2"><i class="bi bi-arrow-right"></i></a>
+                            <a href="<?= BASE_URL ?>/credito/bandejaAprobados" class="btn btn-info btn-sm ms-2">Ver</a>
                         </div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span><i class="bi bi-cash-stack text-warning me-1"></i> Retiros pendientes</span>
                         <div class="text-end">
                             <strong><?= $retirosPendientes['count'] ?></strong> <small class="text-muted">($<?= number_format($retirosPendientes['total'], 2) ?>)</small>
-                            <a href="<?= BASE_URL ?>/retiro/listar?from_sesion=<?= $sesion['id_sesion'] ?>" class="btn btn-sm btn-outline-warning ms-2"><i class="bi bi-arrow-right"></i></a>
+                            <a href="<?= BASE_URL ?>/retiro/listar?from_sesion=<?= $sesion['id_sesion'] ?>" class="btn btn-warning btn-sm ms-2">Ver</a>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="bi bi-graph-up text-secondary me-1"></i> Inversiones pendientes</span>
+                        <div class="text-end">
+                            <strong><?= $invPendientes['count'] ?></strong>
+                            <a href="<?= BASE_URL ?>/inversion/pendientes?from_sesion=<?= $sesion['id_sesion'] ?>" class="btn btn-secondary btn-sm ms-2">Ver</a>
                         </div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <span><i class="bi bi-exclamation-triangle text-danger me-1"></i> Multas en impugnacion</span>
                         <div class="text-end">
                             <strong><?= $multasImpugnacion ?></strong>
-                            <a href="<?= BASE_URL ?>/multa/listar?from_sesion=<?= $sesion['id_sesion'] ?>" class="btn btn-sm btn-outline-danger ms-2"><i class="bi bi-arrow-right"></i></a>
+                            <a href="<?= BASE_URL ?>/multa/listar?from_sesion=<?= $sesion['id_sesion'] ?>" class="btn btn-danger btn-sm ms-2">Ver</a>
                         </div>
                     </div>
                 </div>
