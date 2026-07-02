@@ -492,6 +492,223 @@ class SesionController extends BaseController {
         ]);
     }
 
+    public function dashboard($id) {
+        $this->requirePermission('cobro.aporte');
+        $stmt = $this->db->prepare("SELECT * FROM sesiones_mensuales WHERE id_sesion = ?");
+        $stmt->execute([$id]);
+        $sesion = $stmt->fetch();
+        if (!$sesion) $this->redirect('/sesion/listar');
+
+        $stmt = $this->db->prepare("SELECT COALESCE(SUM(monto),0) AS total, COUNT(DISTINCT id_socio) AS socios FROM obligaciones_sesion WHERE id_sesion = ? AND pagada = FALSE");
+        $stmt->execute([$id]);
+        $pendienteRecaudar = $stmt->fetch();
+
+        $stmt = $this->db->prepare("SELECT COALESCE(SUM(monto),0) AS total, COUNT(*) AS count FROM cobros WHERE id_sesion = ? AND anulado = FALSE AND tipo != 'desembolso'");
+        $stmt->execute([$id]);
+        $recaudado = $stmt->fetch();
+
+        $stmt = $this->db->prepare("SELECT COALESCE(SUM(monto),0) AS total FROM cobros WHERE id_sesion = ? AND anulado = FALSE AND tipo = 'desembolso'");
+        $stmt->execute([$id]);
+        $desembolsado = $stmt->fetchColumn();
+
+        $credADesembolsar = $this->db->query("SELECT COUNT(*) AS count, COALESCE(SUM(monto_aprobado),0) AS total FROM creditos WHERE estado = 'aprobado' AND fecha_desembolso IS NULL")->fetch();
+
+        $invPendientes = $this->db->query("SELECT COUNT(*) AS count, COALESCE(SUM(monto),0) AS total FROM inversiones WHERE estado IN ('activa','pendiente')")->fetch();
+
+        $stmt = $this->db->prepare("SELECT tipo, COUNT(*) AS total FROM asistencias WHERE id_sesion = ? GROUP BY tipo");
+        $stmt->execute([$id]);
+        $asistenciaResumen = $stmt->fetchAll();
+
+        $credIngresados = $this->db->query("SELECT COUNT(*) AS count, COALESCE(SUM(monto_solicitado),0) AS total FROM creditos WHERE estado = 'ingresado'")->fetch();
+
+        $retirosPendientes = $this->db->query("SELECT COUNT(*) AS count, COALESCE(SUM(monto),0) AS total FROM solicitudes_retiro WHERE estado = 'pendiente'")->fetch();
+
+        $multasImpugnacion = $this->db->query("SELECT COUNT(*) AS total FROM multas WHERE estado = 'en_impugnacion'")->fetchColumn();
+
+        $totalSocios = $this->db->query("SELECT COUNT(*) FROM socios WHERE estado = 'activo'")->fetchColumn();
+
+        $asistRegistrada = 0;
+        foreach ($asistenciaResumen as $a) { $asistRegistrada += $a['total']; }
+
+        $roles = RBAC::obtenerRolesUsuario($_SESSION['usuario_id'] ?? '');
+        $permisos = [];
+        foreach ($roles as $r) {
+            if (!empty($r['endosable'])) { $permisos = ['*']; break; }
+        }
+        if (empty($permisos)) {
+            $stmt = $this->db->query("SELECT p.codigo FROM permisos p
+                JOIN roles_permisos rp ON p.id_permiso = rp.id_permiso
+                JOIN roles_usuarios ru ON rp.id_rol = ru.id_rol
+                WHERE ru.id_usuario = '" . ($_SESSION['usuario_id'] ?? '') . "' AND rp.permitir = 1");
+            $permisos = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        }
+
+        $this->render('sesiones/dashboard', [
+            'titulo' => 'Sesion #' . $sesion['numero_sesion'] . ' — Dashboard',
+            'sesion' => $sesion,
+            'pendienteRecaudar' => $pendienteRecaudar,
+            'recaudado' => $recaudado,
+            'desembolsado' => $desembolsado,
+            'credADesembolsar' => $credADesembolsar,
+            'invPendientes' => $invPendientes,
+            'asistenciaResumen' => $asistenciaResumen,
+            'credIngresados' => $credIngresados,
+            'retirosPendientes' => $retirosPendientes,
+            'multasImpugnacion' => $multasImpugnacion,
+            'totalSocios' => $totalSocios,
+            'asistRegistrada' => $asistRegistrada,
+            'permisos' => $permisos,
+        ]);
+    }
+
+    public function asistencia($id) {
+        $this->requirePermission('cobro.aporte');
+        $stmt = $this->db->prepare("SELECT * FROM sesiones_mensuales WHERE id_sesion = ?");
+        $stmt->execute([$id]);
+        $sesion = $stmt->fetch();
+        if (!$sesion) $this->redirect('/sesion/listar');
+        if ($sesion['estado'] === 'cerrada') $this->redirect('/sesion/listar');
+
+        $buscar = trim($_GET['buscar'] ?? '');
+        $pagina = max(1, intval($_GET['pagina'] ?? 1));
+        $porPagina = 20;
+        $offset = ($pagina - 1) * $porPagina;
+
+        $whereSocio = "s.estado = 'activo'";
+        $paramsCount = [];
+        if ($buscar) {
+            $whereSocio .= " AND (s.cedula LIKE ? OR CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) LIKE ?)";
+            $paramsCount[] = "%$buscar%";
+            $paramsCount[] = "%$buscar%";
+        }
+        $totalSocios = $this->db->prepare("SELECT COUNT(*) FROM socios s WHERE $whereSocio");
+        $totalSocios->execute($paramsCount);
+        $totalPaginas = ceil($totalSocios->fetchColumn() / $porPagina);
+
+        $paramsSocio = $paramsCount;
+        $socios = $this->db->prepare("SELECT s.id_socio, s.cedula, CONCAT_WS(' ', s.apellido1, s.apellido2, s.nombre1, s.nombre2) AS nombre_completo FROM socios s WHERE $whereSocio ORDER BY s.apellido1, s.apellido2, s.nombre1, s.nombre2 LIMIT $porPagina OFFSET $offset");
+        $socios->execute($paramsSocio);
+        $socios = $socios->fetchAll();
+
+        $asistencias = [];
+        $stmt = $this->db->prepare("SELECT * FROM asistencias WHERE id_sesion = ?");
+        $stmt->execute([$id]);
+        while ($row = $stmt->fetch()) {
+            $asistencias[$row['id_socio']] = $row;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
+            $this->validateCSRF();
+            $accion = $_POST['accion'];
+
+            if ($accion === 'asistencia') {
+                $idSocio = $_POST['id_socio'] ?? '';
+                $tipo = $_POST['tipo'] ?? 'falta';
+                $stmt = $this->db->prepare("SELECT COUNT(*) AS cnt, MAX(tipo) AS old_tipo FROM asistencias WHERE id_socio = ? AND id_sesion = ?");
+                $stmt->execute([$idSocio, $id]);
+                $row = $stmt->fetch();
+                $existe = intval($row['cnt']) > 0;
+                $oldTipo = $existe ? $row['old_tipo'] : null;
+
+                if ($existe) {
+                    $stmt = $this->db->prepare("UPDATE asistencias SET tipo = ?, usuario_registra = ? WHERE id_socio = ? AND id_sesion = ?");
+                    $stmt->execute([$tipo, $_SESSION['usuario_id'], $idSocio, $id]);
+                } else {
+                    $stmt = $this->db->prepare("INSERT INTO asistencias (id_asistencia, id_socio, id_sesion, tipo, usuario_registra) VALUES (?, ?, ?, ?, ?)");
+                    $stmt->execute([UUIDGenerator::generar(), $idSocio, $id, $tipo, $_SESSION['usuario_id']]);
+                }
+
+                $tiposEliminar = [];
+                if ($oldTipo === 'retraso_10min') $tiposEliminar[] = 'retraso_10min';
+                elseif ($oldTipo === 'retraso_30min') $tiposEliminar[] = 'retraso_30min';
+                elseif ($oldTipo === 'falta') $tiposEliminar[] = 'inasistencia';
+                if ($tipo === 'a_tiempo') $tiposEliminar = ['retraso_10min', 'retraso_30min', 'inasistencia'];
+
+                $multasEliminadas = false;
+                foreach ($tiposEliminar as $tm) {
+                    $idsMultas = $this->db->prepare("SELECT id_multa FROM multas WHERE id_socio = ? AND id_sesion = ? AND tipo = ?");
+                    $idsMultas->execute([$idSocio, $id, $tm]);
+                    $ids = $idsMultas->fetchAll(PDO::FETCH_COLUMN);
+                    if (!empty($ids)) {
+                        $multasEliminadas = true;
+                        $ph = implode(',', array_fill(0, count($ids), '?'));
+                        $this->db->prepare("DELETE FROM obligaciones_sesion WHERE id_sesion = ? AND id_socio = ? AND tipo = 'multa' AND id_referencia IN ($ph)")->execute(array_merge([$id, $idSocio], $ids));
+                    }
+                    $this->db->prepare("DELETE FROM multas WHERE id_socio = ? AND id_sesion = ? AND tipo = ?")->execute([$idSocio, $id, $tm]);
+                }
+
+                if ($tipo === 'a_tiempo' && $multasEliminadas) {
+                    $numSesion = $sesion['numero_sesion'];
+                    $cedula = $this->db->prepare("SELECT cedula FROM socios WHERE id_socio = ?");
+                    $cedula->execute([$idSocio]);
+                    $cedulaVal = $cedula->fetchColumn() ?: '';
+                    NotificacionHelper::crear([
+                        'id_socio' => $idSocio,
+                        'tipo' => 'asistencia',
+                        'titulo' => 'Correccion de asistencia',
+                        'mensaje' => "Correccion de asistencia - A tiempo en la sesion #{$numSesion} para el socio {$cedulaVal}. Multa eliminada.",
+                        'enviar_pusher' => true,
+                    ]);
+                    PusherHelper::actualizarPortal($idSocio);
+                }
+
+                $montoMulta = 0;
+                $tipoMulta = '';
+                switch ($tipo) {
+                    case 'retraso_10min': $montoMulta = MULTA_RETRASO_10MIN; $tipoMulta = 'retraso_10min'; break;
+                    case 'retraso_30min': $montoMulta = MULTA_RETRASO_30MIN; $tipoMulta = 'retraso_30min'; break;
+                    case 'falta': $montoMulta = MULTA_INASISTENCIA; $tipoMulta = 'inasistencia'; break;
+                }
+
+                if ($montoMulta > 0) {
+                    $idMulta = UUIDGenerator::generar();
+                    $upsert = $this->db->prepare("INSERT INTO multas (id_multa, id_socio, id_sesion, tipo, monto) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE monto = VALUES(monto)");
+                    $upsert->execute([$idMulta, $idSocio, $id, $tipoMulta, $montoMulta]);
+                    $numSesion = $sesion['numero_sesion'];
+
+                    if ($upsert->rowCount() == 1) {
+                        $concepto = "Multa por " . str_replace('_', ' ', ucfirst($tipoMulta)) . " - Sesion #{$numSesion} del " . date('d/m/Y', strtotime($sesion['fecha_sesion']));
+                        $this->db->prepare("INSERT INTO obligaciones_sesion (id_obligacion, id_sesion, id_socio, tipo, concepto, monto, id_referencia) VALUES (?, ?, ?, 'multa', ?, ?, ?)")
+                            ->execute([UUIDGenerator::generar(), $id, $idSocio, $concepto, $montoMulta, $idMulta]);
+
+                        $cedula = $this->db->prepare("SELECT cedula FROM socios WHERE id_socio = ?");
+                        $cedula->execute([$idSocio]);
+                        $cedulaVal = $cedula->fetchColumn() ?: '';
+                        $tipoLabel = str_replace('_', ' ', ucfirst($tipoMulta));
+                        NotificacionHelper::crear([
+                            'id_socio' => $idSocio,
+                            'tipo' => 'multa',
+                            'titulo' => 'Multa generada',
+                            'mensaje' => "Se ha generado una multa por {$tipoLabel} de \${$montoMulta} en la sesion #{$numSesion} para el socio {$cedulaVal}",
+                            'enviar_pusher' => true,
+                        ]);
+                        PusherHelper::actualizarPortal($idSocio);
+                    } else {
+                        $realId = $this->db->prepare("SELECT id_multa FROM multas WHERE id_socio = ? AND id_sesion = ? AND tipo = ?");
+                        $realId->execute([$idSocio, $id, $tipoMulta]);
+                        $idMultaReal = $realId->fetchColumn();
+                        if ($idMultaReal) {
+                            $this->db->prepare("UPDATE obligaciones_sesion SET monto = ? WHERE id_referencia = ? AND tipo = 'multa' AND pagada = FALSE")
+                                ->execute([$montoMulta, $idMultaReal]);
+                        }
+                    }
+                }
+
+                $this->redirect('/sesion/asistencia/' . $id);
+            }
+        }
+
+        $this->render('sesiones/asistencia', [
+            'titulo' => 'Asistencia — Sesion #' . $sesion['numero_sesion'],
+            'sesion' => $sesion,
+            'socios' => $socios,
+            'asistencias' => $asistencias,
+            'buscar' => $buscar,
+            'pagina' => $pagina,
+            'totalPaginas' => $totalPaginas,
+        ]);
+    }
+
     public function obligacionesJSON($idSesion, $idSocio) {
         $this->requireAuth();
         // Generar obligaciones para este socio si no existen

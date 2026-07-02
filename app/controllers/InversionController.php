@@ -45,8 +45,9 @@ class InversionController extends BaseController {
                                    ORDER BY i.fecha_registro DESC");
         $pendientes = $stmt->fetchAll();
         $this->render('inversiones/pendientes', [
-            'titulo' => 'Aprobación de inversiones',
+            'titulo' => 'Aprobacion de inversiones',
             'pendientes' => $pendientes,
+            'fromSesion' => $_GET['from_sesion'] ?? null,
         ]);
     }
 

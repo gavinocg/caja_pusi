@@ -1,7 +1,12 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>Aprobación de inversiones</h4>
-        <a href="<?= BASE_URL ?>/inversion/listar" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+        <h4>Aprobacion de inversiones</h4>
+        <div class="d-flex gap-2">
+            <?php if (!empty($fromSesion)): ?>
+            <a href="<?= BASE_URL ?>/sesion/dashboard/<?= htmlspecialchars($fromSesion) ?>" class="btn btn-outline-info"><i class="bi bi-speedometer2"></i> Panel de Sesion</a>
+            <?php endif; ?>
+            <a href="<?= BASE_URL ?>/inversion/listar" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+        </div>
     </div>
 
     <div class="card card-dashboard">

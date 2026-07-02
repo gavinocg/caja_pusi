@@ -91,6 +91,8 @@ $routeMap = [
     'sesion/editar' => ['controller' => 'SesionController', 'method' => 'editar'],
     'sesion/reaperturar' => ['controller' => 'SesionController', 'method' => 'reaperturar'],
     'sesion/checkin' => ['controller' => 'SesionController', 'method' => 'checkin'],
+    'sesion/dashboard' => ['controller' => 'SesionController', 'method' => 'dashboard'],
+    'sesion/asistencia' => ['controller' => 'SesionController', 'method' => 'asistencia'],
     'sesion/obligaciones' => ['controller' => 'SesionController', 'method' => 'obligacionesJSON'],
     'cobro' => ['controller' => 'CobroController', 'method' => 'listar'],
     'cobro/registrar' => ['controller' => 'CobroController', 'method' => 'registrar'],

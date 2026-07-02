@@ -1,10 +1,11 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h4>Sesion #<?= $sesion['numero_sesion'] ?></h4>
+            <h4>Planilla de Cobro — Sesion #<?= $sesion['numero_sesion'] ?></h4>
             <small class="text-muted"><?= htmlspecialchars($sesion['titulo'] ?? '') ?> — Reunion: <?= date('d/m/Y', strtotime($sesion['fecha_sesion'])) ?></small>
         </div>
-        <div>
+        <div class="d-flex gap-2">
+            <a href="<?= BASE_URL ?>/sesion/dashboard/<?= $sesion['id_sesion'] ?>" class="btn btn-outline-info"><i class="bi bi-speedometer2"></i> Panel de Sesion</a>
             <a href="<?= BASE_URL ?>/sesion/listar" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
         </div>
     </div>
@@ -37,14 +38,13 @@
                                 <tr>
                                     <th>Cedula</th>
                                     <th>Socio</th>
-                                    <th>Asistencia</th>
                                     <th class="text-end">Total adeudado</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($socios)): ?>
-                                <tr><td colspan="5" class="text-center text-muted py-3">No se encontraron socios</td></tr>
+                                <tr><td colspan="4" class="text-center text-muted py-3">No se encontraron socios</td></tr>
                                 <?php else: foreach ($socios as $s):
                                     $socOblig = $obligaciones[$s['id_socio']] ?? [];
                                     $totalSocio = array_sum(array_map(function($o) { return floatval($o['monto']); }, $socOblig));
@@ -53,23 +53,9 @@
                                     $pendiente = $totalSocio - $totalPagado;
                                     $pendientes = array_filter($socOblig, function($o) { return !$o['pagada']; });
                                 ?>
-                                <tr class="<?= isset($asistencias[$s['id_socio']]) ? 'table-success' : '' ?>">
+                                <tr>
                                     <td><?= htmlspecialchars($s['cedula']) ?></td>
                                     <td><strong><?= htmlspecialchars($s['nombre_completo']) ?></strong></td>
-                                    <td>
-                                        <form method="POST" class="d-flex gap-1" action="<?= BASE_URL ?>/sesion/checkin/<?= $sesion['id_sesion'] ?>">
-                                            <?= CSRFMiddleware::campoHTML() ?>
-                                            <input type="hidden" name="accion" value="asistencia">
-                                            <input type="hidden" name="id_socio" value="<?= $s['id_socio'] ?>">
-                                            <select name="tipo" class="form-select form-select-sm" style="width:auto">
-                                                <option value="a_tiempo" <?= (isset($asistencias[$s['id_socio']]) && $asistencias[$s['id_socio']]['tipo'] === 'a_tiempo') ? 'selected' : '' ?>>A tiempo</option>
-                                                <option value="retraso_10min" <?= (isset($asistencias[$s['id_socio']]) && $asistencias[$s['id_socio']]['tipo'] === 'retraso_10min') ? 'selected' : '' ?>>Retraso 10min</option>
-                                                <option value="retraso_30min" <?= (isset($asistencias[$s['id_socio']]) && $asistencias[$s['id_socio']]['tipo'] === 'retraso_30min') ? 'selected' : '' ?>>Retraso 30min</option>
-                                                <option value="falta" <?= (isset($asistencias[$s['id_socio']]) && $asistencias[$s['id_socio']]['tipo'] === 'falta') ? 'selected' : '' ?>>Falta</option>
-                                            </select>
-                                            <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-check"></i></button>
-                                        </form>
-                                    </td>
                                     <td class="text-end">
                                         <?php if ($pendiente > 0): ?>
                                         <strong class="text-danger">$<?= number_format($pendiente, 2) ?></strong>
@@ -110,6 +96,17 @@
             <?php endfor; ?>
         </ul>
     </nav>
+    <?php endif; ?>
+
+    <!-- Acciones cierre -->
+    <?php if ($sesion['estado'] === 'abierta'): ?>
+    <div class="mt-3">
+        <form method="POST" action="<?= BASE_URL ?>/sesion/checkin/<?= $sesion['id_sesion'] ?>" style="display:inline" onsubmit="return confirm('¿Cerrar la sesion? No se podran registrar mas cobros.')">
+            <?= CSRFMiddleware::campoHTML() ?>
+            <input type="hidden" name="accion" value="cierre">
+            <button type="submit" class="btn btn-danger"><i class="bi bi-lock"></i> Cerrar sesion</button>
+        </form>
+    </div>
     <?php endif; ?>
 
     <!-- Modal Cobro (carga via AJAX) -->
@@ -186,7 +183,7 @@ function abrirModalCobro(idSocio, nombre) {
             document.getElementById('btnCobrar').style.display = 'inline-block';
             obligs.forEach(function(o, idx) {
                 var badgeHtml = '';
-                if (o.tipo === 'cuota_credito') badgeHtml = '<span class="badge bg-info me-1">Crédito</span>';
+                if (o.tipo === 'cuota_credito') badgeHtml = '<span class="badge bg-info me-1">Credito</span>';
                 else if (o.tipo === 'cuota_mensual') badgeHtml = '<span class="badge bg-primary me-1">Cuota</span>';
                 else if (o.tipo === 'multa') badgeHtml = '<span class="badge bg-warning text-dark me-1">Multa</span>';
                 var div = document.createElement('div');

@@ -14,9 +14,6 @@
                         <th>Título</th>
                         <th>Tipo</th>
                         <th>Estado</th>
-                        <th>Recaudado</th>
-                        <th>Desembolsado</th>
-                        <th>Saldo</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -32,13 +29,10 @@
                                 <?= $s['estado'] === 'abierta' ? 'Abierta' : 'Cerrada' ?>
                             </span>
                         </td>
-                        <td>$<?= number_format($s['total_recaudado'], 2) ?></td>
-                        <td>$<?= number_format($s['total_desembolsado'], 2) ?></td>
-                        <td>$<?= number_format($s['saldo_caja'], 2) ?></td>
                         <td>
                             <a href="<?= BASE_URL ?>/sesion/editar/<?= $s['id_sesion'] ?>" class="btn btn-sm btn-outline-primary" title="Editar"><i class="bi bi-pencil"></i></a>
                             <?php if ($s['estado'] === 'abierta'): ?>
-                            <a href="<?= BASE_URL ?>/sesion/checkin/<?= $s['id_sesion'] ?>" class="btn btn-sm btn-outline-success"><i class="bi bi-check-circle"></i> Gestion</a>
+                            <a href="<?= BASE_URL ?>/sesion/dashboard/<?= $s['id_sesion'] ?>" class="btn btn-sm btn-outline-success"><i class="bi bi-speedometer2"></i> Gestionar</a>
                             <form method="POST" action="<?= BASE_URL ?>/sesion/checkin/<?= $s['id_sesion'] ?>" style="display:inline" onsubmit="return confirm('¿Cerrar la sesion? No se podran registrar mas cobros.')">
                                 <?= CSRFMiddleware::campoHTML() ?>
                                 <input type="hidden" name="accion" value="cierre">

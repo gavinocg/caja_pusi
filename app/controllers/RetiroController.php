@@ -30,6 +30,7 @@ class RetiroController extends BaseController {
             'page' => $page,
             'totalPaginas' => $totalPaginas,
             'filtro' => $filtro,
+            'fromSesion' => $_GET['from_sesion'] ?? null,
         ]);
     }
 

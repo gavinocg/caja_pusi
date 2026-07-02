@@ -1,5 +1,10 @@
 <div class="container-fluid">
-    <h4>Multas</h4>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4>Multas</h4>
+        <?php if (!empty($fromSesion)): ?>
+        <a href="<?= BASE_URL ?>/sesion/dashboard/<?= htmlspecialchars($fromSesion) ?>" class="btn btn-outline-info"><i class="bi bi-speedometer2"></i> Panel de Sesion</a>
+        <?php endif; ?>
+    </div>
 
     <?php if (!$esSocio): ?>
     <form method="GET" class="row g-2 mb-3">

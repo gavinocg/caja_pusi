@@ -36,6 +36,7 @@ class CajaController extends BaseController {
             'desde' => $desde,
             'hasta' => $hasta,
             'categoriaSel' => $categoria,
+            'fromSesion' => $_GET['from_sesion'] ?? null,
         ]);
     }
 

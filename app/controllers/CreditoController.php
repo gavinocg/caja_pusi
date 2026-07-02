@@ -111,6 +111,7 @@ class CreditoController extends BaseController {
         $this->render('creditos/bandejaAprobados', [
             'titulo' => 'Bandeja de creditos',
             'creditos' => $creditos,
+            'fromSesion' => $_GET['from_sesion'] ?? null,
         ]);
     }
 

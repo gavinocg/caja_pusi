@@ -63,6 +63,7 @@ class MultaController extends BaseController {
             'esSocio' => $esSocio,
             'esPresidente' => $this->esPresidente(),
             'puedeAutorizar' => $this->tienePermiso('multa.autorizar_impugnacion'),
+            'fromSesion' => $_GET['from_sesion'] ?? null,
         ]);
     }
 
