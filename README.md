@@ -202,3 +202,5 @@ El formulario de registro/edición de productos (`/producto/registrar` y `/produ
 ---
 
 *Documento incremental — secciones 1 y 2 preservadas, secciones 3 y 4 añadidas*
+#   c a j a _ p u s i  
+ 
